@@ -1,0 +1,244 @@
+@import "tailwindcss";
+
+/**
+ * Custom theme configuration using Tailwind v4 @theme directive
+ * Defines semantic color palette for light/dark modes and typography scale
+ */
+@theme inline {
+  /* Semantic color palette - minimal and calm */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f9fa;
+  --color-bg-tertiary: #e9ecef;
+
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #4a5568;
+  --color-text-muted: #718096;
+
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+
+  --color-border: #e2e8f0;
+  --color-border-hover: #cbd5e0;
+
+  /* Dark mode colors */
+  --color-dark-bg-primary: #0f0f0f;
+  --color-dark-bg-secondary: #1a1a1a;
+  --color-dark-bg-tertiary: #262626;
+
+  --color-dark-text-primary: #f5f5f5;
+  --color-dark-text-secondary: #a3a3a3;
+  --color-dark-text-muted: #737373;
+
+  --color-dark-accent: #3b82f6;
+  --color-dark-accent-hover: #60a5fa;
+
+  --color-dark-border: #2a2a2a;
+  --color-dark-border-hover: #404040;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, monospace;
+
+  /* Spacing for comfortable reading */
+  --max-reading-width: 65ch;
+}
+
+/**
+ * Base layer - global resets and defaults
+ */
+@layer base {
+  html {
+    @apply antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  body {
+    @apply bg-white dark:bg-dark-bg-primary;
+    @apply text-text-primary dark:text-dark-text-primary;
+    @apply transition-colors duration-200;
+  }
+
+  /* Comfortable reading defaults */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
+  }
+
+  h4 {
+    @apply text-xl md:text-2xl;
+  }
+
+  /* Link styling */
+  a {
+    @apply transition-colors duration-150;
+  }
+}
+
+/**
+ * Component layer - reusable patterns
+ */
+@layer components {
+  /* Prose styling for MDX/Markdown content */
+  .prose {
+    @apply max-w-none;
+    @apply text-base;
+    @apply text-text-primary dark:text-dark-text-primary;
+  }
+
+  .prose h1 {
+    @apply text-3xl font-bold;
+    @apply text-text-primary dark:text-dark-text-primary;
+    @apply mt-8 mb-4;
+  }
+
+  .prose h2 {
+    @apply text-2xl font-semibold;
+    @apply text-text-primary dark:text-dark-text-primary;
+    @apply mt-8 mb-4;
+  }
+
+  .prose h3 {
+    @apply text-xl font-semibold;
+    @apply text-text-primary dark:text-dark-text-primary;
+    @apply mt-6 mb-3;
+  }
+
+  .prose h4 {
+    @apply text-lg font-semibold;
+    @apply text-text-primary dark:text-dark-text-primary;
+    @apply mt-4 mb-2;
+  }
+
+  .prose p {
+    @apply text-text-secondary dark:text-dark-text-secondary;
+    @apply leading-relaxed;
+    @apply mb-4;
+  }
+
+  .prose a {
+    @apply text-accent dark:text-dark-accent;
+    @apply no-underline hover:underline;
+    @apply transition-colors;
+  }
+
+  .prose strong {
+    @apply text-text-primary dark:text-dark-text-primary;
+    @apply font-semibold;
+  }
+
+  .prose em {
+    @apply italic;
+  }
+
+  .prose code {
+    @apply text-sm font-mono;
+    @apply bg-bg-secondary dark:bg-dark-bg-secondary;
+    @apply px-1.5 py-0.5 rounded;
+    @apply text-text-primary dark:text-dark-text-primary;
+  }
+
+  .prose pre {
+    @apply bg-bg-secondary dark:bg-dark-bg-secondary;
+    @apply border border-border dark:border-dark-border;
+    @apply p-4 rounded;
+    @apply overflow-x-auto;
+    @apply text-sm;
+    @apply mb-4;
+  }
+
+  .prose pre code {
+    @apply bg-transparent;
+    @apply p-0;
+  }
+
+  .prose ul {
+    @apply list-disc;
+    @apply pl-6 mb-4;
+    @apply text-text-secondary dark:text-dark-text-secondary;
+  }
+
+  .prose ol {
+    @apply list-decimal;
+    @apply pl-6 mb-4;
+    @apply text-text-secondary dark:text-dark-text-secondary;
+  }
+
+  .prose li {
+    @apply mb-2;
+  }
+
+  .prose blockquote {
+    @apply border-l-4 border-border dark:border-dark-border;
+    @apply pl-4 py-2;
+    @apply italic;
+    @apply text-text-muted dark:text-dark-text-muted;
+    @apply mb-4;
+  }
+
+  .prose hr {
+    @apply border-border dark:border-dark-border;
+    @apply my-8;
+  }
+
+  .prose table {
+    @apply w-full;
+    @apply border-collapse;
+    @apply mb-4;
+  }
+
+  .prose th {
+    @apply border border-border dark:border-dark-border;
+    @apply bg-bg-secondary dark:bg-dark-bg-secondary;
+    @apply px-4 py-2;
+    @apply text-left;
+    @apply font-semibold;
+  }
+
+  .prose td {
+    @apply border border-border dark:border-dark-border;
+    @apply px-4 py-2;
+  }
+
+  /* Large prose variant */
+  .prose-lg {
+    @apply text-lg;
+  }
+
+  .prose-lg h1 {
+    @apply text-4xl;
+  }
+
+  .prose-lg h2 {
+    @apply text-3xl;
+  }
+
+  .prose-lg h3 {
+    @apply text-2xl;
+  }
+}
+
+/**
+ * Utility layer - one-off utilities
+ */
+@layer utilities {
+  /* Reading width constraint */
+  .reading-width {
+    max-width: var(--max-reading-width);
+  }
+
+  /* Smooth scrolling for anchor links */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+}
