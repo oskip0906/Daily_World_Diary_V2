@@ -69,11 +69,11 @@ either way.
 
 ```
 backend/
-  pyproject.toml            # anthropic, fastapi, uvicorn, markdown, nh3, pytest
+  pyproject.toml            # openai, fastapi, uvicorn, markdown, nh3, pytest
   diary/
     __init__.py
     prompts.py              # the 7 agents: id, name, description, version, system prompt
-    agent.py                # one Anthropic call -> (markdown, sources)
+    agent.py                # one OpenRouter call -> (markdown, sources)
     render.py               # markdown -> sanitized HTML
     pipeline.py             # fan-out 5, fan-in 2, assemble DiaryEntry
     store.py                # read / write / list_dates over data/*.json
@@ -143,43 +143,88 @@ sentences)", so this costs no extra call and no extra schema.
 One agent failing should not lose the other six: `gather(..., return_exceptions=True)`, and a
 failed section is omitted with a logged warning. An entry missing a section still renders.
 
-## 6. The Anthropic call
+## 6. The OpenRouter call
 
-Model `claude-opus-5-5` for every agent. Thinking is always on — omit the `thinking` parameter;
-`output_config.effort` defaults to `medium` on this model, which is right for summarisation.
+OpenRouter is OpenAI-compatible, so the `openai` SDK reaches it with a base-URL swap. No
+OpenRouter-specific client, no second SDK:
 
 ```python
-TOOLS = [{"type": "web_search_20260209", "name": "web_search", "max_uses": 8}]
+client = AsyncOpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.environ["OPENROUTER_API_KEY"],
+)
 
-resp = await client.messages.create(
-    model="claude-opus-5-5",
-    max_tokens=16000,
-    system=agent.system_prompt,
-    tools=TOOLS if agent.searches else [],
-    messages=[{"role": "user", "content": task}],
+resp = await client.chat.completions.create(
+    model=MODEL,                                    # from env, see below
+    messages=[{"role": "system", "content": agent.system_prompt},
+              {"role": "user", "content": task}],
+    tools=WEB_SEARCH if agent.searches else None,
+    max_tokens=4000,
 )
 ```
 
-`web_search_20260209` carries dynamic filtering, so **do not** also declare `code_execution` — a
-second execution environment confuses the model. `max_uses` is the per-agent cost ceiling.
+**The model is one env var (`OPENROUTER_MODEL`), not a constant per agent.** Ids are namespaced
+`vendor/model`; pick from `GET /api/v1/models`. I'm deliberately not writing an id here — the
+catalogue moves faster than this document, and a stale id in the design is worse than none. The
+criteria that matter: it accepts ~30K-token inputs, follows "emit Markdown, 300–600 words", and
+returns search annotations (see below). Set `OPENROUTER_MODEL` once and all seven agents move
+together; override per agent later only if one of them actually needs it.
 
-Three handling details that are easy to get wrong:
+Two things OpenRouter gives you for free, each one line of request body, both worth taking:
 
-- **`sources` is harvested from the tool-result blocks, never from the model's prose.** Walk
-  `resp.content` for `web_search_tool_result` blocks and collect `{title, url}` from each
-  `web_search_result`. The model never types a URL, so it cannot invent one. Dedupe by URL, cap at
-  5 per section to match the frontend's visual weight.
-- **Server-tool errors do not raise.** They come back HTTP 200 with the result block's `content`
-  being an *error object* instead of a *list*. Branch on that before iterating, or source
-  harvesting throws on the first failed search.
-- **`pause_turn`.** The server-side search loop stops at 10 iterations and returns
-  `stop_reason: "pause_turn"`. Resume by re-sending the user message plus `resp.content` as an
-  assistant turn — no "Continue." message — capped at 5 continuations.
+- `models: ["primary", "fallback"]` — automatic failover when a provider is down. Without it, one
+  provider outage loses the whole day's entry.
+- `extra_headers={"HTTP-Referer": ..., "X-Title": "Daily World Diary"}` — attribution on
+  OpenRouter's rankings. Cosmetic, but free.
 
-**Prompt caching is deliberately not used.** It needs a shared prefix of at least 512–4096 tokens
-(model-dependent); here each agent has its own ~500-token system prompt, the agents share no prefix,
-and the pipeline runs once a day against a 5-minute ephemeral TTL. There is nothing to reuse. Adding
-`cache_control` would be cargo cult.
+### Sources, and the one thing that genuinely changed
+
+The Anthropic-native design harvested `sources[]` from guaranteed `web_search_tool_result` blocks.
+OpenRouter instead returns **`annotations` on the assistant message** — entries of
+`{type: "url_citation", url_citation: {url, title, content?, start_index, end_index}}`. Same idea,
+different shape, so the principle survives: **the model never types a URL, so it cannot invent one.**
+
+```python
+def harvest(message) -> list[dict]:
+    out, seen = [], set()
+    for a in getattr(message, "annotations", None) or []:
+        c = getattr(a, "url_citation", a)        # Chat Completions nests it; Responses API is flat
+        url = getattr(c, "url", None)
+        if url and url.startswith(("http://", "https://")) and url not in seen:
+            seen.add(url)
+            out.append({"title": getattr(c, "title", None) or url, "url": url})
+    return out[:5]
+```
+
+The defensive `getattr` calls are not padding — they cover the real failure mode below.
+
+**The catch, and it is the one risk worth knowing: for models whose underlying provider runs search
+natively, OpenRouter returns no annotations at all.** Then `harvest` yields `[]`, the section ships
+without a Sources block, and the page still renders correctly — `sources` is optional in
+`types/index.ts`, and the current mock only populates it on 3 of its 7 sections. So this degrades
+instead of breaking. But if you want citations on every section, it is a **model-choice fix, not a
+code fix**: pick a model where OpenRouter itself runs the search (Exa is its default engine, Parallel
+is selectable) rather than one that searches provider-side.
+
+### Verify these two before writing `agent.py`
+
+I could not reach `openrouter.ai` from this session — the environment's network policy denies the
+host — so the two items below come from secondary sources and are the only parts of this design I
+have not confirmed first-hand. Both are a single docs page to check, not open design questions:
+
+1. **How to invoke search.** The older `plugins: [{"id": "web", "max_results": 5}]` form appears to
+   be deprecated in favour of a server tool in the `tools` array (`openrouter:web_search`), which
+   lets the model decide when and how often to search rather than searching once per request. Confirm
+   which form is current, and whether the gateway runs the search loop itself or hands tool calls back
+   for a client-side loop. If it hands them back, `run_agent` needs the standard
+   `while finish_reason == "tool_calls"` loop, capped at ~5 turns.
+2. **The annotation field names** for the Chat Completions path, against the `harvest` sketch above.
+
+Nothing else in this document depends on either answer.
+
+**Prompt caching stays out.** It was already worth nothing here — seven short system prompts sharing
+no prefix, run once a day — and on OpenRouter it is provider-specific on top of that. Not worth the
+request-body complexity.
 
 ## 7. Content format and the XSS hole
 
@@ -216,6 +261,10 @@ Writes go to a temp file then `os.replace`, so a crash mid-write cannot leave a 
 that the API would serve. `force` guards the real failure mode: re-running the CLI for a date that
 already has a good entry both overwrites it and burns the API spend again.
 
+Each entry also records the `model` it was generated with and the summed `usage` from the seven
+calls, alongside the `promptVersions` from §4. Three extra keys the frontend ignores, and they turn
+§11 from guesswork into a number you can read off disk.
+
 ## 9. API and the frontend change
 
 FastAPI, three endpoints mirroring §1 byte for byte:
@@ -249,7 +298,7 @@ One scheduled call a day, after markets close:
 0 23 * * *   python -m diary.generate --date $(date -I)
 ```
 
-A GitHub Action with `ANTHROPIC_API_KEY` in secrets is enough; nothing here needs a queue or a
+A GitHub Action with `OPENROUTER_API_KEY` in secrets is enough; nothing here needs a queue or a
 worker pool. `--date` also gives you backfill (`for d in ...; do generate --date $d; done`) and
 regeneration without a deploy.
 
@@ -257,20 +306,27 @@ If you'd rather host nothing: run that Action, commit `data/*.json`, and have th
 the files off disk instead of proxying. You lose runtime regeneration, you gain static generation
 and a free CDN. `store.py` is unchanged; only the route bodies differ.
 
-## 11. Cost
+## 11. Cost — measured, not estimated
 
-At `claude-opus-5-5` ($4/MTok in, $20/MTok out), assuming ~30K input tokens of filtered search
-results and ~1.2K output per searching agent:
+Seven calls a day. Input is dominated by however much search result the model pulls in (~30K tokens
+is a reasonable guess), output is ~1.2K tokens per section.
 
-- 5 searching agents ≈ $0.72/day
-- 2 synthesis agents (≈6.5K in, 1.2K out) ≈ $0.10/day
-- **≈ $0.82/day, ≈ $25/month**, plus web-search tool usage, which is billed per search separately —
-  check current pricing rather than trusting a number here.
+Per-token price depends entirely on which model `OPENROUTER_MODEL` names, and OpenRouter bills web
+search per search on top of tokens. Any dollar figure written here would be invented, so the design
+**records instead of predicting**: §8 stores `model` and summed `usage` in every entry, and
+OpenRouter reports actual credit spend in its own dashboard. After one real run you have the true
+number, which is better than an estimate anyway.
 
-Two levers if that is too much, both your call, not mine: run the 5 gatherers on
-`claude-haiku-5-5` ($0.10/$0.50) and the total drops to roughly $0.12/day; or submit the 5
-independent calls through the Batch API for 50% off, since a nightly job has no latency
-requirement. The design defaults to Opus 5.5 on every agent.
+Three guards that keep a bad run cheap, all free:
+
+- `max_tokens` per call, so a runaway generation has a ceiling.
+- A cap on search results per agent, which is the main input-token lever.
+- `--dry-run` (§12) for assembly and rendering changes, so iterating on HTML output costs nothing.
+
+The cost lever, if it matters: the five gatherers do extraction and summarisation, not reasoning, and
+OpenRouter's whole point is that swapping them to a cheaper model is an env var. Measure the
+expensive version first, then decide — the models catalogue is the right place to compare prices,
+not this document.
 
 ## 12. Tests
 
@@ -278,8 +334,10 @@ No test calls the API. Three things carry real logic and get covered:
 
 - `test_render.py` — markdown converts, and `<script>`, `onerror=` and `javascript:` hrefs do not
   survive `render()`.
-- `test_sources.py` — harvesting from recorded content blocks, including the error-object branch
-  and URL dedupe.
+- `test_sources.py` — `harvest()` against recorded `annotations`, covering the nested
+  (`url_citation`) and flat shapes, URL dedupe, a non-`http` scheme, and — the case that will
+  actually happen — a response with **no `annotations` field at all**, which must yield `[]` rather
+  than raise.
 - `test_pipeline.py` — `assemble()` against stub agent output produces section ids, orders and
   metadata matching `website/src/types/index.ts`, and a failed agent omits one section without
   breaking the entry.
@@ -289,8 +347,12 @@ against the contract — the cheap self-check that the frontend will not break.
 
 ## 13. Open choices
 
-Everything above is decided and implementable. Three things are genuinely yours to call:
+Everything above is decided and implementable. Three things are yours to call:
 
-1. **LangGraph or not** (§2). I recommend not, and the site copy currently promises it.
-2. **Hosted API or commit-to-repo** (§10). Only the three Next route bodies differ.
-3. **Model per agent** (§11). Defaults to Opus 5.5 throughout.
+1. **Which model** `OPENROUTER_MODEL` names (§6). One env var, and it decides both cost and whether
+   you get citations.
+2. **LangGraph or not** (§2). I recommend not, and the site copy currently promises it.
+3. **Hosted API or commit-to-repo** (§10). Only the three Next route bodies differ.
+
+And two facts to confirm against OpenRouter's docs before `agent.py` gets written — the search
+invocation form and the annotation field names, both listed at the end of §6.
