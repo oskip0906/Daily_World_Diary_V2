@@ -6,27 +6,31 @@ import pytest
 from diary import pipeline
 from diary.agent import AgentResult
 from diary.prompts import AGENTS
+from diary.sources import Item, Material
 
-SEARCHERS = [a for a in AGENTS if a.searches]
+GATHERERS = [a for a in AGENTS if a.gathers]
 SECTION_IDS = ["political-news", "financial-news", "entertainment-news", "music-releases",
                "stock-analysis", "daily-summary", "outlook"]
 
 
 @pytest.fixture
 def contexts(monkeypatch):
-    """Stub every agent; record the context each one was given."""
+    """Stub every scrape and agent; record the context and material each agent was given."""
     seen = {}
 
-    async def fake_run_agent(agent, date, context=None):
+    async def fake_run_agent(agent, date, context=None, material=None):
         seen[agent.agent_id] = context
+        seen[agent.agent_id, "material"] = material
         if agent.agent_id == "synthesis-agent":
             md = "### Executive Summary\n\nThe day in **brief**.\n\nMore detail."
         else:
             md = f"### {agent.agent_name}\n\nBody of {agent.agent_id}."
-        sources = [{"title": "S", "url": "https://s.com"}] if agent.searches else []
+        sources = [{"title": "S", "url": "https://s.com"}] if agent.gathers else []
         return AgentResult(md, sources, {"prompt_tokens": 100, "completion_tokens": 10, "cost": 0.01})
 
     monkeypatch.setattr(pipeline, "run_agent", fake_run_agent)
+    monkeypatch.setattr(pipeline, "gather", lambda agent, date: Material(
+        [Item(f"{agent.agent_id} story", f"https://news.example/{agent.agent_id}", "Outlet")]))
     monkeypatch.setenv("OPENROUTER_MODEL", "vendor/model")
     return seen
 
@@ -44,13 +48,13 @@ def test_sections_match_the_frontend_contract(contexts):
     pipeline.check_contract(entry)
 
 
-def test_synthesisers_receive_all_five_searcher_sections(contexts):
+def test_synthesisers_receive_all_five_gatherer_sections(contexts):
     generate()
     for synth in ("synthesis-agent", "outlook-agent"):
-        for a in SEARCHERS:
+        for a in GATHERERS:
             assert f"## {a.section_title}\n" in contexts[synth]
             assert f"Body of {a.agent_id}." in contexts[synth]
-    assert all(contexts[a.agent_id] is None for a in SEARCHERS)
+    assert all(contexts[a.agent_id] is None for a in GATHERERS)
 
 
 def test_metadata(contexts):
@@ -77,10 +81,10 @@ def test_run_records_model_usage_and_prompt_versions(contexts):
 def test_a_failing_agent_omits_only_its_section(contexts, monkeypatch):
     ok = pipeline.run_agent
 
-    async def flaky(agent, date, context=None):
+    async def flaky(agent, date, context=None, material=None):
         if agent.agent_id == "music-curator":
             raise RuntimeError("provider down")
-        return await ok(agent, date, context)
+        return await ok(agent, date, context, material)
 
     monkeypatch.setattr(pipeline, "run_agent", flaky)
     entry = generate()
@@ -96,16 +100,8 @@ def test_check_contract_rejects_a_broken_entry(contexts):
         pipeline.check_contract(entry)
 
 
-def test_prompts_payload_matches_the_prompts_response_type():
-    payload = pipeline.prompts_payload()
-    assert payload["meta"] == {"totalAgents": 7, "schemaVersion": "1.0.0"}
-    first = payload["prompts"][0]
-    assert set(first) == {"agentId", "agentName", "description", "systemPrompt", "version", "lastUpdated"}
-    assert first["agentId"] == "political-analyst"
-
-
 def test_a_leading_heading_repeating_the_section_title_is_dropped(contexts, monkeypatch):
-    async def echo_title(agent, date, context=None):
+    async def echo_title(agent, date, context=None, material=None):
         return AgentResult(f"### {agent.section_title}\n\n**Executive Summary:** Calm day.\n\nMore.")
 
     monkeypatch.setattr(pipeline, "run_agent", echo_title)
@@ -121,11 +117,46 @@ def test_an_account_error_aborts_the_run_instead_of_dropping_sections(contexts, 
     # 2026-10-26: the key hit its daily cap mid-run and a 5-of-7 entry was written as if it were fine
     ok = pipeline.run_agent
 
-    async def capped(agent, date, context=None):
-        if not agent.searches:
+    async def capped(agent, date, context=None, material=None):
+        if not agent.gathers:
             raise account_error(status)
-        return await ok(agent, date, context)
+        return await ok(agent, date, context, material)
 
     monkeypatch.setattr(pipeline, "run_agent", capped)
     with pytest.raises(pipeline.AccountError):
         generate()
+
+
+def test_gatherers_get_their_scraped_material(contexts):
+    generate()
+    for a in GATHERERS:
+        assert contexts[a.agent_id, "material"].items[0].title == f"{a.agent_id} story"
+    assert contexts["synthesis-agent", "material"] is None
+
+
+def test_a_failed_scrape_omits_only_its_section(contexts, monkeypatch):
+    scrape = pipeline.gather
+
+    def flaky(agent, date):
+        if agent.agent_id == "music-curator":
+            raise RuntimeError("SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET must be set")
+        return scrape(agent, date)
+
+    monkeypatch.setattr(pipeline, "gather", flaky)
+    entry = generate()
+    assert "music-releases" not in [s["id"] for s in entry["sections"]]
+    assert len(entry["sections"]) == 6
+
+
+def test_the_briefing_drops_links(contexts, monkeypatch):
+    ok = pipeline.run_agent
+
+    async def linked(agent, date, context=None, material=None):
+        if agent.gathers:
+            return AgentResult(f"Story [Outlet](https://news.example/{agent.agent_id}).")
+        return await ok(agent, date, context, material)
+
+    monkeypatch.setattr(pipeline, "run_agent", linked)
+    generate()
+    assert "Story Outlet." in contexts["synthesis-agent"]
+    assert "https://" not in contexts["synthesis-agent"]

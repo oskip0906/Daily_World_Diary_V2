@@ -10,13 +10,18 @@ from zoneinfo import ZoneInfo
 
 from . import pipeline, store
 from .agent import AgentResult
+from .sources import Item, Material
 
 log = logging.getLogger("diary")
 
 
-async def stub(agent, date, context=None) -> AgentResult:
-    sources = [{"title": "Example source", "url": "https://example.com"}] if agent.searches else []
+async def stub(agent, date, context=None, material=None) -> AgentResult:
+    sources = [{"title": "Example source", "url": "https://example.com"}] if agent.gathers else []
     return AgentResult(f"### {agent.section_title}\n\nStub text for {date}. **No model was called.**", sources)
+
+
+def stub_scrape(agent, date) -> Material:
+    return Material([Item("Example source", "https://example.com", "Example")])
 
 
 def date_arg(value: str) -> str:
@@ -30,11 +35,11 @@ def main(argv=None) -> int:
     parser.add_argument("--date", type=date_arg,
                         default=datetime.now(ZoneInfo("America/New_York")).date().isoformat())
     parser.add_argument("--force", action="store_true", help="overwrite an existing entry")
-    parser.add_argument("--dry-run", action="store_true", help="stub agents, validate, write nothing")
+    parser.add_argument("--dry-run", action="store_true", help="stub scrapers and agents, validate, write nothing")
     args = parser.parse_args(argv)
 
     if args.dry_run:
-        entry = asyncio.run(pipeline.generate(args.date, run=stub))
+        entry = asyncio.run(pipeline.generate(args.date, run=stub, scrape=stub_scrape))
         pipeline.check_contract(entry)
         print(json.dumps({"sections": [s["id"] for s in entry["sections"]], "metadata": entry["metadata"]}, indent=2))
         return 0
@@ -54,7 +59,6 @@ def main(argv=None) -> int:
         log.error("%s: every agent failed, nothing written", args.date)
         return 1
     store.write(entry, force=args.force)
-    store.write_prompts(pipeline.prompts_payload())
     log.info("%s: wrote %d sections, usage %s", args.date, len(entry["sections"]), entry["usage"])
     return 0
 

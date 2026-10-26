@@ -1,0 +1,113 @@
+{
+ "day_gainers": [
+  {
+   "symbol": "RHI",
+   "shortName": "Robert Half Inc.",
+   "regularMarketChangePercent": 21.7357,
+   "regularMarketPrice": 45.87,
+   "regularMarketTime": 1792785602
+  },
+  {
+   "symbol": "GMAB",
+   "shortName": "Genmab A/S",
+   "regularMarketChangePercent": 9.475002,
+   "regularMarketPrice": 43.79,
+   "regularMarketTime": 1792785601
+  },
+  {
+   "symbol": "NTSK",
+   "shortName": "Netskope, Inc.",
+   "regularMarketChangePercent": 9.369369,
+   "regularMarketPrice": 24.28,
+   "regularMarketTime": 1792785600
+  },
+  {
+   "symbol": "VG",
+   "shortName": "Venture Global, Inc.",
+   "regularMarketChangePercent": 9.28961,
+   "regularMarketPrice": 14.0,
+   "regularMarketTime": 1792785602
+  },
+  {
+   "symbol": "CART",
+   "shortName": "Maplebear Inc.",
+   "regularMarketChangePercent": 9.210524,
+   "regularMarketPrice": 56.44,
+   "regularMarketTime": 1792785601
+  }
+ ],
+ "day_losers": [
+  {
+   "symbol": "LKQ",
+   "shortName": "LKQ Corporation",
+   "regularMarketChangePercent": -22.474407,
+   "regularMarketPrice": 17.42,
+   "regularMarketTime": 1792785601
+  },
+  {
+   "symbol": "RGC",
+   "shortName": "Regencell Bioscience Holdings L",
+   "regularMarketChangePercent": -21.814478,
+   "regularMarketPrice": 7.67,
+   "regularMarketTime": 1792785600
+  },
+  {
+   "symbol": "CORT",
+   "shortName": "Corcept Therapeutics Incorporat",
+   "regularMarketChangePercent": -20.130232,
+   "regularMarketPrice": 85.86,
+   "regularMarketTime": 1792785601
+  },
+  {
+   "symbol": "TNGX",
+   "shortName": "Tango Therapeutics, Inc.",
+   "regularMarketChangePercent": -16.433943,
+   "regularMarketPrice": 23.34,
+   "regularMarketTime": 1792785600
+  },
+  {
+   "symbol": "BE",
+   "shortName": "Bloom Energy Corporation",
+   "regularMarketChangePercent": -11.2366,
+   "regularMarketPrice": 193.3,
+   "regularMarketTime": 1792785603
+  }
+ ],
+ "most_actives": [
+  {
+   "symbol": "SPCX",
+   "shortName": "Space Exploration Technologies ",
+   "regularMarketChangePercent": 1.8929226,
+   "regularMarketPrice": 147.49,
+   "regularMarketTime": 1792785600
+  },
+  {
+   "symbol": "T",
+   "shortName": "AT&T Inc.",
+   "regularMarketChangePercent": -7.95954,
+   "regularMarketPrice": 20.93,
+   "regularMarketTime": 1792785721
+  },
+  {
+   "symbol": "NU",
+   "shortName": "Nu Holdings Ltd.",
+   "regularMarketChangePercent": 2.91921,
+   "regularMarketPrice": 15.16,
+   "regularMarketTime": 1792785602
+  },
+  {
+   "symbol": "NOK",
+   "shortName": "Nokia Corporation Sponsored",
+   "regularMarketChangePercent": 3.2995,
+   "regularMarketPrice": 8.14,
+   "regularMarketTime": 1792785603
+  },
+  {
+   "symbol": "NVDA",
+   "shortName": "NVIDIA Corporation",
+   "regularMarketChangePercent": -0.58903915,
+   "regularMarketPrice": 210.96,
+   "regularMarketTime": 1792785600
+  }
+ ]
+}

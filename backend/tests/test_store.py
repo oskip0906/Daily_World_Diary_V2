@@ -33,9 +33,8 @@ def test_write_refuses_to_clobber_without_force():
 def test_list_dates_is_sorted_and_ignores_other_files(data_dir):
     for d in ("2026-10-24", "2026-10-22", "2026-10-23"):
         store.write(entry(d))
-    store.write_prompts({"prompts": []})
+    (data_dir / "notes.json").write_text("{}")
     assert store.list_dates() == ["2026-10-22", "2026-10-23", "2026-10-24"]
-    assert (data_dir / "prompts.json").exists()
 
 
 def test_bad_dates_never_reach_the_filesystem():

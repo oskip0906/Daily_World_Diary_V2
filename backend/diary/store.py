@@ -45,7 +45,3 @@ def read(date: str) -> dict | None:
 
 def list_dates() -> list[str]:
     return sorted(p.stem for p in DATA_DIR.glob("????-??-??.json"))
-
-
-def write_prompts(prompts: dict) -> None:
-    _atomic_write(DATA_DIR / "prompts.json", prompts)

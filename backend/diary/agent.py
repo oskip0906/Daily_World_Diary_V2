@@ -1,19 +1,21 @@
 """One OpenRouter call per agent -> (markdown, sources, usage)."""
 
 import os
+import re
 from dataclasses import dataclass, field
 from functools import cache
 
 from openai import AsyncOpenAI
 
 from .prompts import Agent
+from .sources import Item, Material
 
 MAX_TOKENS = 8000  # includes reasoning tokens; 4000 left some sections empty
 MAX_SOURCES = 5
-# OpenRouter runs the search server-side (Exa for non-native models) and returns url_citation annotations
-WEB_SEARCH = {"plugins": [{"id": "web", "max_results": MAX_SOURCES}]}
 FORMAT = ("Write in Markdown. Start headings at ### (the page already shows the section title). "
           "No preamble, no sign-off.")
+CITATION = re.compile(r"\s*\[(\d+(?:\s*,\s*\d+)*)\]")
+MODEL_LINK = re.compile(r"\[([^\]]+)\]\([^)]*\)")
 
 
 @dataclass
@@ -32,39 +34,60 @@ def model() -> str:
     return os.environ["OPENROUTER_MODEL"]
 
 
-def task(agent: Agent, date: str, context: str | None) -> str:
-    if context is None:
-        return (f"Write the {agent.section_title} section of Daily World Diary for {date}, covering the "
-                f"24 hours up to the morning of {date}. Report only events found in the search results. "
-                + FORMAT)
+def unlink(md: str) -> str:
+    return MODEL_LINK.sub(r"\1", md)
+
+
+def numbered(material: Material) -> str:
+    rows = [f"[{n}] {i.title} — {i.publisher}" + (f" ({i.detail})" if i.detail else "")
+            for n, i in enumerate(material.items, 1)]
+    return "\n\n".join(p for p in (material.data, "Numbered items:\n" + "\n".join(rows)) if p)
+
+
+def task(agent: Agent, date: str, context: str | None = None, material: Material | None = None) -> str:
+    if material is not None:
+        return (f"Write the {agent.section_title} section of Daily World Diary for {date}, covering the 24 hours "
+                f"up to the morning of {date}. Use only the material below; add no facts from elsewhere. "
+                f"Cite the numbered items you use as [n] right after the sentence they support. "
+                f"{FORMAT}\n\n{numbered(material)}")
     return (f"These are the {date} sections of Daily World Diary:\n\n{context}\n\n"
             f"Write the {agent.section_title} section from them. " + FORMAT)
 
 
-def harvest(message) -> list[dict]:
-    """Sources come only from the gateway's citations: the model never types a URL, so it can't invent one."""
-    out, seen = [], set()
-    for a in getattr(message, "annotations", None) or []:
-        c = getattr(a, "url_citation", a)  # Chat Completions nests it; Responses API is flat
-        url = getattr(c, "url", None)
-        if url and url.startswith(("http://", "https://")) and url not in seen:
-            seen.add(url)
-            out.append({"title": getattr(c, "title", None) or url, "url": url})
-    return out[:MAX_SOURCES]
+def cite(md: str, items: list[Item]) -> tuple[str, list[dict]]:
+    """[n] -> a link to scraped item n. The model never supplies a URL: links it typed itself are unlinked."""
+    cited = []
+
+    def link(m: re.Match) -> str:
+        links = []
+        for n in m.group(1).split(","):
+            i = int(n) - 1
+            if 0 <= i < len(items):
+                if items[i] not in cited:
+                    cited.append(items[i])
+                links.append(f"[{items[i].publisher}]({items[i].url})")
+        return " " + " ".join(links) if links else ""
+
+    md = CITATION.sub(link, unlink(md))
+    return md, [{"title": i.title, "url": i.url} for i in (cited or items)[:MAX_SOURCES]]
 
 
-async def run_agent(agent: Agent, date: str, context: str | None = None) -> AgentResult:
+async def run_agent(agent: Agent, date: str, context: str | None = None,
+                    material: Material | None = None) -> AgentResult:
     resp = await client().chat.completions.create(
         model=model(),
         messages=[{"role": "system", "content": agent.system_prompt},
-                  {"role": "user", "content": task(agent, date, context)}],
+                  {"role": "user", "content": task(agent, date, context, material)}],
         max_tokens=MAX_TOKENS,
         extra_headers={"X-Title": "Daily World Diary"},
         # reasoning tokens count against max_tokens; keep them small so the section itself fits
-        extra_body={"reasoning": {"effort": "low"}, **(WEB_SEARCH if agent.searches else {})},
+        extra_body={"reasoning": {"effort": "low"}},
     )
     message = resp.choices[0].message
     if not (message.content or "").strip():
         raise ValueError(f"{agent.agent_id} returned no content (finish_reason={resp.choices[0].finish_reason})")
+    md, sources = cite(message.content.strip(), material.items if material else [])
+    if material is not None:
+        md = material.ensure(md)
     usage = resp.usage.model_dump() if resp.usage else {}
-    return AgentResult(message.content.strip(), harvest(message), usage)
+    return AgentResult(md, sources, usage)
