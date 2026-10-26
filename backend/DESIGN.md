@@ -34,57 +34,61 @@ Two further facts from the frontend that shape the design:
 - `metadata.summary`, `metadata.title` and `metadata.generatedAt` are rendered in the page header;
   `title` is just `World Digest — {long date}`, no model needed.
 
-## 2. Shape: a CLI that writes files, plus a thin read API
+## 2. Shape: a scheduled CLI that commits JSON to the repo
 
 ```
-generate (once a day)                    read (every page view)
-  cron ──▶ python -m diary.generate        Next route ──▶ FastAPI ──▶ store ──▶ data/2026-10-25.json
-                   │                                                     ▲
-                   └────────── store.write ──────────────────────────────┘
+GitHub Action, 9am New York                                   push ──▶ site redeploys
+  python -m diary.generate ──▶ website/data/2026-10-25.json ──▶ git commit + push
+                                          ▲
+                        Next route handlers read these files (§9)
 ```
 
 Three deliberate calls, each with its reasoning:
 
 **No database.** Entries are write-once, one per day, read by date, ~50 KB each. That is a JSON
-file per day — `data/YYYY-MM-DD.json`. `dates` is a sorted glob; a read is `json.load`. 365 files a
-year, trivially backed up, diffable, and greppable. A DB would add migrations, a connection pool,
+file per day — `website/data/YYYY-MM-DD.json`, committed to the repo. `dates` is a sorted listing; a
+read is one file read. 365 files and ~18 MB a year, versioned by git, diffable, and greppable. A DB would add migrations, a connection pool,
 an ORM and a schema in a second language and buy nothing this workload needs. `store.py` is the
 seam: swap it for Postgres the day you need full-text search or a second concurrent writer.
 
-**No LangGraph.** The graph is "5 nodes in parallel, then 2, then assemble" — `asyncio.gather`
-plus two awaits, about 15 lines. LangGraph's value is checkpointing, retry policy and graph
-tooling; the one piece of that worth having here (don't re-pay for the 4 agents that succeeded
-when the 5th fails) is bought by caching each finished section to disk and skipping it on re-run,
-which is ~5 lines. *Note this contradicts the copy in `website/src/app/page.tsx`, which promises "a
-LangGraph-based backend" — either reword that line or tell me and I'll build the graph.* Adopt
-LangGraph when the pipeline grows conditional branches, human review steps, or mid-run streaming to
-the UI.
+**LangGraph orchestrates the agents.** The pipeline is a `StateGraph` (§5): the five searchers fan
+out from `START`, both synthesisers wait on all five, and `assemble` waits on both. This matches what
+the site copy in `website/src/app/page.tsx` already promises ("a LangGraph-based backend"), makes the
+dependency structure explicit instead of implied by `await` order, and leaves room for what LangGraph
+is good at when it is needed: conditional branches, checkpointed resume, human review steps, or
+streaming progress. Only `langgraph` itself is used. The model call stays on the raw `openai` SDK
+(§6), not `langchain-openai`, because `harvest` needs the response's `annotations` field in hand.
 
-**The CLI is the product; the API is 40 lines on top.** `python -m diary.generate --date X` writes
-a file. That keeps the hosting decision open: run the API as a service, or (zero infra) run the CLI
-in a GitHub Action, commit the JSON, and let Next read the files at build time. Same `store.py`
-either way.
+**The repo is the database; there is no Python server.** `python -m diary.generate --date X` writes
+a file, a GitHub Action runs it every morning and commits the result (§10), and the push redeploys
+the site. Nothing to host, nothing to keep running, no database credentials. The trade: a new entry
+appears after the redeploy (~1–2 min), and regenerating a day means re-running the Action, not
+clicking something on the site. If runtime regeneration or search is ever needed, put a database
+behind `store.py` and add a small read API then.
+
+Data lives under `website/` because the site is what reads it: any host that builds `website/` gets
+the files without reaching outside its root directory.
 
 ## 3. Layout
 
 ```
 backend/
-  pyproject.toml            # openai, fastapi, uvicorn, markdown, nh3, pytest
+  pyproject.toml            # langgraph, openai, markdown, nh3, pytest
   diary/
     __init__.py
     prompts.py              # the 7 agents: id, name, description, version, system prompt
     agent.py                # one OpenRouter call -> (markdown, sources)
     render.py               # markdown -> sanitized HTML
-    pipeline.py             # fan-out 5, fan-in 2, assemble DiaryEntry
-    store.py                # read / write / list_dates over data/*.json
+    pipeline.py             # LangGraph StateGraph: fan-out 5, fan-in 2, assemble DiaryEntry
+    store.py                # read / write / list_dates over website/data/*.json
     generate.py             # CLI entrypoint
-    api.py                  # FastAPI: 3 read endpoints
   tests/
     fixtures/               # recorded content blocks, no network
     test_render.py
     test_sources.py
     test_pipeline.py
-  data/                     # generated entries (gitignored, or committed in the static variant)
+website/data/               # generated entries, committed by the Action
+.github/workflows/daily-diary.yml
 ```
 
 ## 4. Prompt registry — one source of truth
@@ -109,7 +113,8 @@ class Agent:
 AGENTS: tuple[Agent, ...] = (...)   # the 7 above, prompt text lifted from the mock
 ```
 
-`/prompts` serializes `AGENTS` with `meta = {"totalAgents": len(AGENTS), "schemaVersion": "1.0.0"}`.
+`generate` serializes `AGENTS` to `website/data/prompts.json` (§9), which `/prompts` serves, with
+`meta = {"totalAgents": len(AGENTS), "schemaVersion": "1.0.0"}`.
 The pipeline iterates the same tuple. Adding an eighth agent is one entry and it shows up in the
 page, the TOC and the transparency panel at once.
 
@@ -121,27 +126,73 @@ nothing asks for yet.
 
 ## 5. Pipeline
 
-```python
-async def generate(date: str) -> DiaryEntry:
-    searchers = [a for a in AGENTS if a.searches]
-    synthesisers = [a for a in AGENTS if not a.searches]
+A LangGraph `StateGraph`, built from the same `AGENTS` tuple, so an eighth agent still costs one
+registry entry:
 
-    results = list(await asyncio.gather(*(run_agent(a, date) for a in searchers)))
-    briefing = "\n\n".join(f"## {a.section_title}\n{r.markdown}"
-                           for a, r in zip(searchers, results))
-    synth = list(await asyncio.gather(*(run_agent(a, date, context=briefing)
-                                        for a in synthesisers)))
-
-    return assemble(date, searchers + synthesisers, results + synth)
 ```
+        ┌─ political-analyst ─────┐
+        ├─ financial-analyst ─────┤     ┌─ synthesis-agent ─┐
+START ──┼─ entertainment-curator ─┼──▶──┤                   ├──▶ assemble ──▶ END
+        ├─ music-curator ─────────┤     └─ outlook-agent ───┘
+        └─ stock-analyst ─────────┘
+```
+
+```python
+class State(TypedDict):
+    date: str
+    results: Annotated[dict[str, AgentResult], operator.or_]  # parallel nodes merge, not overwrite
+    entry: dict
+
+def agent_node(agent: Agent):
+    async def node(state: State) -> dict:
+        context = None if agent.searches else briefing(state["results"])
+        try:
+            result = await run_agent(agent, state["date"], context=context)
+        except Exception:
+            log.warning("agent %s failed; section omitted", agent.agent_id, exc_info=True)
+            return {"results": {}}
+        return {"results": {agent.agent_id: result}}
+    return node
+
+def build():
+    searchers = [a.agent_id for a in AGENTS if a.searches]
+    synthesisers = [a.agent_id for a in AGENTS if not a.searches]
+
+    g = StateGraph(State)
+    for a in AGENTS:
+        g.add_node(a.agent_id, agent_node(a))
+    g.add_node("assemble", lambda s: {"entry": assemble(s["date"], s["results"])})
+
+    for a in searchers:
+        g.add_edge(START, a)
+    for s in synthesisers:
+        g.add_edge(searchers, s)          # list source = wait for all five
+    g.add_edge(synthesisers, "assemble")
+    g.add_edge("assemble", END)
+    return g.compile()
+
+async def generate(date: str) -> DiaryEntry:
+    return (await build().ainvoke({"date": date, "results": {}}))["entry"]
+```
+
+`briefing` joins whichever searcher results made it into state as `## {section_title}\n{markdown}`,
+in `order`. The `operator.or_` reducer is what lets five nodes write `results` in the same step.
+Without it LangGraph rejects concurrent writes to one key.
 
 `assemble` renders each markdown blob to HTML, sorts by `order`, drops `sources` when empty, and
 builds `metadata`. `metadata.summary` is the **first paragraph of the `synthesis-agent` output,
 stripped to plain text** — its prompt already instructs "Start with brief executive summary (2–3
 sentences)", so this costs no extra call and no extra schema.
 
-One agent failing should not lose the other six: `gather(..., return_exceptions=True)`, and a
-failed section is omitted with a logged warning. An entry missing a section still renders.
+One agent failing should not lose the other six. That is why the node catches its own exception
+instead of using LangGraph's `RetryPolicy`: an exception that escapes a node, even after retries,
+aborts the whole run. A failed section is omitted with a logged warning, and an entry missing a
+section still renders. Transient errors are already retried below the graph: the `openai` client
+retries 429/5xx itself, and OpenRouter's `models` fallback (§6) covers a provider outage.
+
+No checkpointer. Each Action run starts from a clean checkout, so a saved checkpoint would not
+survive to the next run anyway. Add `langgraph-checkpoint-sqlite` if resuming a half-finished run
+locally ever becomes worth it.
 
 ## 6. The OpenRouter call
 
@@ -158,10 +209,17 @@ resp = await client.chat.completions.create(
     model=MODEL,                                    # from env, see below
     messages=[{"role": "system", "content": agent.system_prompt},
               {"role": "user", "content": task}],
-    tools=WEB_SEARCH if agent.searches else None,
-    max_tokens=4000,
+    max_tokens=8000,
+    extra_headers={"X-Title": "Daily World Diary"},
+    extra_body={"reasoning": {"effort": "low"},
+                **({"plugins": [{"id": "web", "max_results": 5}]} if agent.searches else {})},
 )
 ```
+
+`max_tokens` covers reasoning tokens as well as the answer. With the first model tried
+(`deepseek/deepseek-v4-flash-0731`), a 4000 cap let reasoning consume the whole budget on one
+section, which came back empty. Low reasoning effort plus an 8000 cap fixed it. A response with no
+content raises, so the section is omitted (§5) instead of shipping blank.
 
 **The model is one env var (`OPENROUTER_MODEL`), not a constant per agent.** Ids are namespaced
 `vendor/model`; pick from `GET /api/v1/models`. I'm deliberately not writing an id here — the
@@ -170,12 +228,11 @@ criteria that matter: it accepts ~30K-token inputs, follows "emit Markdown, 300�
 returns search annotations (see below). Set `OPENROUTER_MODEL` once and all seven agents move
 together; override per agent later only if one of them actually needs it.
 
-Two things OpenRouter gives you for free, each one line of request body, both worth taking:
+`X-Title` gives attribution on OpenRouter's rankings. It's cosmetic, but free.
 
-- `models: ["primary", "fallback"]` — automatic failover when a provider is down. Without it, one
-  provider outage loses the whole day's entry.
-- `extra_headers={"HTTP-Referer": ..., "X-Title": "Daily World Diary"}` — attribution on
-  OpenRouter's rankings. Cosmetic, but free.
+Not built yet: `models: ["primary", "fallback"]` for failover to a *different model*. OpenRouter
+already fails over between providers serving the same model, so this only matters if a whole model
+goes down. Add it when that happens.
 
 ### Sources, and the one thing that genuinely changed
 
@@ -206,21 +263,16 @@ instead of breaking. But if you want citations on every section, it is a **model
 code fix**: pick a model where OpenRouter itself runs the search (Exa is its default engine, Parallel
 is selectable) rather than one that searches provider-side.
 
-### Verify these two before writing `agent.py`
+### Verified against OpenRouter
 
-I could not reach `openrouter.ai` from this session — the environment's network policy denies the
-host — so the two items below come from secondary sources and are the only parts of this design I
-have not confirmed first-hand. Both are a single docs page to check, not open design questions:
-
-1. **How to invoke search.** The older `plugins: [{"id": "web", "max_results": 5}]` form appears to
-   be deprecated in favour of a server tool in the `tools` array (`openrouter:web_search`), which
-   lets the model decide when and how often to search rather than searching once per request. Confirm
-   which form is current, and whether the gateway runs the search loop itself or hands tool calls back
-   for a client-side loop. If it hands them back, `run_agent` needs the standard
-   `while finish_reason == "tool_calls"` loop, capped at ~5 turns.
-2. **The annotation field names** for the Chat Completions path, against the `harvest` sketch above.
-
-Nothing else in this document depends on either answer.
+1. **Search invocation.** The `web` plugin is current, not deprecated. OpenRouter runs the search
+   server-side, once per request, and injects the results, so no client-side tool loop is needed.
+   Models without native search use Exa, at about $0.007 per request. The newer
+   `openrouter:web_search` server tool lets the model decide when and how often to search. It's an
+   option for later if one search per section proves too thin.
+2. **Annotation shape.** A recorded real response (`tests/fixtures/message_with_annotations.json`)
+   has `annotations[].url_citation.{url, title, content, start_index, end_index}`, which matches
+   `harvest`. `start_index` and `end_index` were 0, so citations can't be placed inline from them.
 
 **Prompt caching stays out.** It was already worth nothing here — seven short system prompts sharing
 no prefix, run once a day — and on OpenRouter it is provider-specific on top of that. Not worth the
@@ -254,8 +306,11 @@ schemes only, which kills `javascript:` links.
 ```python
 def write(entry: dict, *, force: bool = False) -> None   # refuses to clobber unless force
 def read(date: str) -> dict | None
-def list_dates() -> list[str]                            # sorted glob of data/*.json
+def list_dates() -> list[str]                            # sorted glob of website/data/????-??-??.json
 ```
+
+The data directory is fixed relative to the package (`Path(__file__).parents[2] / "website" / "data"`),
+so the CLI writes to the same place whether it runs locally or in the Action.
 
 Writes go to a temp file then `os.replace`, so a crash mid-write cannot leave a half-written entry
 that the API would serve. `force` guards the real failure mode: re-running the CLI for a date that
@@ -265,46 +320,117 @@ Each entry also records the `model` it was generated with and the summed `usage`
 calls, alongside the `promptVersions` from §4. Three extra keys the frontend ignores, and they turn
 §11 from guesswork into a number you can read off disk.
 
-## 9. API and the frontend change
+## 9. The frontend change
 
-FastAPI, three endpoints mirroring §1 byte for byte:
+There is no Python API. The three Next route handlers stop generating mocks and read the committed
+files instead, deleting ~700 lines of mock. Response shapes stay exactly as in §1:
 
 ```
-GET /diary/dates     -> {"data": store.list_dates()}
-GET /diary/{date}    -> {"data": entry} | 400 bad format | 404 unknown date
-GET /prompts         -> {"prompts": [...], "meta": {...}}
+GET /api/diary/dates   -> {"data": sorted YYYY-MM-DD file names in website/data (not prompts.json)}
+GET /api/diary/{date}  -> {"data": parsed file} | 400 bad format | 404 no file
+GET /api/prompts       -> {"prompts": [...], "meta": {...}}   from website/data/prompts.json
 ```
-
-The date path parameter is validated against `^\d{4}-\d{2}-\d{2}$` before touching the store — it
-reaches a filesystem path, so this is the boundary where path traversal gets stopped.
-
-On the frontend, each of the three route files collapses to a proxy, deleting ~700 lines of mock:
 
 ```typescript
-export async function GET() {
-  const res = await fetch(`${process.env.DIARY_API_URL}/diary/dates`, { cache: "no-store" });
-  return NextResponse.json(await res.json(), { status: res.status });
+// website/src/app/api/diary/[date]/route.ts — the existing format check stays first
+if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+  return NextResponse.json({ error: "Invalid date format. Use YYYY-MM-DD" }, { status: 400 });
+}
+try {
+  const file = path.join(process.cwd(), "data", `${date}.json`);
+  return NextResponse.json({ data: JSON.parse(await readFile(file, "utf8")) });
+} catch {
+  return NextResponse.json({ error: "No diary entry found for this date" }, { status: 404 });
 }
 ```
 
-No CORS, no change to `page.tsx`/`[date]/page.tsx`, no change to the types. The pages keep fetching
-their own `/api/*` as they do today.
+The date regex is the boundary where path traversal is stopped: the param reaches a filesystem path,
+so it is checked before `path.join`, never after.
 
-## 10. Running it
+**Prompts.** With no Python server, `/prompts` can't serialize `AGENTS` at request time, so
+`generate` also writes `website/data/prompts.json` from the registry on every run. `prompts.py`
+is still the one source of truth (§4); the JSON is its build output.
 
-One scheduled call a day, after markets close:
+**Serverless bundling.** Next only ships files into a serverless function when it can trace them,
+and a `readFile` with a computed name is not reliably traced. One line in `next.config.ts` makes it
+certain: `outputFileTracingIncludes: { "/api/**": ["./data/**"] }`.
 
+No change to `page.tsx`/`[date]/page.tsx` or the types: the pages keep fetching their own `/api/*`
+as they do today. They build that URL from `NEXT_PUBLIC_BASE_URL` (falling back to
+`http://localhost:3000`), so **that env var must be set to the site's public URL in production**.
+
+## 10. Running it — a GitHub Action at 9am New York time
+
+The entry for a date is generated that morning, so it covers the previous day's news and the
+previous session's market close.
+
+GitHub cron runs in **UTC only**, and 9am New York is 13:00 UTC in summer (EDT) and 14:00 UTC in
+winter (EST). So the workflow schedules both and lets a guard decide: it generates only when it is
+at least 9am in New York **and** today's file does not exist yet. In summer the 13:00 run
+generates and the 14:00 run finds the file and exits; in winter the 13:00 run is 8am and skips. The
+same guard absorbs GitHub's scheduling delays, which are commonly several minutes and can be longer
+under load.
+
+```yaml
+# .github/workflows/daily-diary.yml
+name: daily-diary
+on:
+  schedule:
+    - cron: "0 13 * * *"   # 9am EDT
+    - cron: "0 14 * * *"   # 9am EST
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "YYYY-MM-DD (default: today in New York)"
+        required: false
+permissions:
+  contents: write
+concurrency: daily-diary    # never two runs writing at once
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: when
+        env:
+          INPUT_DATE: ${{ inputs.date }}
+        run: |
+          d="${INPUT_DATE:-$(TZ=America/New_York date +%F)}"
+          echo "date=$d" >> "$GITHUB_OUTPUT"
+          if [ -z "$INPUT_DATE" ] && [ "$(TZ=America/New_York date +%-H)" -lt 9 ]; then
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f "website/data/$d.json" ]; then echo "skip=1" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.when.outputs.skip != '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: steps.when.outputs.skip != '1'
+        working-directory: backend
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          pip install .
+          python -m diary.generate --date "${{ steps.when.outputs.date }}"
+      - if: steps.when.outputs.skip != '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add website/data
+          git commit -m "diary: ${{ steps.when.outputs.date }}"
+          git push
 ```
-0 23 * * *   python -m diary.generate --date $(date -I)
-```
 
-A GitHub Action with `OPENROUTER_API_KEY` in secrets is enough; nothing here needs a queue or a
-worker pool. `--date` also gives you backfill (`for d in ...; do generate --date $d; done`) and
-regeneration without a deploy.
+Repo settings it needs: `OPENROUTER_API_KEY` as an Actions **secret**, `OPENROUTER_MODEL` as an
+Actions **variable**. Nothing else: no queue, no worker pool, no server.
 
-If you'd rather host nothing: run that Action, commit `data/*.json`, and have the Next routes read
-the files off disk instead of proxying. You lose runtime regeneration, you gain static generation
-and a free CDN. `store.py` is unchanged; only the route bodies differ.
+`workflow_dispatch` covers the rest from the Actions tab. A date input backfills that day, and
+skips it if a file already exists, matching `store.write`'s refuse-to-clobber rule (§8). To
+regenerate a day, delete its file in a commit, then dispatch.
+
+Every commit redeploys the site, and the pushed entry is live once that build finishes.
 
 ## 11. Cost — measured, not estimated
 
@@ -338,21 +464,19 @@ No test calls the API. Three things carry real logic and get covered:
   (`url_citation`) and flat shapes, URL dedupe, a non-`http` scheme, and — the case that will
   actually happen — a response with **no `annotations` field at all**, which must yield `[]` rather
   than raise.
-- `test_pipeline.py` — `assemble()` against stub agent output produces section ids, orders and
-  metadata matching `website/src/types/index.ts`, and a failed agent omits one section without
-  breaking the entry.
+- `test_pipeline.py` — runs the compiled graph with `run_agent` monkeypatched to a stub. It checks
+  that both synthesisers receive a briefing containing all five searcher sections (the fan-in
+  works), that section ids, orders and metadata match `website/src/types/index.ts`, and that a stub
+  that raises omits one section without breaking the entry.
 
 Plus `generate --dry-run`, which runs the assembly path on stub text and validates the result
 against the contract — the cheap self-check that the frontend will not break.
 
 ## 13. Open choices
 
-Everything above is decided and implementable. Three things are yours to call:
+Everything above is decided and implementable. Storage is settled: JSON committed to the repo by
+a daily Action (§2, §10), and orchestration is LangGraph (§5). One thing is yours to call:
 
 1. **Which model** `OPENROUTER_MODEL` names (§6). One env var, and it decides both cost and whether
-   you get citations.
-2. **LangGraph or not** (§2). I recommend not, and the site copy currently promises it.
-3. **Hosted API or commit-to-repo** (§10). Only the three Next route bodies differ.
-
-And two facts to confirm against OpenRouter's docs before `agent.py` gets written — the search
-invocation form and the annotation field names, both listed at the end of §6.
+   you get citations. The first runs used `deepseek/deepseek-v4-flash-0731`: about $0.035 per day,
+   with citations on every searching section.

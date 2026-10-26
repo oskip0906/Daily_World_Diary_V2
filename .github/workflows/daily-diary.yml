@@ -1,0 +1,49 @@
+name: daily-diary
+on:
+  schedule:
+    - cron: "0 13 * * *"   # 9am EDT
+    - cron: "0 14 * * *"   # 9am EST
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "YYYY-MM-DD (default: today in New York)"
+        required: false
+permissions:
+  contents: write
+concurrency: daily-diary    # never two runs writing at once
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # GitHub cron is UTC-only: both schedules fire, and this guard lets exactly one generate
+      - id: when
+        env:
+          INPUT_DATE: ${{ inputs.date }}
+        run: |
+          d="${INPUT_DATE:-$(TZ=America/New_York date +%F)}"
+          echo "date=$d" >> "$GITHUB_OUTPUT"
+          if [ -z "$INPUT_DATE" ] && [ "$(TZ=America/New_York date +%-H)" -lt 9 ]; then
+            echo "skip=1" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f "website/data/$d.json" ]; then echo "skip=1" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.when.outputs.skip != '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - if: steps.when.outputs.skip != '1'
+        working-directory: backend
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL }}
+        run: |
+          pip install .
+          python -m diary.generate --date "${{ steps.when.outputs.date }}"
+      - if: steps.when.outputs.skip != '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add website/data
+          git commit -m "diary: ${{ steps.when.outputs.date }}"
+          git push
