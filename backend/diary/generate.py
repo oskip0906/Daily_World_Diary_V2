@@ -44,7 +44,11 @@ def main(argv=None) -> int:
         log.error("%s already exists; pass --force to regenerate", args.date)
         return 1
 
-    entry = asyncio.run(pipeline.generate(args.date))
+    try:
+        entry = asyncio.run(pipeline.generate(args.date))
+    except pipeline.AccountError as e:
+        log.error("%s: %s. Nothing written; re-run once the key works.", args.date, e)
+        return 1
     pipeline.check_contract(entry)
     if not entry["sections"]:
         log.error("%s: every agent failed, nothing written", args.date)

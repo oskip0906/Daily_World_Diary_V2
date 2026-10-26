@@ -56,3 +56,15 @@ def test_an_entry_with_no_sections_is_not_written(calls, monkeypatch):
 def test_bad_date_is_rejected(calls):
     with pytest.raises(SystemExit):
         generate.main(["--date", "yesterday"])
+
+
+def test_an_account_error_writes_nothing_and_fails(calls, monkeypatch, account_error):
+    # the 2026-10-26 shape: searchers succeed, then the key's spend cap rejects the synthesisers
+    async def capped(agent, date, context=None):
+        if not agent.searches:
+            raise account_error(403)
+        return AgentResult(f"Body of {agent.agent_id}.")
+
+    monkeypatch.setattr(pipeline, "run_agent", capped)
+    assert generate.main(["--date", "2026-10-24"]) == 1
+    assert store.read("2026-10-24") is None

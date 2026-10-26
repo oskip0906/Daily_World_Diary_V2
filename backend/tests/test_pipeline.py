@@ -113,3 +113,19 @@ def test_a_leading_heading_repeating_the_section_title_is_dropped(contexts, monk
     outlook = next(s for s in entry["sections"] if s["id"] == "outlook")
     assert "<h3>Outlook</h3>" not in outlook["content"]
     assert entry["metadata"]["summary"] == "Calm day."
+
+
+
+@pytest.mark.parametrize("status", [401, 402, 403])
+def test_an_account_error_aborts_the_run_instead_of_dropping_sections(contexts, monkeypatch, account_error, status):
+    # 2026-10-26: the key hit its daily cap mid-run and a 5-of-7 entry was written as if it were fine
+    ok = pipeline.run_agent
+
+    async def capped(agent, date, context=None):
+        if not agent.searches:
+            raise account_error(status)
+        return await ok(agent, date, context)
+
+    monkeypatch.setattr(pipeline, "run_agent", capped)
+    with pytest.raises(pipeline.AccountError):
+        generate()

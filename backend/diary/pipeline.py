@@ -7,6 +7,7 @@ import re
 from datetime import UTC, date as Date, datetime
 from typing import Annotated, TypedDict
 
+import openai
 from langgraph.graph import END, START, StateGraph
 
 from .agent import AgentResult, model, run_agent
@@ -16,6 +17,12 @@ from .render import render, to_text
 log = logging.getLogger(__name__)
 BY_ID = {a.agent_id: a for a in AGENTS}
 USAGE_KEYS = ("prompt_tokens", "completion_tokens", "cost")
+ACCOUNT_STATUSES = {401, 402, 403}  # bad key, out of credits, key spend cap
+
+
+class AccountError(RuntimeError):
+    """OpenRouter rejected the key itself. Every later call fails too, so the run stops rather than
+    writing a partial entry that the write-once store and the Action's skip-if-exists would keep forever."""
 
 
 class State(TypedDict):
@@ -34,7 +41,9 @@ def agent_node(agent: Agent, run=None):
         context = None if agent.searches else briefing(state["results"])
         try:
             result = await (run or run_agent)(agent, state["date"], context=context)
-        except Exception:
+        except Exception as e:
+            if isinstance(e, openai.APIStatusError) and e.status_code in ACCOUNT_STATUSES:
+                raise AccountError(f"OpenRouter rejected the key ({e.status_code}): {e.message}") from e
             # an exception escaping a node aborts the whole graph; one bad agent must not lose six sections
             log.warning("agent %s failed; section omitted", agent.agent_id, exc_info=True)
             return {"results": {}}

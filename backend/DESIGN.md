@@ -190,6 +190,13 @@ aborts the whole run. A failed section is omitted with a logged warning, and an 
 section still renders. Transient errors are already retried below the graph: the `openai` client
 retries 429/5xx itself, and OpenRouter's `models` fallback (§6) covers a provider outage.
 
+The exception is an **account error**: a 401, 402 or 403 means OpenRouter rejected the key itself
+(bad key, no credits, or the key's spend cap). Every later call would fail the same way, so the node
+raises `AccountError` and the whole run stops with nothing written. Otherwise a capped key mid-run
+writes a partial entry, and because the store is write-once and the Action skips dates that already
+have a file, that partial entry would stay forever. This happened on 2026-10-26 with a $0.50/day key
+cap. Stopping leaves the date empty, so the next run fills it.
+
 No checkpointer. Each Action run starts from a clean checkout, so a saved checkpoint would not
 survive to the next run anyway. Add `langgraph-checkpoint-sqlite` if resuming a half-finished run
 locally ever becomes worth it.
