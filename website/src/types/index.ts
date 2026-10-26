@@ -28,23 +28,6 @@ export interface SourceLink {
   url: string;
 }
 
-export interface AgentPrompt {
-  agentId: string;
-  agentName: string;
-  description: string;
-  systemPrompt: string;
-  version: string;
-  lastUpdated: string; // ISO 8601 timestamp
-}
-
-export interface PromptsResponse {
-  prompts: AgentPrompt[];
-  meta: {
-    totalAgents: number;
-    schemaVersion: string;
-  };
-}
-
 /**
  * Calendar-related types
  */
