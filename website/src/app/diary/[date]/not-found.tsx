@@ -16,7 +16,7 @@ export default function NotFound() {
           generated yet, or the date may be invalid.
         </p>
         <Link
-          href="/"
+          href="/calendar"
           className="inline-flex items-center justify-center px-6 py-3 bg-accent dark:bg-dark-accent text-white rounded-lg hover:bg-accent-hover dark:hover:bg-dark-accent-hover transition-colors"
         >
           ← Return to Calendar

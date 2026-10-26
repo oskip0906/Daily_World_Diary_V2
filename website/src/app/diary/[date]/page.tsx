@@ -1,16 +1,15 @@
 /**
  * Dynamic diary entry page
- * Displays full diary entry with sections, TOC, and prompt transparency
- * Server component that fetches diary data and prompts on load
+ * Displays full diary entry with sections and TOC
+ * Server component that fetches diary data on load
  */
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DiaryLayout } from "@/components/DiaryLayout";
 import { DiarySection } from "@/components/DiarySection";
-import { PromptViewer } from "@/components/PromptViewer";
 import { formatDateLong } from "@/lib/date-utils";
-import { DiaryEntry, PromptsResponse, TocItem } from "@/types";
+import { DiaryEntry, TocItem } from "@/types";
 
 interface DiaryPageProps {
   params: Promise<{ date: string }>;
@@ -38,35 +37,10 @@ async function getDiaryEntry(date: string): Promise<DiaryEntry | null> {
   }
 }
 
-/**
- * Fetch agent prompts from API
- */
-async function getPrompts(): Promise<PromptsResponse | null> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-    const response = await fetch(`${baseUrl}/api/prompts`, {
-      cache: "force-cache", // Prompts change infrequently
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching prompts:", error);
-    return null;
-  }
-}
-
 export default async function DiaryPage({ params }: DiaryPageProps) {
   const { date } = await params;
 
-  // Fetch diary entry and prompts in parallel
-  const [diaryEntry, promptsResponse] = await Promise.all([
-    getDiaryEntry(date),
-    getPrompts(),
-  ]);
+  const diaryEntry = await getDiaryEntry(date);
 
   // Handle missing entry
   if (!diaryEntry) {
@@ -80,15 +54,6 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
     order: section.order,
   }));
 
-  // Add prompts section to TOC if available
-  if (promptsResponse) {
-    tocItems.push({
-      id: "prompts",
-      title: "Prompt Transparency",
-      order: 999,
-    });
-  }
-
   return (
     <>
       {/* Page header with metadata */}
@@ -96,7 +61,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-3xl">
             <Link
-              href="/"
+              href="/calendar"
               className="inline-flex items-center text-sm text-accent dark:text-dark-accent hover:text-accent-hover dark:hover:text-dark-accent-hover mb-4"
             >
               ← Back to Calendar
@@ -129,11 +94,6 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
           .map((section) => (
             <DiarySection key={section.id} section={section} />
           ))}
-
-        {/* Prompt transparency section */}
-        {promptsResponse && (
-          <PromptViewer prompts={promptsResponse.prompts} />
-        )}
       </DiaryLayout>
     </>
   );

@@ -1,6 +1,7 @@
-"""LangGraph pipeline: five searchers fan out from START, both synthesisers wait on all five,
-assemble waits on both."""
+"""LangGraph pipeline: five gatherers (scrape, then write) fan out from START, both synthesisers
+wait on all five, assemble waits on both."""
 
+import asyncio
 import logging
 import operator
 import re
@@ -10,9 +11,10 @@ from typing import Annotated, TypedDict
 import openai
 from langgraph.graph import END, START, StateGraph
 
-from .agent import AgentResult, model, run_agent
+from .agent import AgentResult, model, run_agent, unlink
 from .prompts import AGENTS, Agent
 from .render import render, to_text
+from .sources import gather
 
 log = logging.getLogger(__name__)
 BY_ID = {a.agent_id: a for a in AGENTS}
@@ -32,15 +34,20 @@ class State(TypedDict):
 
 
 def briefing(results: dict[str, AgentResult]) -> str:
-    done = sorted((BY_ID[i] for i in results if BY_ID[i].searches), key=lambda a: a.order)
-    return "\n\n".join(f"## {a.section_title}\n{results[a.agent_id].markdown}" for a in done)
+    done = sorted((BY_ID[i] for i in results if BY_ID[i].gathers), key=lambda a: a.order)
+    return "\n\n".join(f"## {a.section_title}\n{unlink(results[a.agent_id].markdown)}" for a in done)
 
 
-def agent_node(agent: Agent, run=None):
+def agent_node(agent: Agent, run=None, scrape=None):
     async def node(state: State) -> dict:
-        context = None if agent.searches else briefing(state["results"])
+        date = state["date"]
         try:
-            result = await (run or run_agent)(agent, state["date"], context=context)
+            if agent.gathers:
+                # scrapers are blocking I/O; a thread keeps the five gatherers parallel
+                material = await asyncio.to_thread(scrape or gather, agent, date)
+                result = await (run or run_agent)(agent, date, material=material)
+            else:
+                result = await (run or run_agent)(agent, date, context=briefing(state["results"]))
         except Exception as e:
             if isinstance(e, openai.APIStatusError) and e.status_code in ACCOUNT_STATUSES:
                 raise AccountError(f"OpenRouter rejected the key ({e.status_code}): {e.message}") from e
@@ -90,27 +97,27 @@ def assemble(date: str, results: dict[str, AgentResult]) -> dict:
     }
 
 
-def build(run=None):
-    searchers = [a.agent_id for a in AGENTS if a.searches]
-    synthesisers = [a.agent_id for a in AGENTS if not a.searches]
+def build(run=None, scrape=None):
+    gatherers = [a.agent_id for a in AGENTS if a.gathers]
+    synthesisers = [a.agent_id for a in AGENTS if not a.gathers]
 
     g = StateGraph(State)
     for a in AGENTS:
-        g.add_node(a.agent_id, agent_node(a, run))
+        g.add_node(a.agent_id, agent_node(a, run, scrape))
     g.add_node("assemble", lambda s: {"entry": assemble(s["date"], s["results"])})
 
-    for a in searchers:
+    for a in gatherers:
         g.add_edge(START, a)
     for s in synthesisers:
-        g.add_edge(searchers, s)  # list source = wait for all five
+        g.add_edge(gatherers, s)  # list source = wait for all five
     g.add_edge(synthesisers, "assemble")
     g.add_edge("assemble", END)
     return g.compile()
 
 
-async def generate(date: str, run=None) -> dict:
-    """`run` replaces the model call (for --dry-run); default is the real OpenRouter call."""
-    return (await build(run).ainvoke({"date": date, "results": {}}))["entry"]
+async def generate(date: str, run=None, scrape=None) -> dict:
+    """`run` and `scrape` replace the model call and the scrapers (for --dry-run)."""
+    return (await build(run, scrape).ainvoke({"date": date, "results": {}}))["entry"]
 
 
 def check_contract(entry: dict) -> None:
@@ -129,11 +136,3 @@ def check_contract(entry: dict) -> None:
         for src in s.get("sources", []):
             need(src.get("url", "").startswith(("http://", "https://")) and src.get("title"), "source")
 
-
-def prompts_payload() -> dict:
-    return {
-        "prompts": [{"agentId": a.agent_id, "agentName": a.agent_name, "description": a.description,
-                     "systemPrompt": a.system_prompt, "version": a.version, "lastUpdated": a.last_updated}
-                    for a in AGENTS],
-        "meta": {"totalAgents": len(AGENTS), "schemaVersion": "1.0.0"},
-    }

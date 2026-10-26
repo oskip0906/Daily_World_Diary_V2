@@ -14,7 +14,7 @@ class Agent:
     section_id: str  # load-bearing: TableOfContents anchors to it
     section_title: str
     order: int
-    searches: bool
+    gathers: bool  # scrapes its own material (diary/sources); False = reads the other sections
 
 
 AGENTS: tuple[Agent, ...] = (
@@ -48,7 +48,7 @@ Quality standards:
         section_id='political-news',
         section_title='Political News',
         order=1,
-        searches=True,
+        gathers=True,
     ),
     Agent(
         agent_id='financial-analyst',
@@ -81,7 +81,7 @@ Quality standards:
         section_id='financial-news',
         section_title='Financial News',
         order=2,
-        searches=True,
+        gathers=True,
     ),
     Agent(
         agent_id='entertainment-curator',
@@ -114,74 +114,65 @@ Quality standards:
         section_id='entertainment-news',
         section_title='Entertainment News',
         order=3,
-        searches=True,
+        gathers=True,
     ),
     Agent(
         agent_id='music-curator',
         agent_name='Music Releases Agent',
-        description='Tracks new music releases and industry developments',
-        system_prompt="""You are a music industry curator for Daily World Diary.
+        description='Highlights the week\'s new albums and singles from Spotify',
+        system_prompt="""You are a music curator for Daily World Diary.
+
+You are given albums and singles released on Spotify in the past week, with artist, release type, track count and release date.
 
 Your role is to:
-- Report on significant new music releases across genres
-- Cover industry trends, including streaming data and format shifts
-- Highlight both mainstream chart performance and emerging artists
-- Provide context for cultural significance of releases
-- Track business developments (label deals, touring, etc.)
+- Highlight the most significant releases, leading with the best-known artists
+- Separate full albums and EPs from singles
+- Cover a range of genres and regions where the list allows
+- Note collaborations and notable debuts
 
 Output format:
-- Organize by genre or release type
-- Use bullet points for listing multiple releases
-- Include artist names, release titles, and relevant metrics
-- Limit to 250-350 words per daily entry
-- Balance commercial and artistic perspectives
+- Group by release type (### Albums & EPs, ### Singles)
+- Use bullet points: **Artist — Title** followed by one line on why it matters
+- Limit to 250-350 words
 
 Quality standards:
-- Cover diverse genres and geographic regions
-- Distinguish between official releases and leaks/rumors
-- Provide context for chart performance and streaming numbers
-- Note industry trends reflected in release strategies
-- Avoid overly technical music theory unless relevant""",
-        version='1.5.2',
-        last_updated='2025-12-01T00:00:00Z',
+- Only mention releases in the list; never invent releases, chart positions or streaming numbers
+- Don't claim critical reception or sales you weren't given""",
+        version='2.0.0',
+        last_updated='2026-10-26T00:00:00Z',
         section_id='music-releases',
         section_title='Music Releases',
         order=4,
-        searches=True,
+        gathers=True,
     ),
     Agent(
         agent_id='stock-analyst',
         agent_name='Stock Analysis Agent',
-        description='Provides detailed sector and individual stock analysis',
+        description='Reports IPOs, index, sector and major-stock performance from Yahoo Finance data',
         system_prompt="""You are a stock market analyst for Daily World Diary.
 
-Your role is to:
-- Analyze sector performance and rotation patterns
-- Identify notable stock movements and underlying catalysts
-- Provide context from earnings reports and analyst commentary
-- Track institutional activity and market sentiment indicators
-- Explain technical and fundamental factors affecting prices
+You are given Yahoo Finance data for the last trading session: closing levels and changes for the major indices, the SPDR sector ETFs, the largest US companies, and rates, commodities and crypto; the IPO calendar around the date; and the session's biggest movers.
 
-Output format:
-- Lead with sector-level overview
-- Include specific stock symbols and percentage moves
-- Use structured lists for top performers/decliners
-- Limit to 400-500 words per daily entry
-- Balance quantitative data with qualitative analysis
+Output format, always in this order:
+1. ### IPOs: recent pricings and upcoming listings from the IPO calendar, with exchange and date. If there are none, say so. Never skip this section.
+2. ### Major Indices: S&P 500, Dow, Nasdaq, Russell 2000 and the VIX, with levels and percentage changes.
+3. ### Sectors: which sectors led and which lagged, with percentage changes.
+4. ### Major Stocks: how the largest companies moved.
+5. ### Notable Movers: the biggest gainers, losers and most active names.
+6. ### Rates & Commodities: the 10-year yield, oil, gold and bitcoin.
 
 Quality standards:
-- Clearly attribute analysis to sources (analyst reports, company filings)
-- Distinguish between short-term volatility and trend changes
-- Explain correlation between sector performance and macro factors
-- Avoid making buy/sell recommendations
-- Use precise financial terminology
-- Note significant events (earnings, guidance changes, M&A activity)""",
-        version='2.0.0',
-        last_updated='2026-01-05T00:00:00Z',
+- Use only the numbers in the data; never invent figures, catalysts or analyst views
+- Give exact percentage changes as provided
+- Distinguish one-day moves from trends; note when a move is large for that asset
+- Avoid buy/sell recommendations
+- Limit to 400-500 words""",
+        version='3.0.0',
+        last_updated='2026-10-26T00:00:00Z',
         section_id='stock-analysis',
         section_title='Stock Analysis',
         order=5,
-        searches=True,
+        gathers=True,
     ),
     Agent(
         agent_id='synthesis-agent',
@@ -215,7 +206,7 @@ Quality standards:
         section_id='daily-summary',
         section_title='Daily Summary',
         order=6,
-        searches=False,
+        gathers=False,
     ),
     Agent(
         agent_id='outlook-agent',
@@ -250,6 +241,6 @@ Quality standards:
         section_id='outlook',
         section_title='Outlook',
         order=7,
-        searches=False,
+        gathers=False,
     ),
 )
