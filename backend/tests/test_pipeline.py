@@ -247,3 +247,21 @@ def test_the_briefing_drops_links(contexts, monkeypatch):
     generate()
     assert "Story Outlet." in contexts["synthesis-agent"]
     assert "https://" not in contexts["synthesis-agent"]
+
+
+def test_a_redesign_reads_the_stories_back_from_the_stored_html():
+    entry = {"metadata": {"date": "2026-10-24", "title": "T", "summary": "S"},
+             "sections": [{"id": "outlook", "title": "Outlook", "order": 7, "content": "<ul><li>Fed on Wednesday</li></ul>"},
+                          {"id": "political-news", "title": "Political News", "order": 1,
+                           "content": '<p>Lead.</p>\n<h3>One</h3>\n<p>Text <a href="https://x.example">Reuters</a>.</p>'
+                                      "\n<h3>Two</h3>\n<p>More.</p>"}]}
+    seen = []
+
+    async def design(*args):
+        seen.append(args)
+        return None, {}
+
+    asyncio.run(pipeline.redesign(entry, design))
+    # one ### per card, as the page splits them, in page order, citations dropped
+    assert seen == [("2026-10-24", "T", "S", [("political-news", "Political News", "Lead.\n\n### One\n\nText.\n\n### Two\n\nMore."),
+                                              ("outlook", "Outlook", "Fed on Wednesday")])]

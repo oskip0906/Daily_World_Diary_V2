@@ -61,6 +61,9 @@ export function TableOfContents({ items }: TableOfContentsProps) {
         <a className="diary-toc-top" href="#top">
           ↑ Back to top
         </a>
+        <a className="diary-toc-bottom" href="#bottom">
+          ↓ Go to bottom
+        </a>
       </nav>
     </aside>
   );

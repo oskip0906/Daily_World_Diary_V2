@@ -1,12 +1,15 @@
-"""The day's look: one last model call takes the vibe from the day's summary and designs its page.
+"""The day's look: one last model call reads the day's news and designs its page.
 
-It picks a header style and, for every section, one of ten card components and one of six layouts,
-then writes the CSS on top. The CSS is injected into the page as-is, so it is treated as untrusted
-input: parsed, scoped to .diary-page, stripped of anything that loads a resource, and checked for
-readable contrast. To keep days from looking alike, the model sees the last few days' designs and
-the picks must vary. A rejected design goes back to the model with the reason, up to MAX_RETRIES
-times."""
+It names the day's mood, which fixes the colour family (a bad day is dark and red, a tragic one
+blue, a good one light and green, a tense one amber, a neutral one white or black), picks a header
+style and, for every section, one of ten card components and one of six layouts, then writes the
+CSS on top. The CSS is injected into the page as-is, so it is treated as untrusted input: parsed,
+scoped to .diary-page, stripped of anything that loads a resource, and checked for readable
+contrast and for colours that match the mood. To keep days from looking alike, the model sees the
+last few days' designs and the picks must vary. A rejected design goes back to the model with the
+reason, up to MAX_RETRIES times."""
 
+import colorsys
 import logging
 import re
 import textwrap
@@ -57,6 +60,34 @@ LAYOUTS = {
 }
 MIN_CARDS, MIN_LAYOUTS = 3, 2  # distinct choices per page, so a page is never one card repeated
 
+# The day's mood sets the palette, so a reader can tell what kind of day it was at a glance.
+# mood -> (when it applies, its colours, hue family or None for no colour, "light"/"dark"/None)
+MOODS = {
+    "good": ("the news is mostly good: relief, progress, recoveries, rallies, breakthroughs, celebrations",
+             "a light page tinted green with a deep green accent, e.g. --paper #e1f2e5, --accent #11652f",
+             "green", "light"),
+    "bad": ("things are going badly: escalating conflict, crises, crashes, scandals, failures",
+            "a dark page tinted red with a bright red accent, e.g. --paper #1c0b0d, --accent #ff5c5c",
+            "red", "dark"),
+    "tragic": ("loss of life dominates: deadly disasters or attacks, the human toll of a war, a death "
+               "that grieves many",
+               "a page tinted blue, dark or light, with a blue accent, e.g. --paper #0c1626, --accent #7db4ff, "
+               "or --paper #e7eef8, --accent #1f4f99", "blue", None),
+    "tense": ("the world is on edge and waiting: standoffs, deadlines, pending votes or verdicts, "
+              "markets bracing",
+              "a page tinted amber, light or dark, with an amber or orange accent, e.g. --paper #fbf0d9, "
+              "--accent #8f4000, or --paper #1d1607, --accent #ffad33", "amber", None),
+    "neutral": ("no clear direction: a quiet day, or good and bad news that cancel out",
+                "a plain white or near-black page with no tint and an uncoloured (black, white or grey) "
+                "accent, e.g. --paper #fafafa, --accent #1a1a1a, or --paper #111111, --accent #ededed",
+                None, None),
+}
+HUES = {"red": (340, 15), "amber": (18, 50), "green": (80, 165), "blue": (190, 250)}  # degrees; red wraps past 0
+# how far apart a colour's strongest and weakest RGB channels (0-255) are: its amount of colour
+TINTED, STRONG = 16, 80  # --paper/--paper-alt at least TINTED, --accent at least STRONG, in the mood's hue
+GREY_PAPER, GREY_ACCENT = 6, 24  # neutral: at most this much colour
+LIGHT, DARK = 0.7, 0.05  # relative luminance of --paper and --paper-alt on light and dark pages
+
 COLOR_TOKENS = ("--paper", "--paper-alt", "--ink", "--ink-soft", "--muted", "--accent", "--accent-ink", "--rule")
 FONT_TOKENS = ("--font-display", "--font-body", "--font-ui")
 # (foreground, background, minimum WCAG contrast ratio)
@@ -75,6 +106,7 @@ UNIVERSAL = re.compile(r"\*(::?[\w-]+)*$")  # a selector whose last part is *
 SCOPE = re.compile(r"^\.diary-page(?![\w-])")
 FONT_VAR = re.compile(r"var\((--ff-[\w-]+)\)")
 HEADER = re.compile(r"^/\*\s*theme:\s*(?P<name>[^|*]{2,60}?)\s*\|\s*(?P<note>[^*]{10,240}?)\s*\*/\s*"
+                    r"/\*\s*mood:\s*(?P<mood>[^*]+?)\s*\*/\s*"
                     r"/\*\s*layout:\s*(?P<layout>[^*]+?)\s*\*/")
 FENCE = re.compile(r"^```[a-z]*\s*\n(?P<css>.*?)\n```$", re.S)
 GLOBALS_CSS = Path(__file__).resolve().parents[2] / "website" / "src" / "app" / "globals.css"
@@ -115,6 +147,7 @@ PAGE = """<div class="diary-page" id="top" data-date="2026-10-26" data-hero="spl
           <!-- one per section; .is-active marks the section being read -->
         </ol>
         <a class="diary-toc-top" href="#top">↑ Back to top</a>
+        <a class="diary-toc-bottom" href="#bottom">↓ Go to bottom</a>
       </nav>
     </aside>
     <article class="diary-article">
@@ -143,8 +176,10 @@ PAGE = """<div class="diary-page" id="top" data-date="2026-10-26" data-hero="spl
               <div class="diary-card-body diary-prose">
                 <!-- the story text: only h4, p, ul, ol, li, strong, em, blockquote, code, pre, hr, br and a.
                      Each a is a citation: a publisher name linking to the article, right after the sentence it supports.
-                     In music-releases each Spotify citation is instead a player:
-                     <iframe class="diary-embed" height="152"> (Spotify's own widget: style its box, not its inside) -->
+                     In music-releases each Spotify citation is instead Spotify's own player:
+                     <iframe class="diary-embed" height="152">. Players stand alone: a section with players
+                     always renders plain cards, and the site strips any border, background, shadow or side
+                     padding from a player and from the card, list and item holding it. Don't style them. -->
               </div>
             </div>
           </article>
@@ -153,7 +188,7 @@ PAGE = """<div class="diary-page" id="top" data-date="2026-10-26" data-hero="spl
       <!-- more sections -->
     </article>
   </div>
-  <footer class="diary-footer">
+  <footer class="diary-footer" id="bottom">
     <a class="diary-footer-prev" href="/diary/2026-10-25">← October 25</a>
     <span class="diary-footer-meta">Generated Oct 26, 2026, 9:04 AM ET</span>
     <a class="diary-footer-next" href="/diary/2026-10-27">October 27 →</a>
@@ -175,17 +210,30 @@ def base_stylesheet() -> str:
 
 @cache
 def prompt() -> str:
-    return f"""You are the art director of Daily World Diary, a news digest written fresh every morning. Every day's page gets its own visual identity, and you design it: you take the day's vibe from its summary, decide how the page is built, and write the stylesheet that makes it look like that day and no other.
+    return f"""You are the art director of Daily World Diary, a news digest written fresh every morning. Every day's page gets its own visual identity, and you design it: you read the day's news, name its mood, decide how the page is built, and write the stylesheet that makes it look like that day and no other.
 
 # The brief
-- The design comes from the summary. The 2-3 sentence summary under the headline is the whole day in brief: read it for the day's vibe, the feeling of the day as a whole rather than of any one story, and let that vibe decide the palette, the type, the ornament and the overall structure. A reader who has just read the summary should feel the page matches it.
-- The rest of the edition is for fitting the components to the material (how many stories each section has, how long they are, which carry figures), not for setting the mood.
-- Every day must look clearly different. Readers open this page every morning, so two days that look alike are a failure even if both are handsome. You'll be shown the last few days' designs; change the structure as well as the colours, not just one of them.
-- Be bold in expressing that vibe. The base stylesheet below is a neutral scaffold, not a style to imitate: a design that keeps its warm paper, its serif headline and its plain columns has not done the job. Push hard on at least two of: the palette (dark, saturated, monochrome, high-key...), the type (scale, weight, case, tracking), the structure (header style, card mix, layouts) and the ornament (rules, borders, shadows, gradients, rotated labels, oversized numerals, patterns made with gradients).
-- Translate the mood instead of illustrating it literally. No flag colours for an election, no automatic red for a bad day. Ask what the day felt like (tense, relieved, feverish, uncertain, celebratory, sombre) and design that.
+- The day's news decides the colours. Before anything else, decide the day's mood: read the summary under the headline (the whole day in brief), skim the edition, and pick the one mood below that a reader would use to sum up the day. The mood fixes the page's colour family, and it must be unmistakable: someone glancing at the page should know at once whether it was a good, bad, tragic, tense or quiet day.
+- The type, the ornament and the structure carry the rest of the day's feeling (feverish, sombre, relieved, defiant, uncertain...) within that colour family.
+- The rest of the edition is for fitting the components to the material (how many stories each section has, how long they are, which carry figures).
+- Every day must look clearly different. Readers open this page every morning, so two days that look alike are a failure even if both are handsome. You'll be shown the last few days' designs and their moods. Days with the same mood share a colour family, so make them differ in everything else: the header style, the card mix, the layouts, the type, the ornament and the exact shades.
+- Be bold. The base stylesheet below is a neutral scaffold, not a style to imitate: a design that keeps its warm paper, its serif headline and its plain columns has not done the job. Push the mood's colours as far as they go, and push hard on at least one of: the type (scale, weight, case, tracking), the structure (header style, card mix, layouts) and the ornament (rules, borders, shadows, gradients, rotated labels, oversized numerals, patterns made with gradients).
 - Reading still comes first. Body text stays comfortable on a 360px phone and on a wide monitor: 16-20px, line-height 1.5-1.8, and no more than about 75 characters per line.
 - Headlines must fit a 360px phone: the longest word of the headline ("OCTOBER", "DIGEST") has to fit on one line, so with wide or uppercase display fonts keep the phone size around 2.25-2.75rem and scale up from there.
 - Motion is optional and restrained: at most one subtle entrance or hover effect, nothing that loops forever over text.
+
+# The mood and its colours (checked)
+Pick exactly one mood:
+{chr(10).join(f"- {mood}: {when}. Colours: {colours}." for mood, (when, colours, _, _) in MOODS.items())}
+
+If one story dominates the day, it sets the mood. When good and bad news cancel out, the day is neutral, or tense if the world is waiting on something.
+
+Your palette is checked against the mood. A colour's amount of colour is how far apart its strongest and weakest RGB channels are: #2a1013 has 26 (42 vs 16), #161414 has 2. Its hue must fall in the family: {", ".join(f"{family} {lo}-{hi}°" for family, (lo, hi) in HUES.items())}.
+- good, bad, tragic and tense: --paper and --paper-alt are both tinted in the mood's hue (at least {TINTED}), and --accent is a strong colour of that hue (at least {STRONG}).
+- good pages are light: --paper and --paper-alt at relative luminance {LIGHT} or more. bad pages are dark: {DARK} or less.
+- neutral pages have no colour: --paper and --paper-alt at most {GREY_PAPER} (white or near-black), --accent at most {GREY_ACCENT} (black, white or grey).
+- Every set of tokens you write is checked, so don't add a dark-mode (prefers-color-scheme) version: the mood decides light or dark.
+Keep the other colours you use (gradients, ornaments, borders, section tints) in the same family, so nothing contradicts the mood.
 
 # How the page is built
 You choose the structure from these components; the site renders them, and your CSS styles them.
@@ -199,7 +247,7 @@ Card components (one per section; every story in that section uses it):
 Layouts (one per section; how its cards are arranged):
 {_listing(LAYOUTS)}
 
-Match the choice to the material: a section with many short stories suits a grid, a rail or masonry; one with two long stories suits stack or split; market sections suit stat cards. You're told how many stories each section has.
+Match the choice to the material: a section with many short stories suits a grid, a rail or masonry; one with two long stories suits stack or split; market sections suit stat cards. You're told how many stories each section has. Spotify players stand alone, never boxed, so music-releases always renders plain cards: pick plain for it.
 
 Variety rules (checked):
 - Use at least {MIN_CARDS} different card components and at least {MIN_LAYOUTS} different layouts on the page.
@@ -239,7 +287,7 @@ Colour tokens must be 6-digit hex values such as #1f2a44. These contrast ratios 
 - --accent-ink on --accent: at least 4.5:1
 Set these tokens only in .diary-page rules; redefining them on any other element is rejected.
 Aim for 5:1 or more on the 4.5:1 pairs so you aren't caught by rounding, and remember --paper-alt is usually the harder background.
-If you also redefine tokens inside a media query (a dark-mode version, for example), the redefined set is checked the same way. You may use other colours elsewhere (gradients, ornaments, borders, section tints). Text you colour with anything other than a token is checked too: it needs 4.5:1 on --paper and --paper-alt in every colour scheme it applies to, so a colour picked for light paper must be redefined for a dark scheme (put it in a custom property on .diary-page and redefine that in the media query). A rule that sets its own background is exempt, so make sure its text reads on that background yourself.
+If you also redefine tokens inside a media query, the redefined set is checked the same way, for contrast and for the mood. You may use other colours elsewhere (gradients, ornaments, borders, section tints), in the mood's family. Text you colour with anything other than a token is checked too: it needs 4.5:1 on --paper and --paper-alt in every colour scheme it applies to, so a colour picked for light paper must be redefined for a dark scheme (put it in a custom property on .diary-page and redefine that in the media query). A rule that sets its own background is exempt, so make sure its text reads on that background yourself.
 Citation links can be long: never stop them wrapping.
 Don't set colours with a universal selector (e.g. `.diary-hero *`): it outranks your own, more specific rules for the elements inside.
 
@@ -248,8 +296,9 @@ These fonts are loaded. Use them only through their variables, always with a gen
 No other fonts are available.
 
 # Hard rules: a design that breaks any of them is rejected
-1. It starts with exactly these two comments:
+1. It starts with exactly these three comments:
    /* theme: <name, 2-5 words> | <one sentence of 10-200 characters on how the design reflects the day> */
+   /* mood: <{"|".join(MOODS)}> */
    /* layout: hero=<header style>; <section id>=<card>/<layout>; <section id>=<card>/<layout>; ... */
    The layout comment names every section on the page, e.g. `hero=poster; political-news=banner/grid-2; financial-news=stat/grid-3`. Readers see the theme name and sentence on the page, so write them for readers, not for a developer.
 2. Every selector starts with .diary-page, e.g. `.diary-page .diary-title` or `.diary-page [data-card="stat"] .diary-card-figure`.
@@ -260,7 +309,7 @@ No other fonts are available.
 7. Under {MAX_CSS:,} characters in total.
 
 # Output
-Reply with the two comments followed by the CSS: no Markdown fences, no explanation before or after."""
+Reply with the three comments followed by the CSS: no Markdown fences, no explanation before or after."""
 
 
 def stories(md: str) -> int:
@@ -281,8 +330,8 @@ def describe(day: str, theme: dict) -> str:
     fonts = ", ".join(f"{t} {m[1]}" for t in ("--font-display", "--font-body")
                       if (m := FONT_VAR.search(tokens.get(t, ""))))
     picks = "; ".join(f"{sid}={p['card']}/{p['layout']}" for sid, p in theme.get("sections", {}).items())
-    parts = [f'{day} "{theme["name"]}": {theme["note"]}', f"header {theme.get('hero', 'classic')}",
-             palette, fonts, picks]
+    parts = [f'{day} "{theme["name"]}": {theme["note"]}', theme.get("mood") and f"mood {theme['mood']}",
+             f"header {theme.get('hero', 'classic')}", palette, fonts, picks]
     return "- " + " | ".join(p for p in parts if p)
 
 
@@ -307,12 +356,13 @@ def context(date: str, title: str, summary: str, sections: list[tuple[str, str, 
     past = "\n".join(describe(day, theme) for day, theme in history) or "- none yet"
     body = "\n\n".join(f"## {title_}\n\n{md}" for _, title_, md in sections)
     return (f"Design the page for {d:%A}, {d:%B} {d.day}, {d.year}.\n\n"
-            f"Headline: {title}\n\nSummary shown under the headline (design the page's vibe from this): {summary}\n\n"
+            f"Headline: {title}\n\nSummary shown under the headline (the day in brief: decide the mood from it): "
+            f"{summary}\n\n"
             f"Sections on the page, in order (use these ids in the layout comment):\n{listing}\n\n"
             f"The most recent designs, newest first. Today's must look clearly different from all of them, "
             f"and its header style and --font-display must differ from the first one:\n{past}\n\n"
-            f"The full edition follows, for choosing each section's card and layout; the vibe comes from "
-            f"the summary above.\n\n{body}")
+            f"The full edition follows, for weighing the mood and for choosing each section's card and "
+            f"layout.\n\n{body}")
 
 
 def _luminance(hex_: str) -> float:
@@ -470,8 +520,12 @@ def validate(raw: str, section_ids: list[str], previous: dict | None = None) -> 
         raise ValueError('the stylesheet contains "<" or a backslash, which are not allowed')
     header = HEADER.match(css)
     if not header:
-        raise ValueError("the reply must start with /* theme: <name> | <one sentence> */ "
-                         "followed by /* layout: hero=...; <section id>=<card>/<layout>; ... */")
+        raise ValueError("the reply must start with /* theme: <name> | <one sentence> */, then "
+                         f"/* mood: <{'|'.join(MOODS)}> */, then "
+                         "/* layout: hero=...; <section id>=<card>/<layout>; ... */")
+    mood = header["mood"].lower()
+    if mood not in MOODS:
+        raise ValueError(f"the mood must be one of {', '.join(MOODS)}, got {header['mood']!r}")
     hero, sections = _layout(header["layout"], section_ids)
 
     tokens: dict[str, str] = {}
@@ -492,6 +546,9 @@ def validate(raw: str, section_ids: list[str], previous: dict | None = None) -> 
     for where, values in variants:
         _check_colors({**tokens, **values}, f" inside {where}")
     _check_literals(literals, tokens, variants)
+    _check_mood(mood, tokens, "")
+    for where, values in variants:
+        _check_mood(mood, {**tokens, **values}, f" inside {where}")
 
     if previous:
         if hero == previous.get("hero", "classic"):
@@ -504,7 +561,7 @@ def validate(raw: str, section_ids: list[str], previous: dict | None = None) -> 
         today_font, last_font = (FONT_VAR.search(t.get("--font-display", "")) for t in (tokens, before))
         if today_font and last_font and today_font[1] == last_font[1]:
             raise ValueError(f"the previous day also used {today_font[1]} for --font-display; pick another")
-    return {"name": header["name"].strip(), "note": header["note"].strip(), "hero": hero,
+    return {"name": header["name"].strip(), "note": header["note"].strip(), "mood": mood, "hero": hero,
             "sections": sections, "css": css}
 
 
@@ -528,6 +585,37 @@ def _check_literals(literals: list, tokens: dict, variants: list) -> None:
                     raise ValueError(f"{selector} sets color {value}, which is {ratio:.2f}:1 on {bg}{label}; "
                                      "text needs 4.5:1 on every background and colour scheme. Use a token, "
                                      "or a colour that works in each scheme")
+
+
+def _colour(hex_: str) -> tuple[float, int]:
+    """(hue in degrees, amount of colour: how far apart the strongest and weakest RGB channels are)"""
+    r, g, b = (int(hex_[i:i + 2], 16) for i in (1, 3, 5))
+    return colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)[0] * 360, max(r, g, b) - min(r, g, b)
+
+
+def _check_mood(mood: str, tokens: dict, where: str) -> None:
+    """The mood's colours: --paper and --paper-alt tinted in its hue and --accent strongly in it, or
+    no colour at all for neutral, and light or dark pages where the mood says so."""
+    _, _, family, shade = MOODS[mood]
+    wrong = []
+    for t in ("--paper", "--paper-alt", "--accent"):
+        hue, amount = _colour(tokens[t])
+        if family is None:
+            limit = GREY_ACCENT if t == "--accent" else GREY_PAPER
+            if amount > limit:
+                wrong.append(f"{t} {tokens[t]} has {amount} of colour, at most {limit} allowed")
+        else:
+            lo, hi = HUES[family]
+            need = STRONG if t == "--accent" else TINTED
+            if amount < need or not (lo <= hue <= hi if lo < hi else hue >= lo or hue <= hi):
+                wrong.append(f"{t} {tokens[t]} is hue {hue:.0f}° with {amount} of colour; {family} needs "
+                             f"{lo}-{hi}° and at least {need}")
+        lum = _luminance(tokens[t])
+        if t != "--accent" and (shade == "light" and lum < LIGHT or shade == "dark" and lum > DARK):
+            wrong.append(f"{t} {tokens[t]} has luminance {lum:.2f}, but a {mood} page is {shade} "
+                         f"(light: at least {LIGHT}, dark: at most {DARK})")
+    if wrong:
+        raise ValueError(f"the colours don't match the {mood} mood{where}: " + "; ".join(wrong))
 
 
 def _check_colors(tokens: dict, where: str) -> None:

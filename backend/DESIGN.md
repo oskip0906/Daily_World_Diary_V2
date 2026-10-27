@@ -94,6 +94,7 @@ backend/
     fixtures/               # recorded Google News feeds and Yahoo responses; no network in tests
 website/data/               # generated entries, committed by the Action
 .github/workflows/daily-diary.yml
+.github/workflows/redesign.yml  # by hand: re-run only the design step on existing entries
 ```
 
 ## 4. Agent registry
@@ -177,8 +178,19 @@ cap. Stopping leaves the date empty, so the next run fills it.
 ## 5a. The design step: a page design per day
 
 After both synthesisers, one more model call reads the finished page (headline, summary, every
-section's markdown) and designs that day's page. The vibe (palette, type, ornament) comes from the
-summary; the sections only decide which components fit their stories. It picks the structure from components the site
+section's markdown) and designs that day's page. First it names the day's **mood** from the news,
+and the mood fixes the colours, so a reader can tell what kind of day it was at a glance:
+
+| mood | when | colours (checked) |
+|---|---|---|
+| `good` | relief, progress, rallies, breakthroughs | light page tinted green, green accent |
+| `bad` | escalating conflict, crises, crashes, scandals | dark page tinted red, red accent |
+| `tragic` | loss of life dominates | page tinted blue (light or dark), blue accent |
+| `tense` | standoffs, deadlines, pending votes, markets bracing | page tinted amber, amber or orange accent |
+| `neutral` | a quiet day, or news that cancels out | plain white or near-black, uncoloured accent |
+
+The type, ornament and structure carry the rest of the day's feeling inside that colour family, and
+the sections decide which components fit their stories. It picks the structure from components the site
 implements, then writes CSS on top:
 
 - a **header style**: `classic`, `centered`, `split`, `poster`;
@@ -187,9 +199,9 @@ implements, then writes CSS on top:
 - per section, one of six **layouts** for its cards (`stack`, `grid-2`, `grid-3`, `feature`,
   `masonry`, `rail`).
 
-The picks arrive as a comment, `/* layout: hero=poster; political-news=banner/grid-2; ... */`, right
-after the `/* theme: name | note */` comment. The entry stores
-`theme: {name, note, hero, sections: {id: {card, layout}}, css}`; the page shows the name and note
+The picks arrive as comments after the `/* theme: name | note */` one: `/* mood: bad */`, then
+`/* layout: hero=poster; political-news=banner/grid-2; ... */`. The entry stores
+`theme: {name, note, mood, hero, sections: {id: {card, layout}}, css}`; the page shows the name and note
 under the summary. `HEROES`, `CARDS` and `LAYOUTS` in `design.py` describe each component to the
 model and must match `StoryCard.tsx`, `DiarySection.tsx` and `globals.css`.
 
@@ -207,7 +219,7 @@ stylesheet, the first themes produced text the same colour as the background the
 
 **The CSS is untrusted.** It is injected into the page raw, so `validate()` parses it with `tinycss2`
 and rejects it unless:
-- it opens with `/* theme: <name> | <note> */`;
+- it opens with `/* theme: <name> | <note> */`, `/* mood: ... */` and `/* layout: ... */`;
 - every selector starts with `.diary-page`;
 - nothing loads a resource: no `url()`, `image-set()`, `@import`, `@font-face`, and no `<` or
   backslash anywhere (no breaking out of `<style>`, no escape tricks);
@@ -216,7 +228,13 @@ and rejects it unless:
 - nothing hides content or uses `position: fixed`;
 - a plain `.diary-page` rule sets all eleven tokens, the colour tokens are hex, and they meet WCAG
   contrast on both `--paper` and `--paper-alt`. A `.diary-page` rule inside `@media` (a dark mode)
-  is checked the same way, merged over the base tokens.
+  is checked the same way, merged over the base tokens;
+- the colours match the mood. A colour's "amount of colour" is how far apart its strongest and
+  weakest RGB channels are (0-255). For good, bad, tragic and tense, `--paper` and `--paper-alt`
+  need at least 16 in the mood's hue and `--accent` at least 80 (hues: red 340-15°, amber 18-50°,
+  green 80-165°, blue 190-250°); good pages are light (luminance 0.7+), bad ones dark (0.05 or less).
+  Neutral allows at most 6 on the papers and 24 on the accent. Variants are held to the same mood,
+  so a good day can't turn dark in dark mode.
 
 **Retries.** A rejected stylesheet, a reply cut off at the token limit, or a provider error goes back
 for another attempt, at most `MAX_RETRIES = 5` after the first. A rejection is sent back with its
@@ -284,6 +302,11 @@ The music section cites each release as a link to its `open.spotify.com/album|tr
 `embedSpotify` in `StoryCard.tsx` turns each such link into Spotify's embed iframe. The iframe `src`
 is rebuilt from the type keyword and the 22-character id the regex captured, so no other part of the
 model's output reaches it.
+
+Players stand alone: Spotify's own widget straight on the page, never framed, boxed or indented. A
+section with players always renders plain cards (`page.tsx`), and `globals.css` strips any border,
+background, shadow or side padding from a player and from the card, list and item holding it with
+layered `!important`, which beats any theme, past or future. The design prompt says so too.
 
 No checkpointer. Each Action run starts from a clean checkout, so a saved checkpoint would not
 survive to the next run anyway.
@@ -420,10 +443,11 @@ The entry for a date is generated that morning, so it covers the previous day's 
 previous session's market close.
 
 GitHub cron runs in **UTC only**, and 9am New York is 13:00 UTC in summer (EDT) and 14:00 UTC in
-winter (EST). So `.github/workflows/daily-diary.yml` schedules both and lets a guard decide: it
-generates only when it is at least 9am in New York **and** today's file does not exist yet. In summer
-the 13:00 run generates and the 14:00 run finds the file and exits; in winter the 13:00 run is 8am and
-skips. The same guard absorbs GitHub's scheduling delays.
+winter (EST). So `.github/workflows/daily-diary.yml` schedules both, at 17 past (GitHub drops
+scheduled runs at the top of the hour under load; 2026-10-27's never fired), and lets a guard decide:
+it generates only when it is at least 9am in New York **and** today's file does not exist yet. In
+summer the 13:17 run generates and the 14:17 run finds the file and exits; in winter the 13:17 run is
+8am and skips. The same guard absorbs GitHub's scheduling delays.
 
 Repo settings it needs: secrets `OPENROUTER_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`,
 and the variable `OPENROUTER_MODEL`. Google News and Yahoo need no keys.
@@ -433,6 +457,11 @@ skips it if a file already exists, matching `store.write`'s refuse-to-clobber ru
 regenerate a day, delete its file in a commit, then dispatch. Backfills are best-effort for news
 (the dated search feed) and music (Spotify only lists the past two weeks); stock data is exact for
 any past date.
+
+To change only the look, dispatch `.github/workflows/redesign.yml`. It runs
+`python -m diary.generate --redesign [DATE ...]` (every entry when no date is given), which re-runs
+the design step oldest first, so each day sees the one before, and keeps the text. The sections are
+read back from the stored HTML. A day whose design fails keeps its old theme.
 
 Every commit redeploys the site, and the pushed entry is live once that build finishes.
 

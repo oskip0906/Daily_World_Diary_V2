@@ -10,7 +10,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DiarySection, LAYOUTS } from "@/components/DiarySection";
-import { CARDS } from "@/components/StoryCard";
+import { CARDS, hasPlayers } from "@/components/StoryCard";
 import { TableOfContents } from "@/components/TableOfContents";
 import { formatDateLong, parseDate } from "@/lib/date-utils";
 import { getAvailableDates, getDiaryEntry } from "@/lib/api";
@@ -56,10 +56,11 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
   const theme = diaryEntry.theme && !diaryEntry.theme.css.includes("<") ? diaryEntry.theme : null;
   // the picks are data: anything unknown falls back to the base design's choice
   const hero = theme?.hero && HEROES.includes(theme.hero) ? theme.hero : "classic";
-  const picks = (id: string) => {
+  const picks = (id: string, content: string) => {
     const pick = theme?.sections?.[id];
     return {
-      card: pick && CARDS.includes(pick.card) ? pick.card : "plain",
+      // Spotify players stand alone, so their cards are never boxes (globals.css strips the rest)
+      card: pick && CARDS.includes(pick.card) && !hasPlayers(content) ? pick.card : "plain",
       layout: pick && LAYOUTS.includes(pick.layout) ? pick.layout : "stack",
     };
   };
@@ -95,13 +96,13 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
               section={section}
               number={i + 1}
               threads={diaryEntry.threads ?? []}
-              {...picks(section.id)}
+              {...picks(section.id, section.content)}
             />
           ))}
         </article>
       </div>
 
-      <footer className="diary-footer">
+      <footer className="diary-footer" id="bottom">
         {prev ? (
           <Link className="diary-footer-prev" href={`/diary/${prev}`}>
             ← {monthDay(prev)}

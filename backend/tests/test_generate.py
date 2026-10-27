@@ -77,3 +77,28 @@ def test_an_account_error_writes_nothing_and_fails(calls, monkeypatch, account_e
     monkeypatch.setattr(pipeline, "run_agent", capped)
     assert generate.main(["--date", "2026-10-24"]) == 1
     assert store.read("2026-10-24") is None
+
+
+def test_redesign_replaces_only_the_theme(calls, monkeypatch):
+    generate.main(["--date", "2026-10-24"])
+    before = store.read("2026-10-24")
+
+    async def design(date, title, summary, sections):
+        return {"name": "New Look", "note": "A redesign.", "mood": "bad", "hero": "poster", "sections": {},
+                "css": ".diary-page {}"}, {"cost": 0.01}
+
+    monkeypatch.setattr(pipeline, "run_design", design)
+    assert generate.main(["--redesign"]) == 0
+    after = store.read("2026-10-24")
+    assert after["theme"]["name"] == "New Look"
+    assert after["sections"] == before["sections"] and after["metadata"] == before["metadata"]
+    assert after["usage"]["cost"] == pytest.approx(before["usage"]["cost"] + 0.01)
+
+
+def test_a_failed_redesign_leaves_the_entry_as_it_was(calls):
+    generate.main(["--date", "2026-10-24"])
+    before = store.read("2026-10-24")
+    # 10-24's design fails (the fixture's designer returns none); 10-25 has no entry
+    assert generate.main(["--redesign", "2026-10-24", "2026-10-25"]) == 1
+    assert store.read("2026-10-24") == before
+    assert store.read("2026-10-25") is None

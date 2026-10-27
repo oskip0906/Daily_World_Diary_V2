@@ -1,4 +1,4 @@
-"""CLI: python -m diary.generate [--date YYYY-MM-DD] [--force] [--dry-run]"""
+"""CLI: python -m diary.generate [--date YYYY-MM-DD] [--force] [--dry-run] | --redesign [YYYY-MM-DD ...]"""
 
 import argparse
 import asyncio
@@ -37,13 +37,37 @@ def date_arg(value: str) -> str:
     return value
 
 
+def redesign(dates: list[str]) -> int:
+    """Only the design step again, oldest first so each day sees the one before. The text is kept,
+    and a day whose design fails keeps the theme it had."""
+    failed = 0
+    for date in sorted(dates):
+        entry = store.read(date)
+        theme, usage = asyncio.run(pipeline.redesign(entry)) if entry else (None, {})
+        if not theme:
+            log.error("%s: %s; left as it was", date, "no valid design" if entry else "no entry")
+            failed += 1
+            continue
+        entry["theme"] = theme
+        entry["usage"] = {k: (entry["usage"].get(k) or 0) + (usage.get(k) or 0) for k in pipeline.USAGE_KEYS}
+        pipeline.check_contract(entry)
+        store.write(entry, force=True)
+        log.info("%s: redesigned as %r, mood %s", date, theme["name"], theme["mood"])
+    return 1 if failed else 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="diary.generate")
     parser.add_argument("--date", type=date_arg,
                         default=datetime.now(ZoneInfo("America/New_York")).date().isoformat())
     parser.add_argument("--force", action="store_true", help="overwrite an existing entry")
     parser.add_argument("--dry-run", action="store_true", help="stub scrapers and agents, validate, write nothing")
+    parser.add_argument("--redesign", nargs="*", type=date_arg, metavar="DATE",
+                        help="re-run only the design step on existing entries (default: every entry)")
     args = parser.parse_args(argv)
+
+    if args.redesign is not None:
+        return redesign(args.redesign or store.list_dates())
 
     if args.dry_run:
         entry = asyncio.run(pipeline.generate(args.date, run=stub, scrape=stub_scrape, design=stub_design, link=stub_threads))

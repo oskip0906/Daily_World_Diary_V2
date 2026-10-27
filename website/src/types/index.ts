@@ -49,6 +49,7 @@ export type StoryLayout = "stack" | "grid-2" | "grid-3" | "feature" | "masonry" 
 export interface DiaryTheme {
   name: string;
   note: string; // one sentence on how the design reflects the day
+  mood?: "good" | "bad" | "tragic" | "tense" | "neutral"; // sets the palette; absent on themes before 2026-10-27
   hero?: HeroStyle; // absent on themes from before the card components existed
   sections?: Record<string, { card: CardStyle; layout: StoryLayout }>;
   css: string; // validated there: every selector scoped to .diary-page, no external resources

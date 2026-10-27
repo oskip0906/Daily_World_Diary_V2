@@ -244,7 +244,8 @@
   }
 
   .diary-toc-link,
-  .diary-toc-top {
+  .diary-toc-top,
+  .diary-toc-bottom {
     display: inline-flex;
     align-items: baseline;
     gap: 0.4rem;
@@ -258,6 +259,7 @@
 
   .diary-toc-link:hover,
   .diary-toc-top:hover,
+  .diary-toc-bottom:hover,
   .diary-toc-link.is-active {
     color: var(--ink);
   }
@@ -360,14 +362,38 @@
     border-bottom: 1px solid currentColor;
   }
 
-  /* Spotify players, in place of the music section's Spotify citations */
+  /*
+   * Spotify players, in place of the music section's Spotify citations. They stand alone: Spotify's
+   * own widget straight on the page, never framed, boxed or indented. Their cards render plain
+   * (page.tsx), and layered !important beats any theme's border, background, shadow or side padding
+   * on a player or on the card, list and item holding it.
+   */
   .diary-embed {
-    display: block;
-    width: 100%;
-    height: 152px;
-    margin-top: 0.75rem;
-    border: 0;
-    border-radius: 12px;
+    display: block !important;
+    width: 100% !important;
+    height: 152px !important;
+    margin: 0.75rem 0 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 12px !important; /* the widget's own corners, so nothing shows behind them */
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  .diary-card:has(.diary-embed),
+  .diary-card:has(.diary-embed) :is(.diary-card-inner, .diary-card-body, ul, li) {
+    padding-inline: 0 !important;
+    border-inline: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+  }
+
+  .diary-card:has(.diary-embed) li::before {
+    content: none !important; /* the list dash sat in the indent */
+  }
+
+  .diary-prose li:has(> .diary-embed) + li {
+    margin-top: 1.75em;
   }
 
   /* a long publisher name that can't wrap pushed phone pages sideways; layered !important beats any theme */
@@ -960,8 +986,14 @@
       border-left-color: var(--accent);
     }
 
-    .diary-toc-top {
+    .diary-toc-top,
+    .diary-toc-bottom {
+      display: flex;
       margin-top: 1.5rem;
+    }
+
+    .diary-toc-bottom {
+      margin-top: 0.6rem;
     }
 
     .diary-section {

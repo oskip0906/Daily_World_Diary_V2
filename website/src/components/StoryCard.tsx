@@ -41,6 +41,11 @@ export function embedSpotify(html: string): string {
   );
 }
 
+/** Whether section HTML has a Spotify citation, which embedSpotify turns into a player */
+export function hasPlayers(html: string): boolean {
+  return html.search(SPOTIFY_LINK) !== -1; // search ignores the g flag's lastIndex
+}
+
 /**
  * Section HTML (sanitized by backend/diary/render.py, whose headings are bare <h3>) -> stories
  */

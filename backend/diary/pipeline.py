@@ -14,7 +14,7 @@ from langgraph.graph import END, START, StateGraph
 
 from .agent import AgentResult, model, run_agent, unlink
 from .design import run_design
-from .threads import SLUG, run_threads
+from .threads import SLUG, _text, run_threads, split
 from .prompts import AGENTS, Agent
 from .render import render, to_text
 from .sources import gather
@@ -109,6 +109,16 @@ def design_node(design=None):
             return {"theme": None, "design_usage": {}}
         return {"theme": theme, "design_usage": usage}
     return node
+
+
+async def redesign(entry: dict, design=None) -> tuple[dict | None, dict]:
+    """The design step again for a stored entry: its sections are read back from their HTML as the
+    markdown the designer reads, one ### per story."""
+    sections = [(s["id"], s["title"], "\n\n".join(f"### {_text(t)}\n\n{_text(b)}" if t else _text(b)
+                                                   for t, b in split(s["content"])))
+                for s in sorted(entry["sections"], key=lambda s: s["order"])]
+    meta = entry["metadata"]
+    return await (design or run_design)(meta["date"], meta["title"], meta["summary"], sections)
 
 
 def assemble(date: str, results: dict[str, AgentResult], theme: dict | None = None,

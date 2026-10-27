@@ -8,12 +8,15 @@ from diary import design, store
 from diary.design import MAX_RETRIES, contrast, stories, validate
 
 IDS = ["political-news", "financial-news", "outlook"]
+MOOD = "/* mood: neutral */"
 LAYOUT = "/* layout: hero=split; political-news=banner/grid-2; financial-news=stat/grid-3; outlook=timeline/stack */"
-TOKENS = """--paper: #f7f4ee; --paper-alt: #efeae0; --ink: #16140f; --ink-soft: #38342c;
-  --muted: #5f5a4e; --accent: #a8321c; --accent-ink: #ffffff; --rule: #d9d2c3;
+COLOURS = """--paper: #f7f7f5; --paper-alt: #ececea; --ink: #16140f; --ink-soft: #38342c;
+  --muted: #5f5a4e; --accent: #2b2b2b; --accent-ink: #ffffff; --rule: #d9d9d6;"""
+TOKENS = f"""{COLOURS}
   --font-display: var(--ff-syne), sans-serif; --font-body: var(--ff-newsreader), serif;
   --font-ui: var(--ff-inter), sans-serif;"""
-VALID = f"""/* theme: Quiet Ledger | Warm paper and a single rust accent for a day of slow, steady news. */
+VALID = f"""/* theme: Quiet Ledger | Plain paper and black ink for a day of slow, steady news. */
+{MOOD}
 {LAYOUT}
 .diary-page {{ {TOKENS} }}
 .diary-page .diary-title, .diary-page .diary-section-title {{ letter-spacing: -0.02em; }}
@@ -22,7 +25,7 @@ VALID = f"""/* theme: Quiet Ledger | Warm paper and a single rust accent for a d
 @keyframes rise {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
 .diary-page .diary-section-title::before {{ content: "§ "; color: var(--accent); }}
 """
-YESTERDAY = {"name": "Old Day", "note": "Yesterday's design.", "hero": "poster",
+YESTERDAY = {"name": "Old Day", "note": "Yesterday's design.", "mood": "bad", "hero": "poster",
              "sections": {"outlook": {"card": "plain", "layout": "stack"}},
              "css": ".diary-page { --paper: #000000; --font-display: var(--ff-fraunces), serif; }"}
 
@@ -30,7 +33,8 @@ YESTERDAY = {"name": "Old Day", "note": "Yesterday's design.", "hero": "poster",
 def test_a_good_design_passes():
     theme = validate(VALID, IDS)
     assert theme["name"] == "Quiet Ledger"
-    assert theme["note"].startswith("Warm paper")
+    assert theme["note"].startswith("Plain paper")
+    assert theme["mood"] == "neutral"
     assert theme["hero"] == "split"
     assert theme["sections"] == {"political-news": {"card": "banner", "layout": "grid-2"},
                                  "financial-news": {"card": "stat", "layout": "grid-3"},
@@ -56,8 +60,10 @@ def test_markdown_fences_are_unwrapped():
     (VALID + ".diary-page { color: red; } </style><script>", '"<"'),
     (VALID + '.diary-page { content: "\\75 rl"; }', "backslash"),
     (VALID.replace("/* theme: Quiet Ledger | ", "/* "), r"must start with /\* theme"),
+    (VALID.replace(MOOD, ""), r"/\* mood"),
+    (VALID.replace("mood: neutral", "mood: gloomy"), "mood must be one of good, bad, tragic, tense, neutral"),
     (VALID.replace(LAYOUT, ""), r"/\* layout"),
-    (VALID.replace("--rule: #d9d2c3;", ""), "--rule"),
+    (VALID.replace("--rule: #d9d9d6;", ""), "--rule"),
     (VALID.replace("#16140f", "black"), "6-digit hex"),
     (VALID.replace("--muted: #5f5a4e", "--muted: #c9c2b4"), "--muted on --paper"),
     (VALID + ".diary-page { color: red; } }", "parse error"),
@@ -117,7 +123,49 @@ def test_a_dark_mode_variant_is_checked_too():
 
 def test_header_colours_are_checked_on_paper_alt():
     with pytest.raises(ValueError, match="--accent on --paper-alt"):
-        validate(VALID.replace("--paper-alt: #efeae0", "--paper-alt: #d8cfbd"), IDS)
+        validate(VALID.replace("--paper-alt: #ececea", "--paper-alt: #6b6b6b"), IDS)
+
+
+def palette(mood: str, paper: str, paper_alt: str, ink: str, soft: str, accent: str, accent_ink: str) -> str:
+    """VALID with another mood and colours (--muted and --rule take --ink-soft's)"""
+    return VALID.replace(MOOD, f"/* mood: {mood} */").replace(COLOURS, (
+        f"--paper: {paper}; --paper-alt: {paper_alt}; --ink: {ink}; --ink-soft: {soft}; --muted: {soft}; "
+        f"--accent: {accent}; --accent-ink: {accent_ink}; --rule: {soft};"))
+
+
+GOOD = ("good", "#e1f2e5", "#d4ebda", "#0f2417", "#24402e", "#11652f", "#ffffff")
+BAD = ("bad", "#1c0b0d", "#2a1013", "#fbecec", "#e6cfcf", "#ff5c5c", "#1c0b0d")
+TRAGIC_DARK = ("tragic", "#0c1626", "#13213a", "#eef3fb", "#cfdbee", "#7db4ff", "#0c1626")
+TRAGIC_LIGHT = ("tragic", "#e7eef8", "#d8e3f3", "#0d1a2e", "#22334f", "#1f4f99", "#ffffff")
+TENSE = ("tense", "#fbf0d9", "#f3e2bb", "#231a06", "#3d2f12", "#8f4000", "#ffffff")
+NEUTRAL_DARK = ("neutral", "#111111", "#1c1c1c", "#f5f5f5", "#d4d4d4", "#ededed", "#111111")
+
+
+@pytest.mark.parametrize("colours", [GOOD, BAD, TRAGIC_DARK, TRAGIC_LIGHT, TENSE, NEUTRAL_DARK])
+def test_each_mood_has_its_colours(colours):
+    assert validate(palette(*colours), IDS)["mood"] == colours[0]
+
+
+@pytest.mark.parametrize("colours, reason", [
+    (("bad",) + GOOD[1:], "don't match the bad mood: --paper #e1f2e5 is hue 134°"),  # a bad day isn't green
+    (("good",) + BAD[1:], "--paper #1c0b0d has luminance 0.01, but a good page is light"),
+    (("bad",) + NEUTRAL_DARK[1:], "--paper #111111 is hue 0° with 0 of colour; red needs 340-15° and at least 16"),
+    (("tragic",) + TENSE[1:], "tragic mood: --paper #fbf0d9 is hue 41°"),  # amber isn't blue
+    (("neutral",) + TRAGIC_LIGHT[1:], "--accent #1f4f99 has 122 of colour, at most 24 allowed"),
+    (("bad",) + BAD[1:5] + ("#ffd0d0",) + BAD[6:], "--accent #ffd0d0 is hue 0° with 47 of colour"),  # too pale
+    (("good", "#b8dcc0", "#b8dcc0") + GOOD[3:], "--paper #b8dcc0 has luminance 0.65, but a good page is light"),
+])
+def test_colours_that_contradict_the_mood_are_rejected(colours, reason):
+    with pytest.raises(ValueError, match=reason):
+        validate(palette(*colours), IDS)
+
+
+def test_a_variant_must_keep_the_mood():
+    dark = ("@media (prefers-color-scheme: dark) { .diary-page { --paper: #121110; --paper-alt: #1b1916; "
+            "--ink: #f4f0e7; --ink-soft: #d6d0c3; --muted: #a29b8c; --accent: #ededed; --accent-ink: #121110; } }")
+    assert validate(VALID + dark, IDS)  # neutral may be white or black
+    with pytest.raises(ValueError, match="good mood inside @media"):
+        validate(palette(*GOOD) + dark, IDS)  # a good day stays light
 
 
 def test_a_universal_selector_cannot_set_colours():
@@ -148,7 +196,7 @@ def test_literal_text_colours_are_checked(extra, ok):
 
 def test_a_literal_colour_must_also_work_in_dark_mode():
     dark = ("@media (prefers-color-scheme: dark) { .diary-page { --paper: #121110; --paper-alt: #1b1916; "
-            "--ink: #f4f0e7; --ink-soft: #d6d0c3; --muted: #a29b8c; --accent: #f08a6c; --accent-ink: #1a0d08; } }")
+            "--ink: #f4f0e7; --ink-soft: #d6d0c3; --muted: #a29b8c; --accent: #ededed; --accent-ink: #121110; } }")
     green = ".diary-page .diary-spark-change { color: #1d6b3e; }"
     # 2026-10-25: readable on light paper, 2.9:1 in dark mode
     with pytest.raises(ValueError, match="inside @media"):
@@ -237,7 +285,7 @@ def test_the_model_gets_the_whole_edition_and_recent_designs(fake):
     assert system == design.prompt()
     assert "Monday, October 26, 2026" in user and "A tense election day." in user
     assert "- political-news: Political News, 2 stories" in user and "- outlook: Outlook, 1 story" in user
-    assert '2026-10-25 "Old Day": Yesterday\'s design. | header poster | --paper #000000' in user
+    assert '2026-10-25 "Old Day": Yesterday\'s design. | mood bad | header poster | --paper #000000' in user
     assert "--font-display --ff-fraunces" in user and "outlook=plain/stack" in user
     assert "## Political News\n\n### Europe\n\nVoters went to the polls." in user
     assert calls.calls[0]["extra_body"] == {"reasoning": {"enabled": False}}
