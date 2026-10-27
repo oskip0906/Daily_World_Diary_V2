@@ -20,7 +20,11 @@ def calls(tmp_path, monkeypatch):
         return None, {}
 
     monkeypatch.setattr(pipeline, "run_agent", fake_run_agent)
+    async def no_threads(entry):
+        return [], {}
+
     monkeypatch.setattr(pipeline, "run_design", no_design)
+    monkeypatch.setattr(pipeline, "run_threads", no_threads)
     monkeypatch.setattr(pipeline, "gather", lambda agent, date: Material([]))
     return made
 

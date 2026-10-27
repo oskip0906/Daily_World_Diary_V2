@@ -24,6 +24,7 @@ class Material:
     items: list[Item]
     data: str = ""  # figures the model reads but can't cite by number (e.g. market tables)
     ensure: Callable[[str], str] = field(default=lambda md: md)  # guarantee applied to the model's output
+    charts: list[dict] = field(default_factory=list)  # sparkline series the page shows with the section
 
 
 def window(date: str) -> tuple[datetime, datetime]:

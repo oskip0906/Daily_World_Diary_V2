@@ -8,7 +8,7 @@ from functools import cache
 from openai import AsyncOpenAI
 
 from .prompts import Agent
-from .sources import Material
+from .sources import Item, Material
 
 MAX_TOKENS = 8000
 FORMAT = ("Write in Markdown. Start headings at ### (the page already shows the section title). "
@@ -21,6 +21,7 @@ MODEL_LINK = re.compile(r"\[([^\]]+)\]\([^)]*\)")
 class AgentResult:
     markdown: str
     usage: dict = field(default_factory=dict)
+    charts: list[dict] = field(default_factory=list)  # from the material, passed through to the section
 
 
 @cache
@@ -52,10 +53,15 @@ def task(agent: Agent, date: str, context: str | None = None, material: Material
             f"Write the {agent.section_title} section from them. " + FORMAT)
 
 
-def uncite(md: str) -> str:
-    """The page shows no sources: drop the [n] markers and any link the model typed itself.
-    The prompt still asks for [n] so the model keeps each claim tied to a scraped item."""
-    return CITATION.sub("", unlink(md))
+def cite(md: str, items: list[Item]) -> str:
+    """[n] -> a link to scraped item n, labelled with its publisher. The model never supplies a URL:
+    links it typed itself are unlinked, and numbers with no item are dropped."""
+    def link(m: re.Match) -> str:
+        picked = [items[i] for i in dict.fromkeys(int(n) - 1 for n in m.group(1).split(","))
+                  if 0 <= i < len(items)]
+        return "".join(f" [{i.publisher}]({i.url})" for i in picked)
+
+    return CITATION.sub(link, unlink(md))
 
 
 async def run_agent(agent: Agent, date: str, context: str | None = None,
@@ -73,8 +79,8 @@ async def run_agent(agent: Agent, date: str, context: str | None = None,
     message = resp.choices[0].message
     if not (message.content or "").strip():
         raise ValueError(f"{agent.agent_id} returned no content (finish_reason={resp.choices[0].finish_reason})")
-    md = uncite(message.content.strip())
+    md = cite(message.content.strip(), material.items if material else [])
     if material is not None:
         md = material.ensure(md)
     usage = resp.usage.model_dump() if resp.usage else {}
-    return AgentResult(md, usage)
+    return AgentResult(md, usage, material.charts if material else [])

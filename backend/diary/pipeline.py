@@ -1,5 +1,6 @@
 """LangGraph pipeline: five gatherers (scrape, then write) fan out from START, both synthesisers
-wait on all five, the designer reads the finished entry, and assemble writes it up."""
+wait on all five, the designer reads the finished entry, assemble writes it up, and the last step
+links its stories to the week's threads."""
 
 import asyncio
 import logging
@@ -13,6 +14,7 @@ from langgraph.graph import END, START, StateGraph
 
 from .agent import AgentResult, model, run_agent, unlink
 from .design import run_design
+from .threads import SLUG, run_threads
 from .prompts import AGENTS, Agent
 from .render import render, to_text
 from .sources import gather
@@ -93,7 +95,8 @@ def summary_of(results: dict[str, AgentResult]) -> str:
 def design_node(design=None):
     async def node(state: State) -> dict:
         results = state["results"]
-        sections = [(a.section_id, a.section_title, md) for a, md in page_sections(results)]
+        # the designer reads the text; citation URLs would only be noise
+        sections = [(a.section_id, a.section_title, unlink(md)) for a, md in page_sections(results)]
         if not sections:
             return {"theme": None, "design_usage": {}}
         try:
@@ -109,6 +112,7 @@ def design_node(design=None):
 def assemble(date: str, results: dict[str, AgentResult], theme: dict | None = None,
              design_usage: dict | None = None) -> dict:
     sections = [{"id": a.section_id, "title": a.section_title, "content": render(md), "order": a.order}
+                | ({"charts": results[a.agent_id].charts} if results[a.agent_id].charts else {})
                 for a, md in page_sections(results)]
     usages = [r.usage for r in results.values()] + [design_usage or {}]
     entry = {
@@ -129,7 +133,21 @@ def assemble(date: str, results: dict[str, AgentResult], theme: dict | None = No
     return entry
 
 
-def build(run=None, scrape=None, design=None):
+def threads_node(link=None):
+    async def node(state: State) -> dict:
+        entry = state["entry"]
+        try:
+            threads, usage = await (link or run_threads)(entry)
+        except Exception:
+            # threads are extra: a failure here must not lose the entry
+            log.warning("threads failed; the entry has none", exc_info=True)
+            return {}
+        usage_total = {k: (entry["usage"].get(k) or 0) + (usage.get(k) or 0) for k in USAGE_KEYS}
+        return {"entry": {**entry, "usage": usage_total} | ({"threads": threads} if threads else {})}
+    return node
+
+
+def build(run=None, scrape=None, design=None, link=None):
     gatherers = [a.agent_id for a in AGENTS if a.gathers]
     synthesisers = [a.agent_id for a in AGENTS if not a.gathers]
 
@@ -144,14 +162,16 @@ def build(run=None, scrape=None, design=None):
     for s in synthesisers:
         g.add_edge(gatherers, s)  # list source = wait for all five
     g.add_edge(synthesisers, "design")
+    g.add_node("threads", threads_node(link))
     g.add_edge("design", "assemble")
-    g.add_edge("assemble", END)
+    g.add_edge("assemble", "threads")
+    g.add_edge("threads", END)
     return g.compile()
 
 
-async def generate(date: str, run=None, scrape=None, design=None) -> dict:
-    """`run`, `scrape` and `design` replace the model calls and the scrapers (for --dry-run)."""
-    return (await build(run, scrape, design).ainvoke({"date": date, "results": {}}))["entry"]
+async def generate(date: str, run=None, scrape=None, design=None, link=None) -> dict:
+    """`run`, `scrape`, `design` and `link` replace the model calls and the scrapers (for --dry-run)."""
+    return (await build(run, scrape, design, link).ainvoke({"date": date, "results": {}}))["entry"]
 
 
 def check_contract(entry: dict) -> None:
@@ -167,8 +187,15 @@ def check_contract(entry: dict) -> None:
     for s in entry["sections"]:
         need(isinstance(s.get("id"), str) and isinstance(s.get("title"), str), "section id/title")
         need(isinstance(s.get("content"), str) and isinstance(s.get("order"), int), "section content/order")
+        for c in s.get("charts", []):
+            need(isinstance(c.get("label"), str) and len(c.get("closes", [])) >= 2, "chart label/closes")
+    for t in entry.get("threads", []):
+        need(isinstance(t.get("id"), str) and SLUG.match(t["id"]) and isinstance(t.get("title"), str), "thread id/title")
+        need(isinstance(t.get("story"), str) and isinstance(t.get("day"), int) and t["day"] >= 2, "thread story/day")
+        need(isinstance(t.get("follows"), list) and t["follows"], "thread follows")
     theme = entry.get("theme")
     if theme is not None:
-        need(all(isinstance(theme.get(k), str) and theme[k] for k in ("name", "note", "css")), "theme name/note/css")
+        need(all(isinstance(theme.get(k), str) and theme[k] for k in ("name", "note", "css", "hero")), "theme strings")
+        need(isinstance(theme.get("sections"), dict), "theme sections")
         need("<" not in theme["css"], "theme css must not contain <")
 

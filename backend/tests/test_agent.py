@@ -4,7 +4,7 @@ from types import SimpleNamespace as NS
 import pytest
 
 from diary import agent as agent_mod
-from diary.agent import uncite
+from diary.agent import cite
 from diary.prompts import AGENTS
 from diary.sources import Item, Material
 
@@ -31,13 +31,22 @@ def fake(monkeypatch):
     return completions
 
 
-def test_citation_markers_are_dropped():
-    # the page shows no sources; the [n] only keeps the model tied to its material
-    assert uncite("Talks stalled [2]. Markets fell [1, 3].") == "Talks stalled. Markets fell."
+def test_citations_become_links_to_the_scraped_item():
+    assert cite("Talks stalled [2].", ITEMS) == "Talks stalled [Outlet 2](https://news.example/2)."
+
+
+def test_grouped_citations_each_become_a_link_once():
+    md = cite("Markets fell [1, 3, 1].", ITEMS)
+    assert md == "Markets fell [Outlet 1](https://news.example/1) [Outlet 3](https://news.example/3)."
+
+
+def test_unknown_citation_numbers_are_dropped():
+    assert cite("Rumour [42].", ITEMS) == "Rumour."
 
 
 def test_links_the_model_typed_itself_are_unlinked():
-    assert uncite("See [this](https://made.up/page) [1].") == "See this."
+    # the model never supplies a URL: only scraped items become links
+    assert cite("See [this](https://made.up/page) [1].", ITEMS) == "See this [Outlet 1](https://news.example/1)."
 
 
 def test_gatherers_get_numbered_material_and_no_web_search(fake):
@@ -50,7 +59,8 @@ def test_gatherers_get_numbered_material_and_no_web_search(fake):
     # 2026-10-23: even "low" reasoning spent the whole token budget and returned an empty section
     assert fake.calls[0]["extra_body"]["reasoning"] == {"enabled": False}
     assert result.markdown.startswith("### IPOs")  # material.ensure ran
-    assert result.markdown.endswith("Body.")  # the [1] marker is gone
+    assert result.markdown.endswith("Body [Outlet 1](https://news.example/1).")
+    assert result.charts == []
     assert result.usage["cost"] == 0.01
 
 

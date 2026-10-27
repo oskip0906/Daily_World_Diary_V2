@@ -11,7 +11,10 @@ from diary.sources import Item, Material
 GATHERERS = [a for a in AGENTS if a.gathers]
 SECTION_IDS = ["political-news", "financial-news", "entertainment-news", "music-releases",
                "stock-analysis", "outlook"]
-THEME = {"name": "Night Shift", "note": "A dark, tense edition.", "css": ".diary-page { --paper: #000000; }"}
+THREAD = {"id": "serbia-protests", "title": "Serbia's protests", "story": "political-news/1", "day": 2,
+          "follows": ["2026-10-23/political-news/2"]}
+THEME = {"name": "Night Shift", "note": "A dark, tense edition.", "hero": "poster",
+         "sections": {"outlook": {"card": "plain", "layout": "stack"}}, "css": ".diary-page { --paper: #000000; }"}
 
 
 @pytest.fixture
@@ -33,7 +36,12 @@ def contexts(monkeypatch):
         return THEME, {"prompt_tokens": 50, "completion_tokens": 5, "cost": 0.005}
 
     monkeypatch.setattr(pipeline, "run_agent", fake_run_agent)
+    async def fake_threads(entry):
+        seen["threads"] = entry
+        return [THREAD], {"prompt_tokens": 20, "completion_tokens": 2, "cost": 0.001}
+
     monkeypatch.setattr(pipeline, "run_design", fake_design)
+    monkeypatch.setattr(pipeline, "run_threads", fake_threads)
     monkeypatch.setattr(pipeline, "gather", lambda agent, date: Material(
         [Item(f"{agent.agent_id} story", f"https://news.example/{agent.agent_id}", "Outlet")]))
     monkeypatch.setenv("OPENROUTER_MODEL", "vendor/model")
@@ -70,6 +78,24 @@ def test_metadata(contexts):
     datetime.fromisoformat(meta["generatedAt"])
 
 
+def test_charts_ride_along_with_their_section(contexts, monkeypatch):
+    ok = pipeline.run_agent
+    chart = {"group": "Indices", "label": "S&P 500", "symbol": "^GSPC", "change": 0.3, "closes": [1.0, 2.0]}
+
+    async def charted(agent, date, context=None, material=None):
+        result = await ok(agent, date, context, material)
+        if agent.agent_id == "stock-analyst":
+            result.charts = [chart]
+        return result
+
+    monkeypatch.setattr(pipeline, "run_agent", charted)
+    entry = generate()
+    sections = {s["id"]: s for s in entry["sections"]}
+    assert sections["stock-analysis"]["charts"] == [chart]
+    assert "charts" not in sections["political-news"]
+    pipeline.check_contract(entry)
+
+
 def test_the_summary_is_metadata_not_a_section(contexts):
     entry = generate()
     assert "daily-summary" not in [s["id"] for s in entry["sections"]]
@@ -85,6 +111,22 @@ def test_the_designer_reads_the_finished_page(contexts):
     assert sections[0][1] == "Political News" and "Body of political-analyst." in sections[0][2]
     assert entry["theme"] == THEME
     pipeline.check_contract(entry)
+
+
+def test_threads_link_the_assembled_entry(contexts):
+    entry = generate()
+    assert contexts["threads"]["sections"] == entry["sections"]  # it sees the rendered page
+    assert entry["threads"] == [THREAD]
+    pipeline.check_contract(entry)
+
+
+def test_a_crashing_threads_step_still_writes_the_entry(contexts, monkeypatch):
+    async def boom(entry):
+        raise RuntimeError("unexpected")
+
+    monkeypatch.setattr(pipeline, "run_threads", boom)
+    entry = generate()
+    assert "threads" not in entry and len(entry["sections"]) == 6
 
 
 def test_no_theme_when_the_designer_gives_up(contexts, monkeypatch):
@@ -109,8 +151,8 @@ def test_a_crashing_designer_still_writes_the_entry(contexts, monkeypatch):
 def test_run_records_model_usage_and_prompt_versions(contexts):
     entry = generate()
     assert entry["model"] == "vendor/model"
-    # seven agents plus the designer
-    assert entry["usage"] == {"prompt_tokens": 750, "completion_tokens": 75, "cost": pytest.approx(0.075)}
+    # seven agents, the designer and the threads step
+    assert entry["usage"] == {"prompt_tokens": 770, "completion_tokens": 77, "cost": pytest.approx(0.076)}
     assert entry["promptVersions"] == {a.agent_id: a.version for a in AGENTS}
 
 

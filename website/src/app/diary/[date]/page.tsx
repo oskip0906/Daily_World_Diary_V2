@@ -9,14 +9,16 @@
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { DiarySection } from "@/components/DiarySection";
+import { DiarySection, LAYOUTS } from "@/components/DiarySection";
+import { CARDS } from "@/components/StoryCard";
 import { TableOfContents } from "@/components/TableOfContents";
 import { formatDateLong, parseDate } from "@/lib/date-utils";
 import { baseUrl, getAvailableDates } from "@/lib/api";
-import { DiaryEntry, TocItem } from "@/types";
+import { DiaryEntry, HeroStyle, TocItem } from "@/types";
 
 // Entries before 2026-10-26 still carry a Daily Summary section; its paragraph already opens the page
 const HIDDEN_SECTIONS = new Set(["daily-summary"]);
+const HEROES: HeroStyle[] = ["classic", "centered", "split", "poster"];
 
 interface DiaryPageProps {
   params: Promise<{ date: string }>;
@@ -77,9 +79,18 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
   });
   // the backend already rejects "<"; checked again because this is injected raw
   const theme = diaryEntry.theme && !diaryEntry.theme.css.includes("<") ? diaryEntry.theme : null;
+  // the picks are data: anything unknown falls back to the base design's choice
+  const hero = theme?.hero && HEROES.includes(theme.hero) ? theme.hero : "classic";
+  const picks = (id: string) => {
+    const pick = theme?.sections?.[id];
+    return {
+      card: pick && CARDS.includes(pick.card) ? pick.card : "plain",
+      layout: pick && LAYOUTS.includes(pick.layout) ? pick.layout : "stack",
+    };
+  };
 
   return (
-    <div className="diary-page" id="top" data-date={date}>
+    <div className="diary-page" id="top" data-date={date} data-hero={hero}>
       {theme && <style dangerouslySetInnerHTML={{ __html: theme.css }} />}
 
       <header className="diary-hero">
@@ -104,7 +115,13 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
         <TableOfContents items={tocItems} />
         <article className="diary-article">
           {sections.map((section, i) => (
-            <DiarySection key={section.id} section={section} number={i + 1} />
+            <DiarySection
+              key={section.id}
+              section={section}
+              number={i + 1}
+              threads={diaryEntry.threads ?? []}
+              {...picks(section.id)}
+            />
           ))}
         </article>
       </div>

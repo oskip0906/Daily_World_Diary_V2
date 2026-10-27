@@ -5,13 +5,18 @@
 
 import type { Metadata } from "next";
 import {
+  Archivo_Black,
   Bebas_Neue,
+  DM_Serif_Display,
   Fraunces,
   IBM_Plex_Mono,
+  Instrument_Serif,
   Inter,
   Newsreader,
   Playfair_Display,
   Space_Grotesk,
+  Syne,
+  Unbounded,
 } from "next/font/google";
 import "./globals.css";
 
@@ -24,7 +29,15 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--ff-playfair
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--ff-space-grotesk", display: "swap", preload: false });
 const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "600"], variable: "--ff-plex-mono", display: "swap", preload: false });
 const bebas = Bebas_Neue({ subsets: ["latin"], weight: "400", variable: "--ff-bebas", display: "swap", preload: false });
-const fontVariables = [fraunces, newsreader, inter, playfair, spaceGrotesk, plexMono, bebas]
+const dmSerif = DM_Serif_Display({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--ff-dm-serif", display: "swap", preload: false });
+const instrument = Instrument_Serif({ subsets: ["latin"], weight: "400", style: ["normal", "italic"], variable: "--ff-instrument", display: "swap", preload: false });
+const syne = Syne({ subsets: ["latin"], variable: "--ff-syne", display: "swap", preload: false });
+const unbounded = Unbounded({ subsets: ["latin"], variable: "--ff-unbounded", display: "swap", preload: false });
+const archivoBlack = Archivo_Black({ subsets: ["latin"], weight: "400", variable: "--ff-archivo-black", display: "swap", preload: false });
+const fontVariables = [
+  fraunces, newsreader, inter, playfair, spaceGrotesk, plexMono, bebas,
+  dmSerif, instrument, syne, unbounded, archivoBlack,
+]
   .map((f) => f.variable)
   .join(" ");
 

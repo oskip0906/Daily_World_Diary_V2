@@ -80,6 +80,15 @@ def ensure_ipo_section(ipo_items: list[Item], md: str) -> str:
     return f"### IPOs\n\n{body}\n\n{md}"
 
 
+def charts(close: pd.DataFrame, date: str, moves: dict) -> list[dict]:
+    """Every session's close in the download window, for the indices and sectors."""
+    before = close[close.index < pd.Timestamp(date)]
+    return [{"group": group, "label": name, "symbol": s, "change": round(moves[s][1], 2),
+             "closes": [round(float(v), 2) for v in before[s].dropna()]}
+            for group, names in (("Indices", INDICES), ("Sectors", SECTORS)) for s, name in names.items()
+            if s in moves]
+
+
 def build(close: pd.DataFrame, ipo_records: list[dict], screens: dict[str, list[dict]], date: str) -> Material:
     session, moves = changes(close, date)
     lines = [f"Last session: {session}"]
@@ -90,7 +99,8 @@ def build(close: pd.DataFrame, ipo_records: list[dict], screens: dict[str, list[
     ipo_items = ipos(ipo_records)
     items = [Item("Yahoo Finance market data", "https://finance.yahoo.com/markets/", "Yahoo Finance",
                   f"closing levels and changes for {session}"), *ipo_items, *movers(screens, session)]
-    return Material(items, data="\n".join(lines), ensure=partial(ensure_ipo_section, ipo_items))
+    return Material(items, data="\n".join(lines), ensure=partial(ensure_ipo_section, ipo_items),
+                    charts=charts(close, date, moves))
 
 
 def gather(date: str) -> Material:

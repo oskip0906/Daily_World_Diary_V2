@@ -83,8 +83,9 @@ backend/
       spotify.py            # client-credentials token + /v1/search?q=tag:new
       yahoo.py              # yfinance: closes, IPO calendar, screeners
       __init__.py           # agent id -> gatherer
-    agent.py                # one OpenRouter call; [n] citation markers stripped
-    design.py               # the day's CSS: prompt, validation, retries (§5a)
+    agent.py                # one OpenRouter call; [n] citations -> publisher links
+    design.py               # the day's design: components, CSS, validation, retries (§5a)
+    threads.py              # links today's stories to the week's developing stories (§5b)
     render.py               # markdown -> sanitized HTML
     pipeline.py             # LangGraph StateGraph: fan-out 5, fan-in 2, assemble DiaryEntry
     store.py                # read / write / list_dates over website/data/*.json
@@ -127,7 +128,7 @@ A LangGraph `StateGraph`, built from the same `AGENTS` tuple:
 ```
         ┌─ political-analyst ─────┐
         ├─ financial-analyst ─────┤     ┌─ synthesis-agent ─┐
-START ──┼─ entertainment-curator ─┼──▶──┤                   ├──▶ design ──▶ assemble ──▶ END
+START ──┼─ entertainment-curator ─┼──▶──┤                   ├──▶ design ──▶ assemble ──▶ threads ──▶ END
         ├─ music-curator ─────────┤     └─ outlook-agent ───┘
         └─ stock-analyst ─────────┘
    each gatherer: scrape (thread) → write (model)
@@ -173,15 +174,34 @@ writes a partial entry, and because the store is write-once and the Action skips
 have a file, that partial entry would stay forever. This happened on 2026-10-26 with a $0.50/day key
 cap. Stopping leaves the date empty, so the next run fills it.
 
-## 5a. The design step: a stylesheet per day
+## 5a. The design step: a page design per day
 
 After both synthesisers, one more model call reads the finished page (headline, summary, every
-section's markdown) and writes the CSS for that day's page. The entry stores it as
-`theme: {name, note, css}`, and the page shows the name and note under the summary.
+section's markdown) and designs that day's page. It picks the structure from components the site
+implements, then writes CSS on top:
+
+- a **header style**: `classic`, `centered`, `split`, `poster`;
+- per section, one of ten **card components** (`plain`, `outline`, `elevated`, `banner`, `split`,
+  `numbered`, `lede`, `stat`, `timeline`, `tile`). Every `###` story in the section becomes one card;
+- per section, one of six **layouts** for its cards (`stack`, `grid-2`, `grid-3`, `feature`,
+  `masonry`, `rail`).
+
+The picks arrive as a comment, `/* layout: hero=poster; political-news=banner/grid-2; ... */`, right
+after the `/* theme: name | note */` comment. The entry stores
+`theme: {name, note, hero, sections: {id: {card, layout}}, css}`; the page shows the name and note
+under the summary. `HEROES`, `CARDS` and `LAYOUTS` in `design.py` describe each component to the
+model and must match `StoryCard.tsx`, `DiarySection.tsx` and `globals.css`.
+
+**Variety.** The first version, CSS only, produced days that looked alike: the model tweaked the base
+instead of designing. Now the prompt includes the last four days' designs (name, header, palette,
+fonts, card picks, read back from the store) and asks for something clearly different, and the
+validator enforces some of it: at least three different cards and two different layouts per page,
+and a header style and `--font-display` family that differ from the previous day's. Twelve fonts are
+loaded. Days are generated one at a time when regenerating, so each sees the one before.
 
 **The prompt** (`design.prompt()`) gives the model the page's exact markup, the site's own diary
 stylesheet (read from `website/src/app/globals.css` between `diary:start` and `diary:end`, so it can't
-drift), the eleven design tokens, the seven loaded fonts, and the rules below. Without the base
+drift), the components, the eleven design tokens, the fonts, and the rules below. Without the base
 stylesheet, the first themes produced text the same colour as the background the base gave it.
 
 **The CSS is untrusted.** It is injected into the page raw, so `validate()` parses it with `tinycss2`
@@ -190,7 +210,8 @@ and rejects it unless:
 - every selector starts with `.diary-page`;
 - nothing loads a resource: no `url()`, `image-set()`, `@import`, `@font-face`, and no `<` or
   backslash anywhere (no breaking out of `<style>`, no escape tricks);
-- the only at-rules are `@media`, `@supports`, `@keyframes`;
+- the only at-rules are `@media`, `@supports`, `@container`, `@keyframes`;
+- the layout comment names a valid header, card and layout for exactly the sections on the page;
 - nothing hides content or uses `position: fixed`;
 - a plain `.diary-page` rule sets all eleven tokens, the colour tokens are hex, and they meet WCAG
   contrast on both `--paper` and `--paper-alt`. A `.diary-page` rule inside `@media` (a dark mode)
@@ -206,6 +227,41 @@ The base design in `globals.css` is drawn entirely from the same tokens, so a th
 the tokens already restyles the whole page. The theme is unlayered CSS and the base sits in
 `@layer components`, so the theme wins without specificity games, while the base's
 `prefers-reduced-motion` rule uses `!important` inside the layer and still beats any animation.
+
+## 5b. Story threads
+
+After `assemble`, one more model call links today's stories to the same developing stories earlier
+in the week, so a card can say "Day 4 · Serbia's student protests" and `/threads/<id>` can follow the
+story day by day.
+
+A **story** is what the page renders as one card: a section's rendered HTML split at each `<h3>`.
+`threads.split` mirrors `splitStories` in `StoryCard.tsx`, so ref `political-news/3` is the third
+card of that section on both sides.
+
+The model sees today's stories and the last seven entries' stories (title plus the first 280
+characters, citations stripped), with past stories that are already in a thread marked. It replies
+with JSON: for each of today's stories that continues earlier ones, a slug id, a title, and the
+earlier refs it follows. The prompt puts precision first: same event or process moving forward, not
+the same person or topic.
+
+**Entries are write-once**, so earlier stories are never edited. Instead each thread record in
+today's entry carries `follows`: every earlier story of the thread, inherited from the last entry
+that had it plus whatever the model added. The latest entry of a thread therefore lists all of it,
+which is what `/api/threads/[id]` reads. `day` is the number of distinct dates among them, today
+included. A thread needs at least one earlier story, so every tag says Day 2 or later.
+
+`validate` rejects unknown refs, a story in two threads, bad slugs or titles, a new thread with
+nothing to follow, and follows that belong to a different thread. As with the design, a rejection
+goes back with its reason (at most 2 retries), and a failure leaves the entry without threads rather
+than losing it. Regenerating has to go oldest first, so each day sees the threads before it.
+
+## 5c. Market sparklines
+
+`sources/yahoo.py` already downloads about seven sessions of closes for every symbol, then used only
+the last two. `charts()` keeps the whole series for the indices and sectors; it travels on
+`Material.charts` → `AgentResult.charts` → the Stock Analysis section's `charts`, and
+`MarketCharts.tsx` draws one small card per symbol as an inline SVG polyline. No model is involved,
+so the numbers are exactly what Yahoo returned.
 
 No checkpointer. Each Action run starts from a clean checkout, so a saved checkpoint would not
 survive to the next run anyway.
@@ -246,10 +302,11 @@ sectors, major stocks, movers, rates & commodities), and `ensure` backs it up: i
 has no heading mentioning IPOs, one is prepended from the calendar data, or "No IPOs priced or
 scheduled around this date" when the calendar is empty.
 
-**Citations.** The model sees the items numbered `[1]…[n]` and is told to cite as `[n]`, which keeps
-each claim tied to an item it was given. The page shows no sources, so `uncite()` strips the markers
-and unlinks any link the model typed itself. (Until 2026-10-26 each `[n]` became a publisher link and
-sections listed their sources; the frontend strips those links from older entries.)
+**Citations.** The model sees the items numbered `[1]…[n]` and is told to cite as `[n]`. After
+generation, `cite()` turns each `[n]` into a link to item *n*'s URL (link text: the publisher), drops
+numbers that don't exist, and unlinks any link the model typed itself. So **the model never supplies
+a URL**: every link on the page is a scraped one. The page styles them as small citation tags. (The
+per-section Sources lists were dropped on 2026-10-26.)
 
 ## 6a. The OpenRouter call
 
@@ -376,15 +433,18 @@ Spotify's API reference documents, because no credentials were available when it
 - `test_google_news.py`, `test_spotify.py`, `test_yahoo.py`: parsing, the 24-hour window, the
   backfill fallback, release-date filtering, IPO filtering, session-matched movers, and the IPO
   section guarantee.
-- `test_agent.py`: `[n]` markers and model-typed links stripped; gatherers get numbered material and
-  no web plugin.
+- `test_agent.py`: `[n]` → links, unknown numbers dropped, model-typed links unlinked; gatherers get
+  numbered material and no web plugin.
 - `test_design.py`: every validation rule (scope, resources, hiding, tokens, contrast, dark-mode
-  variants), the prompt's context, retries with the rejection reason, the retry cap, truncation, and
-  a rejected key stopping at once.
+  variants, layout picks, variety), the prompt's context and recent designs, retries with the
+  rejection reason, the retry cap, truncation, and a rejected key stopping at once.
 - `test_pipeline.py`: runs the compiled graph with scrapers and the model stubbed. It checks the
   fan-in, that gatherers get their material, the contract with `types/index.ts`, that a failed scrape
   or model call omits one section, that an account error aborts the run, and that the designer gets
-  the finished page and can't lose the entry.
+  the finished page and can't lose the entry, that threads see the assembled entry, and that charts
+  reach their section.
+- `test_threads.py`: story splitting matches the page, the week's history and thread membership,
+  inherited members and the day count, every validation rule, retries, and no call without history.
 - `test_store.py`, `test_generate.py`: atomic write-once storage and the CLI.
 
 Plus `generate --dry-run`, which runs the whole graph with stub scrapers and stub text and validates

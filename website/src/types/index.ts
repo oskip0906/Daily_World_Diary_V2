@@ -15,14 +15,42 @@ export interface DiarySection {
   title: string;
   content: string; // MDX/Markdown content
   order: number; // Display order
+  charts?: MarketChart[]; // stock-analysis only: the last week's closes per index and sector
+}
+
+export interface MarketChart {
+  group: string; // "Indices" | "Sectors"
+  label: string;
+  symbol: string;
+  change: number; // % change in the last session
+  closes: number[]; // oldest first
+}
+
+/**
+ * A story that continues earlier ones (backend/diary/threads.py)
+ */
+export interface StoryThread {
+  id: string;
+  title: string;
+  story: string; // "<section id>/<n>": card n (from 1) of that section
+  day: number; // how many days the thread has run, today included
+  follows: string[]; // every earlier story of the thread: "YYYY-MM-DD/<section id>/<n>"
 }
 
 /**
  * The day's design, written by the backend's design step (backend/diary/design.py)
  */
+export type HeroStyle = "classic" | "centered" | "split" | "poster";
+export type CardStyle =
+  | "plain" | "outline" | "elevated" | "banner" | "split"
+  | "numbered" | "lede" | "stat" | "timeline" | "tile";
+export type StoryLayout = "stack" | "grid-2" | "grid-3" | "feature" | "masonry" | "rail";
+
 export interface DiaryTheme {
   name: string;
   note: string; // one sentence on how the design reflects the day
+  hero?: HeroStyle; // absent on themes from before the card components existed
+  sections?: Record<string, { card: CardStyle; layout: StoryLayout }>;
   css: string; // validated there: every selector scoped to .diary-page, no external resources
 }
 
@@ -30,6 +58,7 @@ export interface DiaryEntry {
   metadata: DiaryMetadata;
   sections: DiarySection[];
   theme?: DiaryTheme; // absent on entries before 2026-10-26 or when the design step gave up
+  threads?: StoryThread[];
 }
 
 /**

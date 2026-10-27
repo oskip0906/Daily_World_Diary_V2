@@ -51,6 +51,12 @@ def test_material_has_tables_and_citable_ipos():
     assert any(i.url == "https://finance.yahoo.com/quote/LYCA" for i in material.items)
 
 
+def test_charts_carry_each_index_and_sector_session_but_not_stocks():
+    material = yahoo.build(closes(), IPOS, MOVERS, "2026-10-23")  # the 23rd itself is excluded
+    assert material.charts == [{"group": "Indices", "label": "S&P 500", "symbol": "^GSPC", "change": -1.3,
+                                "closes": [7700.0, 7600.0]}]
+
+
 def test_a_missing_ipo_section_is_added():
     material = yahoo.build(closes(), IPOS, MOVERS, "2026-10-26")
     md = material.ensure("### Major Indices\n\nStocks fell.")
