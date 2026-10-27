@@ -263,14 +263,18 @@ the last two. `charts()` keeps the whole series for the indices and sectors; it 
 `MarketCharts.tsx` draws one small card per symbol as an inline SVG polyline. No model is involved,
 so the numbers are exactly what Yahoo returned.
 
-## 5e. Reader themes
+## 5e. The home page and its themes
 
-A menu on every page (`ThemePicker.tsx`) offers "Today's design" (the default) or one of five fixed
-palettes: Light, Dark, Sepia, Midnight, High contrast. The choice is a cookie, so the server renders
-it directly: the layout puts `data-theme` on `<html>`, and the diary page leaves out the day's `<style>`
-and theme note. The day's structural picks (header style, cards, layouts) stay. Each palette is a
-`html[data-theme=…] .diary-page` token set in `globals.css`, after `diary:end` so the design prompt
-doesn't quote it, and each meets the same contrast pairs as a generated theme.
+`/` is a landing page: the latest edition (with a cover drawn in its own palette and headline font,
+read from the theme CSS), the index sparklines, the threads being followed, the recent editions as
+covers, and a link to the calendar. Diary and thread pages always show the day's own design.
+
+The home page alone has a theme picker (`ThemePicker.tsx`): Auto (the system's light or dark) or
+one of five fixed palettes, Light, Dark, Sepia, Midnight and High contrast. The choice is a cookie,
+so the server renders it directly by putting `data-theme` on the page. Each palette is a
+`[data-theme=…]` token set in `globals.css`, after `diary:end` so the design prompt doesn't quote it,
+and each meets the same contrast pairs as a generated theme. Each swatch carries its own `data-theme`,
+so it previews its palette.
 
 ## 5d. Spotify players
 

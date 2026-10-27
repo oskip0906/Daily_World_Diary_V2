@@ -1,3 +1,5 @@
+import { DiaryEntry } from "@/types";
+
 /**
  * Where the pages fetch their own /api routes; on Vercel, defaults to the production domain
  */
@@ -6,6 +8,19 @@ export const baseUrl =
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "http://localhost:3000");
+
+/**
+ * Server-side fetch of one day's entry; null when there is none
+ */
+export async function getDiaryEntry(date: string): Promise<DiaryEntry | null> {
+  try {
+    const response = await fetch(`${baseUrl}/api/diary/${date}`, { cache: "no-store" });
+    return response.ok ? (await response.json()).data : null;
+  } catch (error) {
+    console.error("Error fetching diary entry:", error);
+    return null;
+  }
+}
 
 /**
  * Server-side fetch of the dates that have diary entries

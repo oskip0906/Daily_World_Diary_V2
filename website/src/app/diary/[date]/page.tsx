@@ -7,42 +7,19 @@
  * backend/diary/design.py in step with it.
  */
 
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { DiarySection, LAYOUTS } from "@/components/DiarySection";
 import { CARDS } from "@/components/StoryCard";
 import { TableOfContents } from "@/components/TableOfContents";
 import { formatDateLong, parseDate } from "@/lib/date-utils";
-import { baseUrl, getAvailableDates } from "@/lib/api";
-import { THEME_COOKIE, readTheme } from "@/lib/themes";
-import { DiaryEntry, HeroStyle, TocItem } from "@/types";
+import { getAvailableDates, getDiaryEntry } from "@/lib/api";
+import { HeroStyle, TocItem } from "@/types";
 
 const HEROES: HeroStyle[] = ["classic", "centered", "split", "poster"];
 
 interface DiaryPageProps {
   params: Promise<{ date: string }>;
-}
-
-/**
- * Fetch diary entry from API
- */
-async function getDiaryEntry(date: string): Promise<DiaryEntry | null> {
-  try {
-    const response = await fetch(`${baseUrl}/api/diary/${date}`, {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const { data } = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching diary entry:", error);
-    return null;
-  }
 }
 
 function monthDay(date: string): string {
@@ -77,8 +54,6 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
   });
   // the backend already rejects "<"; checked again because this is injected raw
   const theme = diaryEntry.theme && !diaryEntry.theme.css.includes("<") ? diaryEntry.theme : null;
-  // a reader theme replaces the day's CSS; its structural picks (header, cards, layouts) stay
-  const daily = readTheme((await cookies()).get(THEME_COOKIE)?.value) === "daily";
   // the picks are data: anything unknown falls back to the base design's choice
   const hero = theme?.hero && HEROES.includes(theme.hero) ? theme.hero : "classic";
   const picks = (id: string) => {
@@ -91,7 +66,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
 
   return (
     <div className="diary-page" id="top" data-date={date} data-hero={hero}>
-      {theme && daily && <style dangerouslySetInnerHTML={{ __html: theme.css }} />}
+      {theme && <style dangerouslySetInnerHTML={{ __html: theme.css }} />}
 
       <header className="diary-hero">
         <div className="diary-hero-inner">
@@ -103,7 +78,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
           </p>
           <h1 className="diary-title">{diaryEntry.metadata.title}</h1>
           {diaryEntry.metadata.summary && <p className="diary-summary">{diaryEntry.metadata.summary}</p>}
-          {theme && daily && (
+          {theme && (
             <p className="diary-theme-note">
               <span className="diary-theme-name">{theme.name}</span> {theme.note}
             </p>
