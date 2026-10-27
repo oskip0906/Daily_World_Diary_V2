@@ -177,7 +177,8 @@ cap. Stopping leaves the date empty, so the next run fills it.
 ## 5a. The design step: a page design per day
 
 After both synthesisers, one more model call reads the finished page (headline, summary, every
-section's markdown) and designs that day's page. It picks the structure from components the site
+section's markdown) and designs that day's page. The vibe (palette, type, ornament) comes from the
+summary; the sections only decide which components fit their stories. It picks the structure from components the site
 implements, then writes CSS on top:
 
 - a **header style**: `classic`, `centered`, `split`, `poster`;
