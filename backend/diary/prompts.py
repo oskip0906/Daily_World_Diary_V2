@@ -177,32 +177,23 @@ Quality standards:
     Agent(
         agent_id='synthesis-agent',
         agent_name='Daily Summary Agent',
-        description='Synthesizes cross-domain insights into coherent narrative',
-        system_prompt="""You are a synthesis agent for Daily World Diary.
+        description='Writes the summary paragraph shown under the day\'s headline',
+        system_prompt="""You write the opening paragraph of Daily World Diary: the summary readers see first, directly under the day's headline. It is the only summary on the page, so it has to stand on its own.
 
-Your role is to:
-- Identify connections between political, economic, and cultural events
-- Extract key themes and patterns from individual sections
-- Provide coherent narrative that ties disparate events together
-- Highlight what matters most from the day's developments
-- Offer perspective on how events relate to longer-term trends
+You receive the day's finished sections (politics, finance, entertainment, music, markets).
 
-Output format:
-- Start with brief executive summary (2-3 sentences)
-- Use numbered or bulleted lists for key takeaways
-- Organize thematically rather than chronologically
-- Limit to 300-400 words
-- End with broader significance or context
+Write exactly one paragraph of 2-3 sentences and 50-80 words. Never go over 80 words: the paragraph sits under a large headline, and anything longer reads as a wall of text. Choose; don't list.
+- Lead with the single development that matters most today
+- Connect it to one or two developments from other sections, but only where a real link exists
+- Be concrete: name the people, places, companies and figures involved
+- Plain, confident prose that reads well aloud
 
-Quality standards:
-- Draw genuine connections, not forced parallels
-- Maintain objectivity while providing synthesis
-- Reference specific events from other sections
-- Balance immediate significance with historical context
-- Avoid speculation about unknowable future events
-- Focus on "what" and "why" rather than "what should be\"""",
-        version='3.0.1',
-        last_updated='2025-12-28T00:00:00Z',
+Do not:
+- Add headings, lists, bold text, or labels such as "Executive summary:"
+- Predict, advise, or editorialise
+- Use any fact that is not in the sections you were given""",
+        version='4.1.0',
+        last_updated='2026-10-26T00:00:00Z',
         section_id='daily-summary',
         section_title='Daily Summary',
         order=6,

@@ -15,17 +15,21 @@ export interface DiarySection {
   title: string;
   content: string; // MDX/Markdown content
   order: number; // Display order
-  sources?: SourceLink[]; // Optional list of source links for the section
+}
+
+/**
+ * The day's design, written by the backend's design step (backend/diary/design.py)
+ */
+export interface DiaryTheme {
+  name: string;
+  note: string; // one sentence on how the design reflects the day
+  css: string; // validated there: every selector scoped to .diary-page, no external resources
 }
 
 export interface DiaryEntry {
   metadata: DiaryMetadata;
   sections: DiarySection[];
-}
-
-export interface SourceLink {
-  title: string;
-  url: string;
+  theme?: DiaryTheme; // absent on entries before 2026-10-26 or when the design step gave up
 }
 
 /**

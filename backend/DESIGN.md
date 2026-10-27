@@ -23,12 +23,12 @@ Section ids are load-bearing: `TableOfContents` anchors to them, so they must no
 | 3 | `entertainment-news` | `entertainment-curator` | Google News: Entertainment |
 | 4 | `music-releases` | `music-curator` | Spotify Web API: the week's new albums and singles |
 | 5 | `stock-analysis` | `stock-analyst` | Yahoo Finance: IPOs, indices, sectors, major stocks, movers |
-| 6 | `daily-summary` | `synthesis-agent` | none: reads sections 1–5 |
+| — | none: becomes `metadata.summary` | `synthesis-agent` | none: reads sections 1–5 |
 | 7 | `outlook` | `outlook-agent` | none: reads sections 1–5 |
 
 Two further facts from the frontend that shape the design:
 
-- `MDXContent` renders section content with `dangerouslySetInnerHTML`. So content arrives as an
+- `DiarySection` renders section content with `dangerouslySetInnerHTML`. So content arrives as an
   **HTML string**, and anything the backend puts there executes in the browser (see §7).
 - `metadata.summary`, `metadata.title` and `metadata.generatedAt` are rendered in the page header;
   `title` is just `World Digest — {long date}`, no model needed.
@@ -83,7 +83,8 @@ backend/
       spotify.py            # client-credentials token + /v1/search?q=tag:new
       yahoo.py              # yfinance: closes, IPO calendar, screeners
       __init__.py           # agent id -> gatherer
-    agent.py                # one OpenRouter call; [n] citations -> links
+    agent.py                # one OpenRouter call; [n] citation markers stripped
+    design.py               # the day's CSS: prompt, validation, retries (§5a)
     render.py               # markdown -> sanitized HTML
     pipeline.py             # LangGraph StateGraph: fan-out 5, fan-in 2, assemble DiaryEntry
     store.py                # read / write / list_dates over website/data/*.json
@@ -126,7 +127,7 @@ A LangGraph `StateGraph`, built from the same `AGENTS` tuple:
 ```
         ┌─ political-analyst ─────┐
         ├─ financial-analyst ─────┤     ┌─ synthesis-agent ─┐
-START ──┼─ entertainment-curator ─┼──▶──┤                   ├──▶ assemble ──▶ END
+START ──┼─ entertainment-curator ─┼──▶──┤                   ├──▶ design ──▶ assemble ──▶ END
         ├─ music-curator ─────────┤     └─ outlook-agent ───┘
         └─ stock-analyst ─────────┘
    each gatherer: scrape (thread) → write (model)
@@ -154,9 +155,11 @@ the gatherers' finished markdown (links removed) as `## {section_title}\n{markdo
 `operator.or_` reducer on `results` is what lets five nodes write the same key in one step.
 
 `assemble` drops a leading heading that repeats the section title, renders each markdown blob to
-HTML, sorts by `order`, drops `sources` when empty, and builds `metadata`. `metadata.summary` is the
-**first paragraph of the `synthesis-agent` output, stripped to plain text** (with any "Executive
-Summary:" label removed).
+HTML, sorts by `order`, and builds `metadata`. The `synthesis-agent` writes no section: its one
+paragraph, stripped to plain text, is `metadata.summary`, which the page shows under the headline.
+(It was a "Daily Summary" section until 2026-10-26, repeating what the header already said; the
+frontend hides that section on older entries.) If the design step produced a theme, it goes in
+`theme`.
 
 One agent failing should not lose the other six, so the node catches its own exception: a failed
 scrape (a feed down, Spotify credentials missing) or a failed model call omits that section with a
@@ -169,6 +172,40 @@ raises `AccountError` and the whole run stops with nothing written. Otherwise a 
 writes a partial entry, and because the store is write-once and the Action skips dates that already
 have a file, that partial entry would stay forever. This happened on 2026-10-26 with a $0.50/day key
 cap. Stopping leaves the date empty, so the next run fills it.
+
+## 5a. The design step: a stylesheet per day
+
+After both synthesisers, one more model call reads the finished page (headline, summary, every
+section's markdown) and writes the CSS for that day's page. The entry stores it as
+`theme: {name, note, css}`, and the page shows the name and note under the summary.
+
+**The prompt** (`design.prompt()`) gives the model the page's exact markup, the site's own diary
+stylesheet (read from `website/src/app/globals.css` between `diary:start` and `diary:end`, so it can't
+drift), the eleven design tokens, the seven loaded fonts, and the rules below. Without the base
+stylesheet, the first themes produced text the same colour as the background the base gave it.
+
+**The CSS is untrusted.** It is injected into the page raw, so `validate()` parses it with `tinycss2`
+and rejects it unless:
+- it opens with `/* theme: <name> | <note> */`;
+- every selector starts with `.diary-page`;
+- nothing loads a resource: no `url()`, `image-set()`, `@import`, `@font-face`, and no `<` or
+  backslash anywhere (no breaking out of `<style>`, no escape tricks);
+- the only at-rules are `@media`, `@supports`, `@keyframes`;
+- nothing hides content or uses `position: fixed`;
+- a plain `.diary-page` rule sets all eleven tokens, the colour tokens are hex, and they meet WCAG
+  contrast on both `--paper` and `--paper-alt`. A `.diary-page` rule inside `@media` (a dark mode)
+  is checked the same way, merged over the base tokens.
+
+**Retries.** A rejected stylesheet, a reply cut off at the token limit, or a provider error goes back
+for another attempt, at most `MAX_RETRIES = 5` after the first. A rejection is sent back with its
+reason, so the model fixes that one thing. A rejected key stops at once. If every attempt fails, the
+entry is written without a theme and the page uses the base design; the design step can never lose
+an entry. In the first 11 runs, 9 needed at least one retry (mostly for contrast) and none needed more than four attempts.
+
+The base design in `globals.css` is drawn entirely from the same tokens, so a theme that only sets
+the tokens already restyles the whole page. The theme is unlayered CSS and the base sits in
+`@layer components`, so the theme wins without specificity games, while the base's
+`prefers-reduced-motion` rule uses `!important` inside the layer and still beats any animation.
 
 No checkpointer. Each Action run starts from a clean checkout, so a saved checkpoint would not
 survive to the next run anyway.
@@ -209,11 +246,10 @@ sectors, major stocks, movers, rates & commodities), and `ensure` backs it up: i
 has no heading mentioning IPOs, one is prepended from the calendar data, or "No IPOs priced or
 scheduled around this date" when the calendar is empty.
 
-**Citations.** The model sees the items numbered `[1]…[n]` and is told to cite as `[n]`. After
-generation, `cite()` turns each `[n]` into a link to item *n*'s URL (link text: the publisher), drops
-numbers that don't exist, and unlinks any link the model typed itself. `sources` is the cited items in
-order of first citation, capped at 5, or the top 5 items if the model cited nothing. So **the model
-never supplies a URL**: every link on the page is a scraped one.
+**Citations.** The model sees the items numbered `[1]…[n]` and is told to cite as `[n]`, which keeps
+each claim tied to an item it was given. The page shows no sources, so `uncite()` strips the markers
+and unlinks any link the model typed itself. (Until 2026-10-26 each `[n]` became a publisher link and
+sections listed their sources; the frontend strips those links from older entries.)
 
 ## 6a. The OpenRouter call
 
@@ -226,14 +262,16 @@ resp = await client.chat.completions.create(
               {"role": "user", "content": task}],      # numbered material, or the briefing
     max_tokens=8000,
     extra_headers={"X-Title": "Daily World Diary"},
-    extra_body={"reasoning": {"effort": "low"}},
+    extra_body={"reasoning": {"enabled": False}},
 )
 ```
 
-`max_tokens` covers reasoning tokens as well as the answer. With `deepseek/deepseek-v4-flash-0731`, a
-4000 cap let reasoning consume the whole budget on one section, which came back empty. Low reasoning
-effort plus an 8000 cap fixed it. A response with no content raises, so the section is omitted (§5)
-instead of shipping blank.
+**Reasoning is off.** `max_tokens` counts reasoning tokens as well as the answer, and with
+`deepseek/deepseek-v4-flash-0731` even `effort: "low"` sometimes spent the whole budget thinking and
+returned no text. That emptied a section twice (Financial News on 2026-10-25 at a 4000 cap, Music on
+2026-10-23 at 8000). The agents summarise material they're handed, so they don't need to reason.
+Disabling it fixed both, and cut output tokens by about 70%. A response with no content still raises,
+so the section is omitted (§5) instead of shipping blank.
 
 **The model is one env var (`OPENROUTER_MODEL`), not a constant per agent.** Set it once and all
 seven agents move together. No web-search plugin: the material comes from §6, which also removes the
@@ -294,8 +332,8 @@ so it is checked before `path.join`, never after.
 and a `readFile` with a computed name is not reliably traced. One line in `next.config.ts` makes it
 certain: `outputFileTracingIncludes: { "/api/**": ["./data/**"] }`.
 
-The pages fetch their own `/api/*` routes, building the URL from `NEXT_PUBLIC_BASE_URL` (falling back
-to `http://localhost:3000`), so **that env var must be set to the site's public URL in production**.
+The pages fetch their own `/api/*` routes, building the URL from `NEXT_PUBLIC_BASE_URL`, then
+Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, then `http://localhost:3000`.
 
 ## 10. Running it — a GitHub Action at 9am New York time
 
@@ -338,11 +376,15 @@ Spotify's API reference documents, because no credentials were available when it
 - `test_google_news.py`, `test_spotify.py`, `test_yahoo.py`: parsing, the 24-hour window, the
   backfill fallback, release-date filtering, IPO filtering, session-matched movers, and the IPO
   section guarantee.
-- `test_agent.py`: `[n]` → links, unknown numbers dropped, model-typed links unlinked, sources from
-  citations; gatherers get numbered material and no web plugin.
+- `test_agent.py`: `[n]` markers and model-typed links stripped; gatherers get numbered material and
+  no web plugin.
+- `test_design.py`: every validation rule (scope, resources, hiding, tokens, contrast, dark-mode
+  variants), the prompt's context, retries with the rejection reason, the retry cap, truncation, and
+  a rejected key stopping at once.
 - `test_pipeline.py`: runs the compiled graph with scrapers and the model stubbed. It checks the
   fan-in, that gatherers get their material, the contract with `types/index.ts`, that a failed scrape
-  or model call omits one section, and that an account error aborts the run.
+  or model call omits one section, that an account error aborts the run, and that the designer gets
+  the finished page and can't lose the entry.
 - `test_store.py`, `test_generate.py`: atomic write-once storage and the CLI.
 
 Plus `generate --dry-run`, which runs the whole graph with stub scrapers and stub text and validates

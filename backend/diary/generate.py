@@ -16,8 +16,11 @@ log = logging.getLogger("diary")
 
 
 async def stub(agent, date, context=None, material=None) -> AgentResult:
-    sources = [{"title": "Example source", "url": "https://example.com"}] if agent.gathers else []
-    return AgentResult(f"### {agent.section_title}\n\nStub text for {date}. **No model was called.**", sources)
+    return AgentResult(f"### {agent.section_title}\n\nStub text for {date}. **No model was called.**")
+
+
+async def stub_design(date, title, summary, sections):
+    return None, {}
 
 
 def stub_scrape(agent, date) -> Material:
@@ -39,7 +42,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     if args.dry_run:
-        entry = asyncio.run(pipeline.generate(args.date, run=stub, scrape=stub_scrape))
+        entry = asyncio.run(pipeline.generate(args.date, run=stub, scrape=stub_scrape, design=stub_design))
         pipeline.check_contract(entry)
         print(json.dumps({"sections": [s["id"] for s in entry["sections"]], "metadata": entry["metadata"]}, indent=2))
         return 0

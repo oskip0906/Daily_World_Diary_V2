@@ -8,6 +8,7 @@ dependencies = [
     "markdown",
     "nh3",
     "yfinance>=1.7.0",
+    "tinycss2>=1.5.1",
 ]
 
 [dependency-groups]

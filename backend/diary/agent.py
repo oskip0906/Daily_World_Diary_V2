@@ -1,4 +1,4 @@
-"""One OpenRouter call per agent -> (markdown, sources, usage)."""
+"""One OpenRouter call per agent -> (markdown, usage)."""
 
 import os
 import re
@@ -8,10 +8,9 @@ from functools import cache
 from openai import AsyncOpenAI
 
 from .prompts import Agent
-from .sources import Item, Material
+from .sources import Material
 
-MAX_TOKENS = 8000  # includes reasoning tokens; 4000 left some sections empty
-MAX_SOURCES = 5
+MAX_TOKENS = 8000
 FORMAT = ("Write in Markdown. Start headings at ### (the page already shows the section title). "
           "No preamble, no sign-off.")
 CITATION = re.compile(r"\s*\[(\d+(?:\s*,\s*\d+)*)\]")
@@ -21,7 +20,6 @@ MODEL_LINK = re.compile(r"\[([^\]]+)\]\([^)]*\)")
 @dataclass
 class AgentResult:
     markdown: str
-    sources: list[dict] = field(default_factory=list)
     usage: dict = field(default_factory=dict)
 
 
@@ -54,22 +52,10 @@ def task(agent: Agent, date: str, context: str | None = None, material: Material
             f"Write the {agent.section_title} section from them. " + FORMAT)
 
 
-def cite(md: str, items: list[Item]) -> tuple[str, list[dict]]:
-    """[n] -> a link to scraped item n. The model never supplies a URL: links it typed itself are unlinked."""
-    cited = []
-
-    def link(m: re.Match) -> str:
-        links = []
-        for n in m.group(1).split(","):
-            i = int(n) - 1
-            if 0 <= i < len(items):
-                if items[i] not in cited:
-                    cited.append(items[i])
-                links.append(f"[{items[i].publisher}]({items[i].url})")
-        return " " + " ".join(links) if links else ""
-
-    md = CITATION.sub(link, unlink(md))
-    return md, [{"title": i.title, "url": i.url} for i in (cited or items)[:MAX_SOURCES]]
+def uncite(md: str) -> str:
+    """The page shows no sources: drop the [n] markers and any link the model typed itself.
+    The prompt still asks for [n] so the model keeps each claim tied to a scraped item."""
+    return CITATION.sub("", unlink(md))
 
 
 async def run_agent(agent: Agent, date: str, context: str | None = None,
@@ -80,14 +66,15 @@ async def run_agent(agent: Agent, date: str, context: str | None = None,
                   {"role": "user", "content": task(agent, date, context, material)}],
         max_tokens=MAX_TOKENS,
         extra_headers={"X-Title": "Daily World Diary"},
-        # reasoning tokens count against max_tokens; keep them small so the section itself fits
-        extra_body={"reasoning": {"effort": "low"}},
+        # the agents summarise material they're handed; reasoning (even "low") could spend the whole
+        # max_tokens budget and return an empty section
+        extra_body={"reasoning": {"enabled": False}},
     )
     message = resp.choices[0].message
     if not (message.content or "").strip():
         raise ValueError(f"{agent.agent_id} returned no content (finish_reason={resp.choices[0].finish_reason})")
-    md, sources = cite(message.content.strip(), material.items if material else [])
+    md = uncite(message.content.strip())
     if material is not None:
         md = material.ensure(md)
     usage = resp.usage.model_dump() if resp.usage else {}
-    return AgentResult(md, sources, usage)
+    return AgentResult(md, usage)

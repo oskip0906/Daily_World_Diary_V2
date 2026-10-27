@@ -15,7 +15,12 @@ def calls(tmp_path, monkeypatch):
         made.append(agent.agent_id)
         return AgentResult(f"Body of {agent.agent_id}.")
 
+    async def no_design(*args):
+        made.append("design")
+        return None, {}
+
     monkeypatch.setattr(pipeline, "run_agent", fake_run_agent)
+    monkeypatch.setattr(pipeline, "run_design", no_design)
     monkeypatch.setattr(pipeline, "gather", lambda agent, date: Material([]))
     return made
 

@@ -1,16 +1,22 @@
 /**
  * Dynamic diary entry page
- * Displays full diary entry with sections and TOC
+ * Displays full diary entry with sections and TOC, styled by the day's generated theme
  * Server component that fetches diary data on load
+ *
+ * The markup below is what the backend's design step styles: keep PAGE in
+ * backend/diary/design.py in step with it.
  */
 
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { DiaryLayout } from "@/components/DiaryLayout";
 import { DiarySection } from "@/components/DiarySection";
-import { formatDateLong } from "@/lib/date-utils";
-import { baseUrl } from "@/lib/api";
+import { TableOfContents } from "@/components/TableOfContents";
+import { formatDateLong, parseDate } from "@/lib/date-utils";
+import { baseUrl, getAvailableDates } from "@/lib/api";
 import { DiaryEntry, TocItem } from "@/types";
+
+// Entries before 2026-10-26 still carry a Daily Summary section; its paragraph already opens the page
+const HIDDEN_SECTIONS = new Set(["daily-summary"]);
 
 interface DiaryPageProps {
   params: Promise<{ date: string }>;
@@ -37,65 +43,90 @@ async function getDiaryEntry(date: string): Promise<DiaryEntry | null> {
   }
 }
 
+function monthDay(date: string): string {
+  return parseDate(date).toLocaleDateString("en-US", { month: "long", day: "numeric" });
+}
+
 export default async function DiaryPage({ params }: DiaryPageProps) {
   const { date } = await params;
 
-  const diaryEntry = await getDiaryEntry(date);
+  const [diaryEntry, dates] = await Promise.all([getDiaryEntry(date), getAvailableDates()]);
 
   // Handle missing entry
   if (!diaryEntry) {
     notFound();
   }
 
-  // Build table of contents from sections
-  const tocItems: TocItem[] = diaryEntry.sections.map((section) => ({
+  const sections = diaryEntry.sections
+    .filter((section) => !HIDDEN_SECTIONS.has(section.id))
+    .sort((a, b) => a.order - b.order);
+  const tocItems: TocItem[] = sections.map((section) => ({
     id: section.id,
     title: section.title,
     order: section.order,
   }));
 
+  const index = dates.indexOf(date);
+  const prev = index > 0 ? dates[index - 1] : null;
+  const next = index >= 0 && index < dates.length - 1 ? dates[index + 1] : null;
+  const weekday = parseDate(date).toLocaleDateString("en-US", { weekday: "long" });
+  const generated = new Date(diaryEntry.metadata.generatedAt).toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  // the backend already rejects "<"; checked again because this is injected raw
+  const theme = diaryEntry.theme && !diaryEntry.theme.css.includes("<") ? diaryEntry.theme : null;
+
   return (
-    <>
-      {/* Page header with metadata */}
-      <div className="border-b border-border dark:border-dark-border bg-bg-secondary dark:bg-dark-bg-secondary">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-3xl">
-            <Link
-              href="/calendar"
-              className="inline-flex items-center text-sm text-accent dark:text-dark-accent hover:text-accent-hover dark:hover:text-dark-accent-hover mb-4"
-            >
-              ← Back to Calendar
-            </Link>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary dark:text-dark-text-primary mb-3">
-              {diaryEntry.metadata.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-text-muted dark:text-dark-text-muted">
-              <time dateTime={diaryEntry.metadata.date}>
-                {formatDateLong(diaryEntry.metadata.date)}
-              </time>
-              <span>•</span>
-              <span>
-                Generated{" "}
-                {new Date(diaryEntry.metadata.generatedAt).toLocaleString()}
-              </span>
-            </div>
-            <p className="mt-4 text-lg text-text-secondary dark:text-dark-text-secondary">
-              {diaryEntry.metadata.summary}
+    <div className="diary-page" id="top" data-date={date}>
+      {theme && <style dangerouslySetInnerHTML={{ __html: theme.css }} />}
+
+      <header className="diary-hero">
+        <div className="diary-hero-inner">
+          <nav className="diary-crumbs">
+            <Link href="/calendar">All entries</Link>
+          </nav>
+          <p className="diary-kicker">
+            <time dateTime={date}>{weekday} edition</time>
+          </p>
+          <h1 className="diary-title">{diaryEntry.metadata.title}</h1>
+          {diaryEntry.metadata.summary && <p className="diary-summary">{diaryEntry.metadata.summary}</p>}
+          {theme && (
+            <p className="diary-theme-note">
+              <span className="diary-theme-name">{theme.name}</span> {theme.note}
             </p>
-          </div>
+          )}
         </div>
+      </header>
+
+      <div className="diary-body">
+        <TableOfContents items={tocItems} />
+        <article className="diary-article">
+          {sections.map((section, i) => (
+            <DiarySection key={section.id} section={section} number={i + 1} />
+          ))}
+        </article>
       </div>
 
-      {/* Main content with TOC sidebar */}
-      <DiaryLayout tocItems={tocItems}>
-        {/* Render diary sections */}
-        {diaryEntry.sections
-          .sort((a, b) => a.order - b.order)
-          .map((section) => (
-            <DiarySection key={section.id} section={section} />
-          ))}
-      </DiaryLayout>
-    </>
+      <footer className="diary-footer">
+        {prev ? (
+          <Link className="diary-footer-prev" href={`/diary/${prev}`}>
+            ← {monthDay(prev)}
+          </Link>
+        ) : (
+          <span />
+        )}
+        <span className="diary-footer-meta">Generated {generated} ET</span>
+        {next ? (
+          <Link className="diary-footer-next" href={`/diary/${next}`}>
+            {monthDay(next)} →
+          </Link>
+        ) : (
+          <span />
+        )}
+      </footer>
+    </div>
   );
 }
 
@@ -116,6 +147,6 @@ export async function generateMetadata({
 
   return {
     title: `${diaryEntry.metadata.title} | Daily World Diary`,
-    description: diaryEntry.metadata.summary,
+    description: diaryEntry.metadata.summary || formatDateLong(date),
   };
 }

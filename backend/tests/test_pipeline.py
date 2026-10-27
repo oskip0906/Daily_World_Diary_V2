@@ -10,7 +10,8 @@ from diary.sources import Item, Material
 
 GATHERERS = [a for a in AGENTS if a.gathers]
 SECTION_IDS = ["political-news", "financial-news", "entertainment-news", "music-releases",
-               "stock-analysis", "daily-summary", "outlook"]
+               "stock-analysis", "outlook"]
+THEME = {"name": "Night Shift", "note": "A dark, tense edition.", "css": ".diary-page { --paper: #000000; }"}
 
 
 @pytest.fixture
@@ -25,10 +26,14 @@ def contexts(monkeypatch):
             md = "### Executive Summary\n\nThe day in **brief**.\n\nMore detail."
         else:
             md = f"### {agent.agent_name}\n\nBody of {agent.agent_id}."
-        sources = [{"title": "S", "url": "https://s.com"}] if agent.gathers else []
-        return AgentResult(md, sources, {"prompt_tokens": 100, "completion_tokens": 10, "cost": 0.01})
+        return AgentResult(md, {"prompt_tokens": 100, "completion_tokens": 10, "cost": 0.01})
+
+    async def fake_design(date, title, summary, sections):
+        seen["design"] = (date, title, summary, sections)
+        return THEME, {"prompt_tokens": 50, "completion_tokens": 5, "cost": 0.005}
 
     monkeypatch.setattr(pipeline, "run_agent", fake_run_agent)
+    monkeypatch.setattr(pipeline, "run_design", fake_design)
     monkeypatch.setattr(pipeline, "gather", lambda agent, date: Material(
         [Item(f"{agent.agent_id} story", f"https://news.example/{agent.agent_id}", "Outlet")]))
     monkeypatch.setenv("OPENROUTER_MODEL", "vendor/model")
@@ -42,7 +47,7 @@ def generate(date="2026-10-24"):
 def test_sections_match_the_frontend_contract(contexts):
     entry = generate()
     assert [s["id"] for s in entry["sections"]] == SECTION_IDS
-    assert [s["order"] for s in entry["sections"]] == [1, 2, 3, 4, 5, 6, 7]
+    assert [s["order"] for s in entry["sections"]] == [1, 2, 3, 4, 5, 7]
     assert entry["sections"][0]["title"] == "Political News"
     assert entry["sections"][0]["content"].startswith("<h3>")
     pipeline.check_contract(entry)
@@ -65,16 +70,47 @@ def test_metadata(contexts):
     datetime.fromisoformat(meta["generatedAt"])
 
 
-def test_sources_only_on_sections_that_have_them(contexts):
-    sections = {s["id"]: s for s in generate()["sections"]}
-    assert sections["political-news"]["sources"] == [{"title": "S", "url": "https://s.com"}]
-    assert "sources" not in sections["daily-summary"]
+def test_the_summary_is_metadata_not_a_section(contexts):
+    entry = generate()
+    assert "daily-summary" not in [s["id"] for s in entry["sections"]]
+    assert entry["metadata"]["summary"] == "The day in brief."
+    assert all("sources" not in s for s in entry["sections"])
+
+
+def test_the_designer_reads_the_finished_page(contexts):
+    entry = generate()
+    date, title, summary, sections = contexts["design"]
+    assert (date, title, summary) == ("2026-10-24", "World Digest — October 24, 2026", "The day in brief.")
+    assert [sid for sid, _, _ in sections] == SECTION_IDS
+    assert sections[0][1] == "Political News" and "Body of political-analyst." in sections[0][2]
+    assert entry["theme"] == THEME
+    pipeline.check_contract(entry)
+
+
+def test_no_theme_when_the_designer_gives_up(contexts, monkeypatch):
+    async def gave_up(*args):
+        return None, {"cost": 0.02}
+
+    monkeypatch.setattr(pipeline, "run_design", gave_up)
+    entry = generate()
+    assert "theme" not in entry
+    assert len(entry["sections"]) == 6
+
+
+def test_a_crashing_designer_still_writes_the_entry(contexts, monkeypatch):
+    async def boom(*args):
+        raise RuntimeError("unexpected")
+
+    monkeypatch.setattr(pipeline, "run_design", boom)
+    entry = generate()
+    assert "theme" not in entry and len(entry["sections"]) == 6
 
 
 def test_run_records_model_usage_and_prompt_versions(contexts):
     entry = generate()
     assert entry["model"] == "vendor/model"
-    assert entry["usage"] == {"prompt_tokens": 700, "completion_tokens": 70, "cost": pytest.approx(0.07)}
+    # seven agents plus the designer
+    assert entry["usage"] == {"prompt_tokens": 750, "completion_tokens": 75, "cost": pytest.approx(0.075)}
     assert entry["promptVersions"] == {a.agent_id: a.version for a in AGENTS}
 
 
@@ -145,7 +181,7 @@ def test_a_failed_scrape_omits_only_its_section(contexts, monkeypatch):
     monkeypatch.setattr(pipeline, "gather", flaky)
     entry = generate()
     assert "music-releases" not in [s["id"] for s in entry["sections"]]
-    assert len(entry["sections"]) == 6
+    assert len(entry["sections"]) == 5
 
 
 def test_the_briefing_drops_links(contexts, monkeypatch):

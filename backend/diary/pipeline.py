@@ -1,5 +1,5 @@
 """LangGraph pipeline: five gatherers (scrape, then write) fan out from START, both synthesisers
-wait on all five, assemble waits on both."""
+wait on all five, the designer reads the finished entry, and assemble writes it up."""
 
 import asyncio
 import logging
@@ -12,6 +12,7 @@ import openai
 from langgraph.graph import END, START, StateGraph
 
 from .agent import AgentResult, model, run_agent, unlink
+from .design import run_design
 from .prompts import AGENTS, Agent
 from .render import render, to_text
 from .sources import gather
@@ -19,6 +20,7 @@ from .sources import gather
 log = logging.getLogger(__name__)
 BY_ID = {a.agent_id: a for a in AGENTS}
 USAGE_KEYS = ("prompt_tokens", "completion_tokens", "cost")
+SUMMARY_AGENT = "synthesis-agent"  # its paragraph becomes metadata.summary, not a section
 ACCOUNT_STATUSES = {401, 402, 403}  # bad key, out of credits, key spend cap
 
 
@@ -30,6 +32,8 @@ class AccountError(RuntimeError):
 class State(TypedDict):
     date: str
     results: Annotated[dict[str, AgentResult], operator.or_]  # parallel nodes merge, not overwrite
+    theme: dict | None
+    design_usage: dict
     entry: dict
 
 
@@ -70,54 +74,84 @@ def summary(md: str) -> str:
     return re.sub(r"^executive summary:\s*", "", to_text(para), flags=re.I)
 
 
-def assemble(date: str, results: dict[str, AgentResult]) -> dict:
-    sections = []
-    for a in sorted((BY_ID[i] for i in results), key=lambda a: a.order):
-        r = results[a.agent_id]
-        md = strip_title(r.markdown, a.section_title)
-        section = {"id": a.section_id, "title": a.section_title, "content": render(md), "order": a.order}
-        if r.sources:
-            section["sources"] = r.sources
-        sections.append(section)
+def page_sections(results: dict[str, AgentResult]) -> list[tuple[Agent, str]]:
+    """(agent, markdown) for every section the page shows, in page order."""
+    shown = sorted((BY_ID[i] for i in results if i != SUMMARY_AGENT), key=lambda a: a.order)
+    return [(a, strip_title(results[a.agent_id].markdown, a.section_title)) for a in shown]
 
+
+def title(date: str) -> str:
     d = Date.fromisoformat(date)
-    synthesis = results.get("synthesis-agent")
-    return {
+    return f"World Digest — {d:%B} {d.day}, {d.year}"
+
+
+def summary_of(results: dict[str, AgentResult]) -> str:
+    synthesis = results.get(SUMMARY_AGENT)
+    return summary(synthesis.markdown) if synthesis else ""
+
+
+def design_node(design=None):
+    async def node(state: State) -> dict:
+        results = state["results"]
+        sections = [(a.section_id, a.section_title, md) for a, md in page_sections(results)]
+        if not sections:
+            return {"theme": None, "design_usage": {}}
+        try:
+            theme, usage = await (design or run_design)(state["date"], title(state["date"]), summary_of(results), sections)
+        except Exception:
+            # the theme is decoration: a failure here must not lose the entry
+            log.warning("design failed; the page uses the base design", exc_info=True)
+            return {"theme": None, "design_usage": {}}
+        return {"theme": theme, "design_usage": usage}
+    return node
+
+
+def assemble(date: str, results: dict[str, AgentResult], theme: dict | None = None,
+             design_usage: dict | None = None) -> dict:
+    sections = [{"id": a.section_id, "title": a.section_title, "content": render(md), "order": a.order}
+                for a, md in page_sections(results)]
+    usages = [r.usage for r in results.values()] + [design_usage or {}]
+    entry = {
         "metadata": {
             "date": date,
-            "title": f"World Digest — {d:%B} {d.day}, {d.year}",
-            "summary": summary(synthesis.markdown) if synthesis else "",
+            "title": title(date),
+            "summary": summary_of(results),
             "generatedAt": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         },
         "sections": sections,
         # ignored by the frontend; records what produced the entry and what it cost
         "model": model(),
-        "usage": {k: sum(r.usage.get(k) or 0 for r in results.values()) for k in USAGE_KEYS},
+        "usage": {k: sum(u.get(k) or 0 for u in usages) for k in USAGE_KEYS},
         "promptVersions": {a.agent_id: a.version for a in AGENTS},
     }
+    if theme:
+        entry["theme"] = theme
+    return entry
 
 
-def build(run=None, scrape=None):
+def build(run=None, scrape=None, design=None):
     gatherers = [a.agent_id for a in AGENTS if a.gathers]
     synthesisers = [a.agent_id for a in AGENTS if not a.gathers]
 
     g = StateGraph(State)
     for a in AGENTS:
         g.add_node(a.agent_id, agent_node(a, run, scrape))
-    g.add_node("assemble", lambda s: {"entry": assemble(s["date"], s["results"])})
+    g.add_node("design", design_node(design))
+    g.add_node("assemble", lambda s: {"entry": assemble(s["date"], s["results"], s.get("theme"), s.get("design_usage"))})
 
     for a in gatherers:
         g.add_edge(START, a)
     for s in synthesisers:
         g.add_edge(gatherers, s)  # list source = wait for all five
-    g.add_edge(synthesisers, "assemble")
+    g.add_edge(synthesisers, "design")
+    g.add_edge("design", "assemble")
     g.add_edge("assemble", END)
     return g.compile()
 
 
-async def generate(date: str, run=None, scrape=None) -> dict:
-    """`run` and `scrape` replace the model call and the scrapers (for --dry-run)."""
-    return (await build(run, scrape).ainvoke({"date": date, "results": {}}))["entry"]
+async def generate(date: str, run=None, scrape=None, design=None) -> dict:
+    """`run`, `scrape` and `design` replace the model calls and the scrapers (for --dry-run)."""
+    return (await build(run, scrape, design).ainvoke({"date": date, "results": {}}))["entry"]
 
 
 def check_contract(entry: dict) -> None:
@@ -133,6 +167,8 @@ def check_contract(entry: dict) -> None:
     for s in entry["sections"]:
         need(isinstance(s.get("id"), str) and isinstance(s.get("title"), str), "section id/title")
         need(isinstance(s.get("content"), str) and isinstance(s.get("order"), int), "section content/order")
-        for src in s.get("sources", []):
-            need(src.get("url", "").startswith(("http://", "https://")) and src.get("title"), "source")
+    theme = entry.get("theme")
+    if theme is not None:
+        need(all(isinstance(theme.get(k), str) and theme[k] for k in ("name", "note", "css")), "theme name/note/css")
+        need("<" not in theme["css"], "theme css must not contain <")
 
