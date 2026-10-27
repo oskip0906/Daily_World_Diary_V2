@@ -55,6 +55,9 @@ def test_gatherers_get_numbered_material_and_no_web_search(fake):
     prompt = fake.calls[0]["messages"][1]["content"]
     assert "[1] Headline 1 — Outlet 1" in prompt and "[2] Headline 2 — Outlet 2" in prompt
     assert "S&P 500: 7,600 (+0.3%)" in prompt
+    # 2026-10-26: the limit only in the system prompt was ignored, so it's restated around the material
+    limit = GATHERER.system_prompt.split("Limit to ")[1].split(" words")[0].split("-")[1]
+    assert f"Hard limit: {limit} words" in prompt and prompt.endswith(f"Remember: at most {limit} words.")
     assert "plugins" not in fake.calls[0]["extra_body"]
     # 2026-10-23: even "low" reasoning spent the whole token budget and returned an empty section
     assert fake.calls[0]["extra_body"]["reasoning"] == {"enabled": False}

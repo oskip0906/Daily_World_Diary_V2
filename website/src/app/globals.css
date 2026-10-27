@@ -360,9 +360,27 @@
     border-bottom: 1px solid currentColor;
   }
 
+  /* Spotify players, in place of the music section's Spotify citations */
+  .diary-embed {
+    display: block;
+    width: 100%;
+    height: 152px;
+    margin-top: 0.75rem;
+    border: 0;
+    border-radius: 12px;
+  }
+
   /* a long publisher name that can't wrap pushed phone pages sideways; layered !important beats any theme */
   .diary-prose a {
     white-space: normal !important;
+  }
+
+  /* 2026-10-23: a 48px uppercase headline in a wide font made "OCTOBER" wider than a phone */
+  .diary-title,
+  .diary-section-title,
+  .diary-card-title {
+    min-width: 0 !important;
+    overflow-wrap: anywhere !important; /* unlike break-word, also lowers min-content, so flex rows shrink */
   }
 
   .diary-prose a:hover {

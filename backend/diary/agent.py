@@ -15,6 +15,7 @@ FORMAT = ("Write in Markdown. Start headings at ### (the page already shows the 
           "No preamble, no sign-off.")
 CITATION = re.compile(r"\s*\[(\d+(?:\s*,\s*\d+)*)\]")
 MODEL_LINK = re.compile(r"\[([^\]]+)\]\([^)]*\)")
+WORD_LIMIT = re.compile(r"Limit to \d+-(\d+) words")
 
 
 @dataclass
@@ -44,13 +45,18 @@ def numbered(material: Material) -> str:
 
 
 def task(agent: Agent, date: str, context: str | None = None, material: Material | None = None) -> str:
+    # the word limit is restated next to the material, and again after it: on 2026-10-26 sections ran
+    # to three times the limit when it was only in the system prompt
+    m = WORD_LIMIT.search(agent.system_prompt)
+    limit = (f" Hard limit: {m[1]} words, citations not counted. Cover only the most important stories and "
+             f"leave the rest out; a reader should finish the section in about a minute.") if m else ""
     if material is not None:
         return (f"Write the {agent.section_title} section of Daily World Diary for {date}, covering the 24 hours "
                 f"up to the morning of {date}. Use only the material below; add no facts from elsewhere. "
                 f"Cite the numbered items you use as [n] right after the sentence they support. "
-                f"{FORMAT}\n\n{numbered(material)}")
+                f"{FORMAT}{limit}\n\n{numbered(material)}" + (f"\n\nRemember: at most {m[1]} words." if m else ""))
     return (f"These are the {date} sections of Daily World Diary:\n\n{context}\n\n"
-            f"Write the {agent.section_title} section from them. " + FORMAT)
+            f"Write the {agent.section_title} section from them. " + FORMAT + limit)
 
 
 def cite(md: str, items: list[Item]) -> str:

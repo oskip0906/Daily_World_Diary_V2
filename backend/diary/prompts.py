@@ -35,7 +35,7 @@ Output format:
 - Use clear, accessible language
 - Structure content with markdown headings and paragraphs
 - Include relevant context for understanding significance
-- Limit to 300-500 words per daily entry
+- Limit to 150-250 words per daily entry
 - Avoid editorializing or expressing political bias
 
 Quality standards:
@@ -43,8 +43,8 @@ Quality standards:
 - Clearly distinguish between confirmed facts and developing situations
 - Provide historical context when necessary for understanding
 - Focus on events likely to have lasting impact""",
-        version='2.1.0',
-        last_updated='2026-01-01T00:00:00Z',
+        version='2.2.0',
+        last_updated='2026-10-26T00:00:00Z',
         section_id='political-news',
         section_title='Political News',
         order=1,
@@ -68,7 +68,7 @@ Output format:
 - Include specific numerical data (indices, prices, percentages)
 - Use bullet points for market statistics
 - Organize by asset class or geographic region
-- Limit to 400-600 words per daily entry
+- Limit to 200-300 words per daily entry
 
 Quality standards:
 - Clearly separate market data from analysis or commentary
@@ -76,8 +76,8 @@ Quality standards:
 - Avoid making predictions or investment recommendations
 - Explain correlation between different market segments when relevant
 - Use standardized financial terminology""",
-        version='2.3.1',
-        last_updated='2025-12-15T00:00:00Z',
+        version='2.4.0',
+        last_updated='2026-10-26T00:00:00Z',
         section_id='financial-news',
         section_title='Financial News',
         order=2,
@@ -100,7 +100,7 @@ Output format:
 - Organize by medium (film, TV, streaming, etc.)
 - Use engaging but professional tone
 - Include relevant industry metrics when applicable
-- Limit to 300-400 words per daily entry
+- Limit to 150-200 words per daily entry
 - Focus on news over opinion
 
 Quality standards:
@@ -109,8 +109,8 @@ Quality standards:
 - Avoid hyperbole or excessive promotional language
 - Cover diverse range of content and creators
 - Note trends that reflect broader cultural shifts""",
-        version='1.8.0',
-        last_updated='2025-11-20T00:00:00Z',
+        version='1.9.0',
+        last_updated='2026-10-26T00:00:00Z',
         section_id='entertainment-news',
         section_title='Entertainment News',
         order=3,
@@ -133,12 +133,12 @@ Your role is to:
 Output format:
 - Group by release type (### Albums & EPs, ### Singles)
 - Use bullet points: **Artist — Title** followed by one line on why it matters
-- Limit to 250-350 words
+- Limit to 125-175 words
 
 Quality standards:
 - Only mention releases in the list; never invent releases, chart positions or streaming numbers
 - Don't claim critical reception or sales you weren't given""",
-        version='2.0.0',
+        version='2.1.0',
         last_updated='2026-10-26T00:00:00Z',
         section_id='music-releases',
         section_title='Music Releases',
@@ -166,8 +166,8 @@ Quality standards:
 - Give exact percentage changes as provided
 - Distinguish one-day moves from trends; note when a move is large for that asset
 - Avoid buy/sell recommendations
-- Limit to 400-500 words""",
-        version='3.0.0',
+- Limit to 200-250 words""",
+        version='3.1.0',
         last_updated='2026-10-26T00:00:00Z',
         section_id='stock-analysis',
         section_title='Stock Analysis',
@@ -182,7 +182,7 @@ Quality standards:
 
 You receive the day's finished sections (politics, finance, entertainment, music, markets).
 
-Write exactly one paragraph of 2-3 sentences and 50-80 words. Never go over 80 words: the paragraph sits under a large headline, and anything longer reads as a wall of text. Choose; don't list.
+Write exactly one paragraph of 1-2 sentences and 25-40 words. Never go over 40 words: the paragraph sits under a large headline, and anything longer reads as a wall of text. Choose; don't list.
 - Lead with the single development that matters most today
 - Connect it to one or two developments from other sections, but only where a real link exists
 - Be concrete: name the people, places, companies and figures involved
@@ -192,7 +192,7 @@ Do not:
 - Add headings, lists, bold text, or labels such as "Executive summary:"
 - Predict, advise, or editorialise
 - Use any fact that is not in the sections you were given""",
-        version='4.1.0',
+        version='4.2.0',
         last_updated='2026-10-26T00:00:00Z',
         section_id='daily-summary',
         section_title='Daily Summary',
@@ -216,7 +216,7 @@ Output format:
 - Organize by time horizon (24-48 hours, next week, next month)
 - Use bullet points for specific upcoming events
 - Clearly label projections as possibilities, not predictions
-- Limit to 300-400 words
+- Limit to 150-200 words
 - Structure around themes rather than exhaustive lists
 
 Quality standards:
@@ -227,8 +227,8 @@ Quality standards:
 - Maintain calibrated confidence language (may, could, likely)
 - Focus on events with broad significance
 - Acknowledge uncertainty and alternative scenarios""",
-        version='1.9.0',
-        last_updated='2025-12-10T00:00:00Z',
+        version='1.10.0',
+        last_updated='2026-10-26T00:00:00Z',
         section_id='outlook',
         section_title='Outlook',
         order=7,

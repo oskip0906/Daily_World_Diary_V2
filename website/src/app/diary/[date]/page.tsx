@@ -16,8 +16,6 @@ import { formatDateLong, parseDate } from "@/lib/date-utils";
 import { baseUrl, getAvailableDates } from "@/lib/api";
 import { DiaryEntry, HeroStyle, TocItem } from "@/types";
 
-// Entries before 2026-10-26 still carry a Daily Summary section; its paragraph already opens the page
-const HIDDEN_SECTIONS = new Set(["daily-summary"]);
 const HEROES: HeroStyle[] = ["classic", "centered", "split", "poster"];
 
 interface DiaryPageProps {
@@ -59,9 +57,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
     notFound();
   }
 
-  const sections = diaryEntry.sections
-    .filter((section) => !HIDDEN_SECTIONS.has(section.id))
-    .sort((a, b) => a.order - b.order);
+  const sections = [...diaryEntry.sections].sort((a, b) => a.order - b.order);
   const tocItems: TocItem[] = sections.map((section) => ({
     id: section.id,
     title: section.title,

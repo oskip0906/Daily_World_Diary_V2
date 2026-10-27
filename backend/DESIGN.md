@@ -263,6 +263,13 @@ the last two. `charts()` keeps the whole series for the indices and sectors; it 
 `MarketCharts.tsx` draws one small card per symbol as an inline SVG polyline. No model is involved,
 so the numbers are exactly what Yahoo returned.
 
+## 5d. Spotify players
+
+The music section cites each release as a link to its `open.spotify.com/album|track/<id>` page.
+`embedSpotify` in `StoryCard.tsx` turns each such link into Spotify's embed iframe. The iframe `src`
+is rebuilt from the type keyword and the 22-character id the regex captured, so no other part of the
+model's output reaches it.
+
 No checkpointer. Each Action run starts from a clean checkout, so a saved checkpoint would not
 survive to the next run anyway.
 

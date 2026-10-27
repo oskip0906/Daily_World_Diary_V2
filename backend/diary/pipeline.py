@@ -71,8 +71,10 @@ def strip_title(md: str, title: str) -> str:
 
 
 def summary(md: str) -> str:
-    """First non-heading paragraph: the synthesis prompt already opens with a 2-3 sentence summary."""
-    para = next((b for b in md.split("\n\n") if b.strip() and not b.lstrip().startswith("#")), "")
+    """First non-heading paragraph, the summary the synthesis prompt asks for. If the model wrote it as
+    a heading instead (2026-10-26 came back empty that way), the first block with its #s removed."""
+    blocks = [b.strip() for b in md.split("\n\n") if b.strip()]
+    para = next((b for b in blocks if not b.startswith("#")), blocks[0].lstrip("#").strip() if blocks else "")
     return re.sub(r"^executive summary:\s*", "", to_text(para), flags=re.I)
 
 

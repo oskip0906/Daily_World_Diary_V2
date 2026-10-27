@@ -96,6 +96,15 @@ def test_charts_ride_along_with_their_section(contexts, monkeypatch):
     pipeline.check_contract(entry)
 
 
+@pytest.mark.parametrize("md, expected", [
+    ("### Executive Summary\n\nThe day in **brief**.", "The day in brief."),
+    ("### Markets fell as talks stalled.", "Markets fell as talks stalled."),  # 2026-10-26
+    ("", ""),
+])
+def test_summary_takes_the_first_paragraph_or_a_lone_heading(md, expected):
+    assert pipeline.summary(md) == expected
+
+
 def test_the_summary_is_metadata_not_a_section(contexts):
     entry = generate()
     assert "daily-summary" not in [s["id"] for s in entry["sections"]]

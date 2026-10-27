@@ -22,6 +22,25 @@ const LEDE = /^\s*<p>([\s\S]*?)<\/p>\s*([\s\S]*)$/;
 const FIGURE =
   /[+\-−]?\$?\d[\d,]*(?:\.\d+)?\s?(?:%|percent\b|bps\b|(?:trillion|billion|million)\b)|[+\-−]?\$\d[\d,]*(?:\.\d+)?/i;
 
+// a citation of a Spotify album or track (backend/diary/sources/spotify.py): becomes a player
+const SPOTIFY_LINK =
+  /\s*<a href="https:\/\/open\.spotify\.com\/(album|track)\/([A-Za-z0-9]{22})(?:\?[^"]*)?"[^>]*>[^<]*<\/a>([.,;:]?)/g;
+
+/**
+ * Spotify citations -> embedded players. The iframe src is rebuilt from the two captured parts,
+ * which the regex limits to a type keyword and a 22-character base62 id, so nothing else reaches it.
+ */
+export function embedSpotify(html: string): string {
+  return html.replace(
+    SPOTIFY_LINK,
+    // the sentence's own punctuation stays with the sentence, before the player
+    (_, type: string, id: string, punctuation: string) =>
+      `${punctuation}<iframe class="diary-embed" src="https://open.spotify.com/embed/${type}/${id}" height="152" ` +
+      `loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" ` +
+      `title="Play on Spotify"></iframe>`
+  );
+}
+
 /**
  * Section HTML (sanitized by backend/diary/render.py, whose headings are bare <h3>) -> stories
  */
@@ -45,7 +64,7 @@ interface StoryCardProps {
 
 export function StoryCard({ story, card, index, thread }: StoryCardProps) {
   const lede = card === "lede" ? story.body.match(LEDE) : null;
-  const body = lede ? lede[2] : story.body;
+  const body = embedSpotify(lede ? lede[2] : story.body);
   const figure = card === "stat" ? story.body.replace(/<[^>]+>/g, " ").match(FIGURE)?.[0].trim() : undefined;
 
   return (

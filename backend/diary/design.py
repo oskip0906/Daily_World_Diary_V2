@@ -142,7 +142,9 @@ PAGE = """<div class="diary-page" id="top" data-date="2026-10-26" data-hero="spl
               <p class="diary-card-lede">The first paragraph.</p>   <!-- lede cards only -->
               <div class="diary-card-body diary-prose">
                 <!-- the story text: only h4, p, ul, ol, li, strong, em, blockquote, code, pre, hr, br and a.
-                     Each a is a citation: a publisher name linking to the article, right after the sentence it supports -->
+                     Each a is a citation: a publisher name linking to the article, right after the sentence it supports.
+                     In music-releases each Spotify citation is instead a player:
+                     <iframe class="diary-embed" height="152"> (Spotify's own widget: style its box, not its inside) -->
               </div>
             </div>
           </article>
@@ -181,6 +183,7 @@ def prompt() -> str:
 - Be bold. The base stylesheet below is a neutral scaffold, not a style to imitate: a design that keeps its warm paper, its serif headline and its plain columns has not done the job. Push hard on at least two of: the palette (dark, saturated, monochrome, high-key...), the type (scale, weight, case, tracking), the structure (header style, card mix, layouts) and the ornament (rules, borders, shadows, gradients, rotated labels, oversized numerals, patterns made with gradients).
 - Translate the mood instead of illustrating it literally. No flag colours for an election, no automatic red for a bad day. Ask what the day felt like (tense, relieved, feverish, uncertain, celebratory, sombre) and design that.
 - Reading still comes first. Body text stays comfortable on a 360px phone and on a wide monitor: 16-20px, line-height 1.5-1.8, and no more than about 75 characters per line.
+- Headlines must fit a 360px phone: the longest word of the headline ("OCTOBER", "DIGEST") has to fit on one line, so with wide or uppercase display fonts keep the phone size around 2.25-2.75rem and scale up from there.
 - Motion is optional and restrained: at most one subtle entrance or hover effect, nothing that loops forever over text.
 
 # How the page is built
