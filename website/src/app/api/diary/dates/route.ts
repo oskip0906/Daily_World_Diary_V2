@@ -1,7 +1,7 @@
 /**
  * API Route: /api/diary/dates
  * Returns list of dates that have diary entries
- * Used by calendar to determine which dates are clickable
+ * Used by the home page calendar to determine which dates are clickable
  */
 
 import { readdir } from "node:fs/promises";

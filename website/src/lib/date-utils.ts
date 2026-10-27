@@ -120,13 +120,6 @@ export function getNextMonth(year: number, month: number) {
 }
 
 /**
- * Check if a date is today
- */
-export function isToday(dateString: string): boolean {
-  return dateString === formatDate(new Date());
-}
-
-/**
  * Format date for display (e.g., "January 15, 2024")
  */
 export function formatDateLong(dateString: string): string {

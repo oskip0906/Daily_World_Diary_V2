@@ -99,7 +99,7 @@ PAGE = """<div class="diary-page" id="top" data-date="2026-10-26" data-hero="spl
   <style>/* your stylesheet goes here */</style>
   <header class="diary-hero">
     <div class="diary-hero-inner">
-      <nav class="diary-crumbs"><a href="/calendar">All entries</a></nav>
+      <nav class="diary-crumbs"><a href="/">All editions</a></nav>
       <p class="diary-kicker">Monday edition</p>
       <h1 class="diary-title">World Digest — October 26, 2026</h1>
       <p class="diary-summary">The 2-3 sentence summary of the day.</p>

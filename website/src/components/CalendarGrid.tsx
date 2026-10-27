@@ -1,110 +1,60 @@
 "use client";
 
 /**
- * Calendar grid component with month navigation
- * Displays a monthly calendar view with clickable days that have diary entries
+ * Calendar grid component with month navigation, on the home page
+ * Days with an entry link to it; styled by the home page theme (globals.css, .home-cal)
  */
 
 import { useState } from "react";
-import { CalendarMonth } from "@/types";
 import { CalendarDay } from "./CalendarDay";
-import {
-  getMonthName,
-  getPreviousMonth,
-  getNextMonth,
-  generateCalendarMonth,
-} from "@/lib/date-utils";
+import { getMonthName, getPreviousMonth, getNextMonth, generateCalendarMonth } from "@/lib/date-utils";
 
 interface CalendarGridProps {
-  initialMonth: CalendarMonth;
-  datesWithEntries: Set<string>;
+  year: number;
+  month: number; // 0-indexed
+  today: string; // YYYY-MM-DD in New York, from the server, so both renders agree
+  dates: string[];
 }
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export function CalendarGrid({
-  initialMonth,
-  datesWithEntries,
-}: CalendarGridProps) {
-  const [currentYear, setCurrentYear] = useState(initialMonth.year);
-  const [currentMonth, setCurrentMonth] = useState(initialMonth.month);
-
-  const calendar = generateCalendarMonth(
-    currentYear,
-    currentMonth,
-    datesWithEntries
-  );
-
-  const handlePreviousMonth = () => {
-    const { year, month } = getPreviousMonth(currentYear, currentMonth);
-    setCurrentYear(year);
-    setCurrentMonth(month);
-  };
-
-  const handleNextMonth = () => {
-    const { year, month } = getNextMonth(currentYear, currentMonth);
-    setCurrentYear(year);
-    setCurrentMonth(month);
-  };
+export function CalendarGrid({ year, month, today, dates }: CalendarGridProps) {
+  const [current, setCurrent] = useState({ year, month });
+  const calendar = generateCalendarMonth(current.year, current.month, new Set(dates));
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* Month navigation header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="home-cal">
+      <div className="home-cal-head">
         <button
-          onClick={handlePreviousMonth}
-          className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-dark-text-secondary hover:text-accent dark:hover:text-dark-accent transition-colors"
+          type="button"
+          className="home-cal-nav"
+          onClick={() => setCurrent(getPreviousMonth(current.year, current.month))}
           aria-label="Previous month"
         >
-          ← Previous
+          ←
         </button>
-
-        <h2 className="text-2xl md:text-3xl font-semibold text-text-primary dark:text-dark-text-primary">
-          {getMonthName(currentMonth)} {currentYear}
-        </h2>
-
+        <h3 className="home-cal-month" aria-live="polite">
+          {getMonthName(current.month)} {current.year}
+        </h3>
         <button
-          onClick={handleNextMonth}
-          className="px-4 py-2 text-sm font-medium text-text-secondary dark:text-dark-text-secondary hover:text-accent dark:hover:text-dark-accent transition-colors"
+          type="button"
+          className="home-cal-nav"
+          onClick={() => setCurrent(getNextMonth(current.year, current.month))}
           aria-label="Next month"
         >
-          Next →
+          →
         </button>
       </div>
 
-      {/* Weekday labels */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="home-cal-grid">
         {WEEKDAY_LABELS.map((label) => (
-          <div
-            key={label}
-            className="p-2 text-center text-xs font-semibold text-text-muted dark:text-dark-text-muted uppercase tracking-wider"
-          >
+          <div key={label} className="home-cal-weekday">
             {label}
           </div>
         ))}
-      </div>
-
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1">
         {calendar.days.map((day, index) => (
-          <CalendarDay key={`${day.date}-${index}`} day={day} />
+          <CalendarDay key={`${day.date}-${index}`} day={day} today={day.date === today} />
         ))}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 flex flex-wrap gap-4 text-sm text-text-muted dark:text-dark-text-muted">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 border border-border dark:border-dark-border" />
-          <span>Entry available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-bg-secondary dark:bg-dark-bg-secondary" />
-          <span>No entry</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 border border-accent dark:border-dark-accent bg-accent/5 dark:bg-dark-accent/5" />
-          <span>Today</span>
-        </div>
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ An AI newsroom that writes, designs and publishes a new edition of the world eve
 - 📊 **Market sparklines** for every index and sector
 - 🎵 **Spotify players** for each new release
 - 🔗 **Cited sources**: every link comes from scraped material, never from the model
-- 🏠 **Home page**: today's edition, markets, the stories being followed, and recent editions shown as covers in their own designs, with five themes (Light, Dark, Sepia, Midnight, High contrast)
+- 🏠 **Home page**: the latest edition and a calendar of every edition, in five themes (Light, Dark, Sepia, Midnight, High contrast) that switch instantly
 - 🛡️ **Safe with AI output**: sanitized HTML, and CSS that is validated for scope, external resources and WCAG contrast, then retried with feedback
 
 ## ⚙️ How it works

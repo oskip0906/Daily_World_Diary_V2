@@ -71,7 +71,7 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
       <header className="diary-hero">
         <div className="diary-hero-inner">
           <nav className="diary-crumbs">
-            <Link href="/calendar">All entries</Link>
+            <Link href="/">All editions</Link>
           </nav>
           <p className="diary-kicker">
             <time dateTime={date}>{weekday} edition</time>

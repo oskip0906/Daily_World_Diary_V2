@@ -10,7 +10,7 @@
 | `GET /api/diary/{date}` | `{ "data": DiaryEntry }` | `400` on bad format, `404` on missing |
 
 Pages: `/` redirects to today's entry (New York date), or to the latest one before 9am when today's
-doesn't exist yet. `/diary/{date}` shows an entry, and its "Back to Calendar" link goes to `/calendar`.
+doesn't exist yet. `/diary/{date}` shows an entry, and its "All editions" link goes to the home page.
 
 Types are frozen in `website/src/types/index.ts`. The backend emits exactly those, camelCase included.
 
@@ -265,16 +265,17 @@ so the numbers are exactly what Yahoo returned.
 
 ## 5e. The home page and its themes
 
-`/` is a landing page: the latest edition (with a cover drawn in its own palette and headline font,
-read from the theme CSS), the index sparklines, the threads being followed, the recent editions as
-covers, and a link to the calendar. Diary and thread pages always show the day's own design.
+`/` shows the latest edition, with a cover drawn in its own palette and headline font (read from the
+theme CSS), and a calendar of every edition. There is no separate calendar page. Diary and thread
+pages always show the day's own design.
 
-The home page alone has a theme picker (`ThemePicker.tsx`): Auto (the system's light or dark) or
-one of five fixed palettes, Light, Dark, Sepia, Midnight and High contrast. The choice is a cookie,
-so the server renders it directly by putting `data-theme` on the page. Each palette is a
+The home page alone has a theme picker (`ThemePicker.tsx`) with five palettes: Light (the default),
+Dark, Sepia, Midnight and High contrast. A click sets `data-theme` on the page in the browser, with
+no server round trip, and saves a cookie so the server renders the same theme on the next visit.
+Themes change colours only, and every colour fades together: the first version re-rendered on the
+server and swapped fonts that then had to download, which flickered. Each palette is a
 `[data-theme=…]` token set in `globals.css`, after `diary:end` so the design prompt doesn't quote it,
-and each meets the same contrast pairs as a generated theme. Each swatch carries its own `data-theme`,
-so it previews its palette.
+and each meets the same contrast pairs as a generated theme.
 
 ## 5d. Spotify players
 
