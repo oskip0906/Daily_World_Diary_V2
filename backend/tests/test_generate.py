@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 
 from diary import generate, pipeline, store
@@ -102,3 +104,19 @@ def test_a_failed_redesign_leaves_the_entry_as_it_was(calls):
     assert generate.main(["--redesign", "2026-10-24", "2026-10-25"]) == 1
     assert store.read("2026-10-24") == before
     assert store.read("2026-10-25") is None
+
+
+def test_redesign_runs_every_day_in_one_event_loop(calls, monkeypatch):
+    # 2026-10-27: a loop per day broke the cached OpenRouter client from the second day on
+    # ("Event loop is closed"), so only the first day was redesigned
+    for date in ("2026-10-23", "2026-10-24"):
+        generate.main(["--date", date])
+    loops = []
+
+    async def design(date, title, summary, sections):
+        loops.append(asyncio.get_running_loop())
+        return None, {}
+
+    monkeypatch.setattr(pipeline, "run_design", design)
+    generate.main(["--redesign"])
+    assert len(loops) == 2 and loops[0] is loops[1]

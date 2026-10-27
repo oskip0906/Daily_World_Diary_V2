@@ -37,13 +37,14 @@ def date_arg(value: str) -> str:
     return value
 
 
-def redesign(dates: list[str]) -> int:
+async def redesign(dates: list[str]) -> int:
     """Only the design step again, oldest first so each day sees the one before. The text is kept,
-    and a day whose design fails keeps the theme it had."""
+    and a day whose design fails keeps the theme it had. One event loop for every day: the cached
+    OpenRouter client is bound to the loop it first ran in."""
     failed = 0
     for date in sorted(dates):
         entry = store.read(date)
-        theme, usage = asyncio.run(pipeline.redesign(entry)) if entry else (None, {})
+        theme, usage = await pipeline.redesign(entry) if entry else (None, {})
         if not theme:
             log.error("%s: %s; left as it was", date, "no valid design" if entry else "no entry")
             failed += 1
@@ -67,7 +68,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     if args.redesign is not None:
-        return redesign(args.redesign or store.list_dates())
+        return asyncio.run(redesign(args.redesign or store.list_dates()))
 
     if args.dry_run:
         entry = asyncio.run(pipeline.generate(args.date, run=stub, scrape=stub_scrape, design=stub_design, link=stub_threads))
