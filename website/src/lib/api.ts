@@ -1,9 +1,17 @@
 /**
+ * Where the pages fetch their own /api routes; on Vercel, defaults to the production domain
+ */
+export const baseUrl =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
+/**
  * Server-side fetch of the dates that have diary entries
  */
 export async function getAvailableDates(): Promise<string[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const response = await fetch(`${baseUrl}/api/diary/dates`, {
       cache: "no-store", // Ensure fresh data on each page load
     });

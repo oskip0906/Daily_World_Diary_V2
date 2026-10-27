@@ -9,6 +9,7 @@ import Link from "next/link";
 import { DiaryLayout } from "@/components/DiaryLayout";
 import { DiarySection } from "@/components/DiarySection";
 import { formatDateLong } from "@/lib/date-utils";
+import { baseUrl } from "@/lib/api";
 import { DiaryEntry, TocItem } from "@/types";
 
 interface DiaryPageProps {
@@ -20,7 +21,6 @@ interface DiaryPageProps {
  */
 async function getDiaryEntry(date: string): Promise<DiaryEntry | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
     const response = await fetch(`${baseUrl}/api/diary/${date}`, {
       cache: "no-store",
     });
