@@ -103,6 +103,7 @@ BANNED_FUNCTIONS = {"url", "image", "image-set", "-webkit-image-set", "cross-fad
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 ORNAMENT = re.compile(r"::?(before|after|marker)\b")
 UNIVERSAL = re.compile(r"\*(::?[\w-]+)*$")  # a selector whose last part is *
+HEADER_BOX = re.compile(r"\.diary-hero(-inner)?$")  # a selector for the block behind the header's text
 SCOPE = re.compile(r"^\.diary-page(?![\w-])")
 FONT_VAR = re.compile(r"var\((--ff-[\w-]+)\)")
 HEADER = re.compile(r"^/\*\s*theme:\s*(?P<name>[^|*]{2,60}?)\s*\|\s*(?P<note>[^*]{10,240}?)\s*\*/\s*"
@@ -287,7 +288,7 @@ Colour tokens must be 6-digit hex values such as #1f2a44. These contrast ratios 
 - --accent-ink on --accent: at least 4.5:1
 Set these tokens only in .diary-page rules; redefining them on any other element is rejected.
 Aim for 5:1 or more on the 4.5:1 pairs so you aren't caught by rounding, and remember --paper-alt is usually the harder background.
-If you also redefine tokens inside a media query, the redefined set is checked the same way, for contrast and for the mood. You may use other colours elsewhere (gradients, ornaments, borders, section tints), in the mood's family. Text you colour with anything other than a token is checked too: it needs 4.5:1 on --paper and --paper-alt in every colour scheme it applies to, so a colour picked for light paper must be redefined for a dark scheme (put it in a custom property on .diary-page and redefine that in the media query). A rule that sets its own background is exempt, so make sure its text reads on that background yourself.
+If you also redefine tokens inside a media query, the redefined set is checked the same way, for contrast and for the mood. You may use other colours elsewhere (gradients, ornaments, borders, section tints), in the mood's family. Text you colour with anything other than a token is checked too: it needs 4.5:1 on --paper and --paper-alt in every colour scheme it applies to, so a colour picked for light paper must be redefined for a dark scheme (put it in a custom property on .diary-page and redefine that in the media query). A rule that sets its own background is exempt, so make sure its text reads on that background yourself. The header is checked, though: every colour in a background you give .diary-hero or .diary-hero-inner, gradient stops included, needs 4.5:1 with the header's text, which is --accent-ink on a poster header and --ink, --ink-soft, --muted and --accent on the others.
 Citation links can be long: never stop them wrapping.
 Don't set colours with a universal selector (e.g. `.diary-hero *`): it outranks your own, more specific rules for the elements inside.
 
@@ -421,10 +422,12 @@ def _declarations(content, where: str, ornament: bool = False) -> list:
     return decls
 
 
-def _rules(rules, tokens: dict, variants: list, where: str | None = None, literals: list | None = None) -> None:
+def _rules(rules, tokens: dict, variants: list, where: str | None = None, literals: list | None = None,
+           backgrounds: list | None = None) -> None:
     """Checks every rule. Tokens set by a plain top-level .diary-page rule go in `tokens`; a
     .diary-page rule inside an at-rule (a dark mode, say) is a variant, checked separately. Text
-    colours set to anything but a design token go in `literals`, checked once the tokens are known."""
+    colours set to anything but a design token go in `literals`, and backgrounds given to the header
+    in `backgrounds`, both checked once the tokens are known."""
     for r in rules:
         if r.type == "error":
             raise ValueError(f"CSS parse error (line {r.source_line}): {r.message}")
@@ -442,7 +445,7 @@ def _rules(rules, tokens: dict, variants: list, where: str | None = None, litera
                     _declarations(frame.content, "@keyframes")
             else:
                 label = f"@{r.lower_at_keyword} {tinycss2.serialize(r.prelude).strip()}"
-                _rules(inner, tokens, variants, f"{where} {label}" if where else label, literals)
+                _rules(inner, tokens, variants, f"{where} {label}" if where else label, literals, backgrounds)
         elif r.type == "qualified-rule":
             selectors = _selectors(r.prelude)
             for s in selectors:
@@ -464,6 +467,9 @@ def _rules(rules, tokens: dict, variants: list, where: str | None = None, litera
             if literals is not None and not any(d.lower_name in ("background", "background-color") for d in decls):
                 literals += [(where, ", ".join(selectors), tinycss2.serialize(d.value).strip())
                              for d in decls if d.lower_name == "color"]
+            if backgrounds is not None and any(HEADER_BOX.search(s) for s in selectors):
+                backgrounds += [(where, ", ".join(selectors), d.value) for d in decls
+                                if d.lower_name in ("background", "background-color", "background-image")]
             if selectors == [".diary-page"]:
                 values = {d.lower_name: tinycss2.serialize(d.value).strip() for d in decls}
                 if where is None:
@@ -531,8 +537,9 @@ def validate(raw: str, section_ids: list[str], previous: dict | None = None) -> 
     tokens: dict[str, str] = {}
     variants: list[tuple[str, dict]] = []
     literals: list[tuple[str | None, str, str]] = []
+    backgrounds: list = []
     _rules(tinycss2.parse_stylesheet(css, skip_comments=True, skip_whitespace=True), tokens, variants,
-           literals=literals)
+           literals=literals, backgrounds=backgrounds)
 
     missing = [t for t in COLOR_TOKENS + FONT_TOKENS if t not in tokens]
     if missing:
@@ -546,6 +553,7 @@ def validate(raw: str, section_ids: list[str], previous: dict | None = None) -> 
     for where, values in variants:
         _check_colors({**tokens, **values}, f" inside {where}")
     _check_literals(literals, tokens, variants)
+    _check_header(backgrounds, hero, tokens, variants)
     _check_mood(mood, tokens, "")
     for where, values in variants:
         _check_mood(mood, {**tokens, **values}, f" inside {where}")
@@ -573,10 +581,7 @@ def _check_literals(literals: list, tokens: dict, variants: list) -> None:
         var = re.fullmatch(r"var\((--[\w-]+)\)", value)
         if var and var[1] in COLOR_TOKENS:
             continue  # the token pairs are checked already
-        schemes = [(f" inside {w}", {**tokens, **v}) for w, v in variants if where is None or w == where]
-        if where is None or not schemes:
-            schemes.insert(0, ("", tokens))
-        for label, t in schemes:
+        for label, t in _schemes(where, tokens, variants):
             hex_ = t.get(var[1], "") if var else value
             if not HEX.match(hex_):
                 continue  # a keyword or function we can't measure; currentColor and friends
@@ -585,6 +590,35 @@ def _check_literals(literals: list, tokens: dict, variants: list) -> None:
                     raise ValueError(f"{selector} sets color {value}, which is {ratio:.2f}:1 on {bg}{label}; "
                                      "text needs 4.5:1 on every background and colour scheme. Use a token, "
                                      "or a colour that works in each scheme")
+
+
+def _schemes(where: str | None, tokens: dict, variants: list) -> list[tuple[str, dict]]:
+    """(label, tokens) for every colour scheme a rule inside `where` (None: top level) applies in."""
+    schemes = [(f" inside {w}", {**tokens, **v}) for w, v in variants if where is None or w == where]
+    if where is None or not schemes:
+        schemes.insert(0, ("", tokens))
+    return schemes
+
+
+def _check_header(backgrounds: list, hero: str, tokens: dict, variants: list) -> None:
+    """A background the theme gives the header must keep the header's text readable on every colour
+    in it, gradient stops included: 2026-10-23's poster faded from its bright --accent to near-black
+    under --accent-ink text. Colours that aren't hex or a hex custom property can't be measured."""
+    text = ("--accent-ink",) if hero == "poster" else ("--ink", "--ink-soft", "--muted", "--accent")
+    for where, selector, value in backgrounds:
+        for label, t in _schemes(where, tokens, variants):
+            for v in _walk(value):
+                if v.type == "hash":
+                    stop = f"#{v.value}"
+                elif v.type == "function" and v.lower_name == "var" and v.arguments:
+                    stop = t.get(tinycss2.serialize(v.arguments).split(",")[0].strip(), "")
+                else:
+                    continue
+                for fg in text:
+                    if HEX.match(stop) and (ratio := contrast(t[fg], stop)) < 4.5:
+                        raise ValueError(f"{selector} puts {stop} behind the header, where its text ({fg} {t[fg]}) "
+                                         f"is {ratio:.2f}:1{label}; header text needs 4.5:1 on every colour of "
+                                         "its background, gradients included")
 
 
 def _colour(hex_: str) -> tuple[float, int]:

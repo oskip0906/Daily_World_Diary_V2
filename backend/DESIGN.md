@@ -229,6 +229,10 @@ and rejects it unless:
 - a plain `.diary-page` rule sets all eleven tokens, the colour tokens are hex, and they meet WCAG
   contrast on both `--paper` and `--paper-alt`. A `.diary-page` rule inside `@media` (a dark mode)
   is checked the same way, merged over the base tokens;
+- a background the theme gives the header (`.diary-hero`, `.diary-hero-inner`), every gradient stop
+  included, keeps the header's text at 4.5:1: `--accent-ink` on a poster header, `--ink`, `--ink-soft`,
+  `--muted` and `--accent` on the others. 2026-10-23's poster faded from its bright accent to
+  near-black under dark text;
 - the colours match the mood. A colour's "amount of colour" is how far apart its strongest and
   weakest RGB channels are (0-255). For good, bad, tragic and tense, `--paper` and `--paper-alt`
   need at least 16 in the mood's hue and `--accent` at least 80 (hues: red 340-15°, amber 18-50°,

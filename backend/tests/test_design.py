@@ -20,7 +20,7 @@ VALID = f"""/* theme: Quiet Ledger | Plain paper and black ink for a day of slow
 {LAYOUT}
 .diary-page {{ {TOKENS} }}
 .diary-page .diary-title, .diary-page .diary-section-title {{ letter-spacing: -0.02em; }}
-@media (min-width: 1024px) {{ .diary-page .diary-hero {{ background: linear-gradient(180deg, #efeae0, #f7f4ee); }} }}
+@media (min-width: 1024px) {{ .diary-page .diary-footer {{ background: linear-gradient(180deg, var(--paper-alt), var(--paper)); }} }}
 @container (min-width: 30rem) {{ .diary-page .diary-card-title {{ font-size: 1.5rem; }} }}
 @keyframes rise {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
 .diary-page .diary-section-title::before {{ content: "§ "; color: var(--accent); }}
@@ -327,3 +327,18 @@ def test_provider_errors_are_retried_and_a_rejected_key_stops(fake, account_erro
     calls = fake(account_error(402), VALID)
     assert run() == (None, {})
     assert len(calls.calls) == 1
+
+
+def test_a_header_background_must_keep_its_text_readable():
+    # 2026-10-23: a poster header faded from its bright --accent to near-black under --accent-ink text
+    poster = palette(*BAD).replace("hero=split", "hero=poster")
+
+    def fade(middle, end):
+        return f'.diary-page[data-hero="poster"] .diary-hero {{ background: linear-gradient(135deg, #ff5c5c, {middle} 50%, {end}); }}'
+
+    with pytest.raises(ValueError, match=r"#7a1a1a.*--accent-ink #1c0b0d"):
+        validate(poster + fade("#7a1a1a", "#1c0b0d"), IDS)
+    assert validate(poster + fade("#ff8080", "var(--accent)"), IDS)
+    # other headers carry --ink, --ink-soft, --muted and --accent
+    with pytest.raises(ValueError, match=r"#111111.*--ink #16140f"):
+        validate(VALID + ".diary-page .diary-hero-inner { background: linear-gradient(#ececea, #111111); }", IDS)
