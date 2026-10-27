@@ -978,6 +978,100 @@
     }
   }
   /* diary:end */
+
+  /*
+   * Reader themes, picked with the theme menu (src/components/ThemePicker.tsx). Picking one stops the
+   * day's generated CSS from loading, so these only have to beat the base tokens above, which the
+   * html[data-theme] prefix does. Each palette meets the same contrast pairs as a generated theme.
+   */
+  html[data-theme="light"] .diary-page {
+    --paper: #f7f4ee;
+    --paper-alt: #efe9dd;
+    --ink: #16140f;
+    --ink-soft: #36322b;
+    --muted: #615b4f;
+    --accent: #a8321c;
+    --accent-ink: #ffffff;
+    --rule: #d9d2c3;
+  }
+
+  html[data-theme="dark"] .diary-page {
+    --paper: #121110;
+    --paper-alt: #1b1916;
+    --ink: #f4f0e7;
+    --ink-soft: #d6d0c3;
+    --muted: #a29b8c;
+    --accent: #f08a6c;
+    --accent-ink: #1a0d08;
+    --rule: #2e2b26;
+  }
+
+  html[data-theme="sepia"] .diary-page {
+    --paper: #f4ecd8;
+    --paper-alt: #eadfc4;
+    --ink: #2b2116;
+    --ink-soft: #4a3b2a;
+    --muted: #6e5c45;
+    --accent: #8a4b14;
+    --accent-ink: #fff8ec;
+    --rule: #d6c7a5;
+    --font-display: var(--ff-playfair), Georgia, serif;
+    --font-body: var(--ff-newsreader), Georgia, serif;
+  }
+
+  html[data-theme="midnight"] .diary-page {
+    --paper: #0d1424;
+    --paper-alt: #141d33;
+    --ink: #eef2ff;
+    --ink-soft: #c7d0e8;
+    --muted: #93a0c4;
+    --accent: #7cc4ff;
+    --accent-ink: #06122a;
+    --rule: #26324f;
+    --font-display: var(--ff-space-grotesk), system-ui, sans-serif;
+    --font-body: var(--ff-inter), system-ui, sans-serif;
+    --font-ui: var(--ff-space-grotesk), system-ui, sans-serif;
+  }
+
+  html[data-theme="contrast"] .diary-page {
+    --paper: #ffffff;
+    --paper-alt: #f0f0f0;
+    --ink: #000000;
+    --ink-soft: #111111;
+    --muted: #3d3d3d;
+    --accent: #0039c7;
+    --accent-ink: #ffffff;
+    --rule: #000000;
+    --font-display: var(--ff-inter), system-ui, sans-serif;
+    --font-body: var(--ff-inter), system-ui, sans-serif;
+  }
+
+  /* The theme menu sits outside .diary-page, so no generated theme can restyle it */
+  .theme-picker {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem 0.4rem 0.85rem;
+    background: #ffffff;
+    color: #111111;
+    border: 1px solid #c8c8c8;
+    border-radius: 999px;
+    box-shadow: 0 6px 24px -8px rgb(0 0 0 / 0.35);
+    font: 600 0.8rem/1 system-ui, sans-serif;
+  }
+
+  .theme-picker select {
+    padding: 0.3rem 0.5rem;
+    background: #f3f3f3;
+    color: #111111;
+    border: 1px solid #c8c8c8;
+    border-radius: 999px;
+    font: inherit;
+  }
 }
 
 /**

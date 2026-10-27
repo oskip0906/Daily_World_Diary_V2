@@ -4,6 +4,7 @@
  */
 
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import {
   Archivo_Black,
   Bebas_Neue,
@@ -18,6 +19,8 @@ import {
   Syne,
   Unbounded,
 } from "next/font/google";
+import { ThemePicker } from "@/components/ThemePicker";
+import { THEME_COOKIE, readTheme } from "@/lib/themes";
 import "./globals.css";
 
 // Each day's theme picks from these by variable (FONTS in backend/diary/design.py); keep the two in
@@ -55,15 +58,17 @@ export const metadata: Metadata = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = readTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="en" className={`smooth-scroll ${fontVariables}`}>
+    <html lang="en" className={`smooth-scroll ${fontVariables}`} data-theme={theme === "daily" ? undefined : theme}>
       <body className="flex flex-col min-h-screen">
         <div className="flex-1">{children}</div>
+        <ThemePicker current={theme} />
       </body>
     </html>
   );
