@@ -1,8 +1,9 @@
 name: daily-diary
 on:
   schedule:
-    - cron: "0 13 * * *"   # 9am EDT
-    - cron: "0 14 * * *"   # 9am EST
+    # off the hour: GitHub drops scheduled events at :00 under load
+    - cron: "17 13 * * *"   # 9:17am EDT
+    - cron: "17 14 * * *"   # 9:17am EST
   workflow_dispatch:
     inputs:
       date:
