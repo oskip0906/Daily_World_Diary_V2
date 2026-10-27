@@ -6,11 +6,10 @@ An AI newsroom that writes, designs and publishes a new edition of the world eve
 
 - 📰 **Daily edition**: politics, finance, entertainment, music, markets and an outlook, written from news scraped that morning (Google News, Spotify, Yahoo Finance)
 - 🎨 **A new design every day**: an AI art director picks header styles, card components and layouts, then writes the CSS, and must look different from yesterday
-- 🧵 **Story threads**: developing stories are linked across days ("Day 3 · Netflix's leadership shakeup"), each with its own timeline page
+- 🧵 **Story threads**: developing stories are linked across days, each with its own timeline page
 - 📊 **Market sparklines** for every index and sector
 - 🎵 **Spotify players** for each new release
-- 🔗 **Cited sources**: every link comes from scraped material, never from the model
-- 🏠 **Home page**: the latest edition and a calendar of every edition, in five themes (Light, Dark, Sepia, Midnight, High contrast) that switch instantly
+- 🔗 **Cited sources**: every link comes from scraped material, never from the model itself
 - 🛡️ **Safe with AI output**: sanitized HTML, and CSS that is validated for scope, external resources and WCAG contrast, then retried with feedback
 
 ## ⚙️ How it works
