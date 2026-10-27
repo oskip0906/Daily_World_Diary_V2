@@ -1,4 +1,4 @@
-"""The day's look: one last model call reads the finished entry and designs its page.
+"""The day's look: one last model call takes the vibe from the day's summary and designs its page.
 
 It picks a header style and, for every section, one of ten card components and one of six layouts,
 then writes the CSS on top. The CSS is injected into the page as-is, so it is treated as untrusted
@@ -175,12 +175,13 @@ def base_stylesheet() -> str:
 
 @cache
 def prompt() -> str:
-    return f"""You are the art director of Daily World Diary, a news digest written fresh every morning. Every day's page gets its own visual identity, and you design it: you read the whole edition, decide how the page is built, and write the stylesheet that makes it look like that day and no other.
+    return f"""You are the art director of Daily World Diary, a news digest written fresh every morning. Every day's page gets its own visual identity, and you design it: you take the day's vibe from its summary, decide how the page is built, and write the stylesheet that makes it look like that day and no other.
 
 # The brief
-- The design comes from the content. Find the day's dominant mood and its biggest story, and let them decide everything: the structure, the palette, the type, the ornament. A reader who knows what happened that day should recognise it in the design.
+- The design comes from the summary. The 2-3 sentence summary under the headline is the whole day in brief: read it for the day's vibe, the feeling of the day as a whole rather than of any one story, and let that vibe decide the palette, the type, the ornament and the overall structure. A reader who has just read the summary should feel the page matches it.
+- The rest of the edition is for fitting the components to the material (how many stories each section has, how long they are, which carry figures), not for setting the mood.
 - Every day must look clearly different. Readers open this page every morning, so two days that look alike are a failure even if both are handsome. You'll be shown the last few days' designs; change the structure as well as the colours, not just one of them.
-- Be bold. The base stylesheet below is a neutral scaffold, not a style to imitate: a design that keeps its warm paper, its serif headline and its plain columns has not done the job. Push hard on at least two of: the palette (dark, saturated, monochrome, high-key...), the type (scale, weight, case, tracking), the structure (header style, card mix, layouts) and the ornament (rules, borders, shadows, gradients, rotated labels, oversized numerals, patterns made with gradients).
+- Be bold in expressing that vibe. The base stylesheet below is a neutral scaffold, not a style to imitate: a design that keeps its warm paper, its serif headline and its plain columns has not done the job. Push hard on at least two of: the palette (dark, saturated, monochrome, high-key...), the type (scale, weight, case, tracking), the structure (header style, card mix, layouts) and the ornament (rules, borders, shadows, gradients, rotated labels, oversized numerals, patterns made with gradients).
 - Translate the mood instead of illustrating it literally. No flag colours for an election, no automatic red for a bad day. Ask what the day felt like (tense, relieved, feverish, uncertain, celebratory, sombre) and design that.
 - Reading still comes first. Body text stays comfortable on a 360px phone and on a wide monitor: 16-20px, line-height 1.5-1.8, and no more than about 75 characters per line.
 - Headlines must fit a 360px phone: the longest word of the headline ("OCTOBER", "DIGEST") has to fit on one line, so with wide or uppercase display fonts keep the phone size around 2.25-2.75rem and scale up from there.
@@ -306,11 +307,12 @@ def context(date: str, title: str, summary: str, sections: list[tuple[str, str, 
     past = "\n".join(describe(day, theme) for day, theme in history) or "- none yet"
     body = "\n\n".join(f"## {title_}\n\n{md}" for _, title_, md in sections)
     return (f"Design the page for {d:%A}, {d:%B} {d.day}, {d.year}.\n\n"
-            f"Headline: {title}\n\nSummary shown under the headline: {summary}\n\n"
+            f"Headline: {title}\n\nSummary shown under the headline (design the page's vibe from this): {summary}\n\n"
             f"Sections on the page, in order (use these ids in the layout comment):\n{listing}\n\n"
             f"The most recent designs, newest first. Today's must look clearly different from all of them, "
             f"and its header style and --font-display must differ from the first one:\n{past}\n\n"
-            f"The full edition follows. Read all of it before you decide on a direction.\n\n{body}")
+            f"The full edition follows, for choosing each section's card and layout; the vibe comes from "
+            f"the summary above.\n\n{body}")
 
 
 def _luminance(hex_: str) -> float:
