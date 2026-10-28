@@ -447,11 +447,17 @@ The entry for a date is generated that morning, so it covers the previous day's 
 previous session's market close.
 
 GitHub cron runs in **UTC only**, and 9am New York is 13:00 UTC in summer (EDT) and 14:00 UTC in
-winter (EST). So `.github/workflows/daily-diary.yml` schedules both, at 17 past (GitHub drops
-scheduled runs at the top of the hour under load; 2026-10-27's never fired), and lets a guard decide:
-it generates only when it is at least 9am in New York **and** today's file does not exist yet. In
-summer the 13:17 run generates and the 14:17 run finds the file and exits; in winter the 13:17 run is
-8am and skips. The same guard absorbs GitHub's scheduling delays.
+winter (EST). So `.github/workflows/daily-diary.yml` schedules both, at 17 past (GitHub may delay or
+drop scheduled runs at the top of the hour under load), and lets a guard decide: it generates only
+when it is at least 9am in New York **and** today's file does not exist yet. In summer the 13:17 run
+generates and the 14:17 run finds the file and exits; in winter the 13:17 run is 8am and skips. The
+same guard absorbs GitHub's scheduling delays.
+
+**Who commits the cron lines matters.** GitHub runs a schedule as the user who last committed to its
+cron lines. Commits authored as `Claude <noreply@anthropic.com>` link to an outside GitHub account
+with no access to this repo, and while every cron change was authored that way, no scheduled run was
+ever created (2026-10-27 and 10-28), though manual runs worked. So any change to the `schedule:` block
+must be committed by a repo collaborator, for example in GitHub's web editor.
 
 Repo settings it needs: secrets `OPENROUTER_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`,
 and the variable `OPENROUTER_MODEL`. Google News and Yahoo need no keys.
