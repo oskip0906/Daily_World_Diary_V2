@@ -287,9 +287,9 @@
   ],
   "model": "deepseek/deepseek-v4-flash-0731",
   "usage": {
-    "prompt_tokens": 149256,
-    "completion_tokens": 18375,
-    "cost": 0.013149452199999998
+    "prompt_tokens": 163240,
+    "completion_tokens": 21422,
+    "cost": 0.015538734199999998
   },
   "promptVersions": {
     "political-analyst": "2.2.0",
@@ -348,5 +348,38 @@
         "2026-10-27/entertainment-news/3"
       ]
     }
-  ]
+  ],
+  "theme": {
+    "name": "Humming Current",
+    "note": "The market hums with tension between record chip profits and the looming AI debt question, while politics churns beneath a deceptively calm surface.",
+    "mood": "tense",
+    "hero": "centered",
+    "sections": {
+      "political-news": {
+        "card": "outline",
+        "layout": "grid-2"
+      },
+      "financial-news": {
+        "card": "stat",
+        "layout": "stack"
+      },
+      "entertainment-news": {
+        "card": "tile",
+        "layout": "grid-3"
+      },
+      "music-releases": {
+        "card": "plain",
+        "layout": "stack"
+      },
+      "stock-analysis": {
+        "card": "numbered",
+        "layout": "grid-2"
+      },
+      "outlook": {
+        "card": "timeline",
+        "layout": "stack"
+      }
+    },
+    "css": "/* theme: Humming Current | The market hums with tension between record chip profits and the looming AI debt question, while politics churns beneath a deceptively calm surface. */\n/* mood: tense */\n/* layout: hero=centered; political-news=outline/grid-2; financial-news=stat/stack; entertainment-news=tile/grid-3; music-releases=plain/stack; stock-analysis=numbered/grid-2; outlook=timeline/stack */\n\n.diary-page {\n  --paper: #1a1508;\n  --paper-alt: #2a2210;\n  --ink: #f7f0d9;\n  --ink-soft: #d8cdab;\n  --muted: #a89a6f;\n  --accent: #ffb347;\n  --accent-ink: #1a1508;\n  --rule: #4a3d1e;\n  --font-display: var(--ff-bebas), sans-serif;\n  --font-body: var(--ff-newsreader), Georgia, serif;\n  --font-ui: var(--ff-space-grotesk), sans-serif;\n\n  background: \n    linear-gradient(180deg, transparent 0%, transparent 60%, rgba(255, 179, 71, 0.04) 60%, rgba(255, 179, 71, 0.04) 62%, transparent 62%, transparent 100%),\n    var(--paper);\n}\n\n.diary-page .diary-hero {\n  background: \n    linear-gradient(135deg, var(--paper-alt) 0%, var(--paper) 50%, var(--paper-alt) 100%);\n  border-bottom: 2px solid var(--accent);\n}\n\n.diary-page[data-hero=\"centered\"] .diary-hero-inner {\n  padding-block: 3rem 4rem;\n}\n\n.diary-page .diary-kicker {\n  color: var(--accent);\n  font-size: 0.8rem;\n  letter-spacing: 0.3em;\n  margin-top: 2rem;\n}\n\n.diary-page .diary-title {\n  font-size: clamp(2.75rem, 7vw, 5.5rem);\n  letter-spacing: 0.04em;\n  line-height: 0.95;\n  margin-top: 0.85rem;\n  font-weight: 400;\n  text-transform: uppercase;\n}\n\n.diary-page .diary-summary {\n  font-size: clamp(1.15rem, 2vw, 1.35rem);\n  font-style: italic;\n  max-width: 42rem;\n  margin-top: 1.25rem;\n}\n\n.diary-page .diary-theme-note {\n  margin-top: 1.75rem;\n  font-size: 0.9rem;\n  color: var(--muted);\n}\n\n.diary-page .diary-theme-name {\n  background: var(--accent);\n  color: var(--accent-ink);\n  padding: 0.2rem 0.8rem;\n  border-radius: 2px;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n}\n\n.diary-page .diary-crumbs a {\n  color: var(--muted);\n  font-size: 0.8rem;\n  letter-spacing: 0.08em;\n}\n\n.diary-page .diary-crumbs a:hover {\n  color: var(--accent);\n}\n\n.diary-page .diary-toc {\n  background: var(--paper);\n  border-bottom-color: var(--rule);\n}\n\n.diary-page .diary-toc-label {\n  letter-spacing: 0.2em;\n  font-size: 0.7rem;\n}\n\n.diary-page .diary-toc-link,\n.diary-page .diary-toc-top,\n.diary-page .diary-toc-bottom {\n  color: var(--muted);\n  font-size: 0.85rem;\n  letter-spacing: 0.03em;\n}\n\n.diary-page .diary-toc-link:hover,\n.diary-page .diary-toc-top:hover,\n.diary-page .diary-toc-bottom:hover,\n.diary-page .diary-toc-link.is-active {\n  color: var(--ink);\n}\n\n.diary-page .diary-toc-number {\n  color: var(--accent);\n  font-size: 0.7rem;\n}\n\n.diary-page .diary-toc-list {\n  border-left-color: var(--rule);\n}\n\n.diary-page .diary-toc-link.is-active {\n  border-left-color: var(--accent);\n}\n\n.diary-page .diary-section {\n  padding-block: 3.5rem;\n  border-top-color: var(--rule);\n  position: relative;\n}\n\n.diary-page .diary-section:first-child {\n  border-top: 0;\n  padding-top: 2.5rem;\n}\n\n.diary-page .diary-section-head {\n  margin-bottom: 2rem;\n}\n\n.diary-page .diary-section-number {\n  font-size: 0.75rem;\n  letter-spacing: 0.2em;\n  color: var(--accent);\n}\n\n.diary-page .diary-section-title {\n  font-size: clamp(2.2rem, 4vw, 3.2rem);\n  letter-spacing: 0.03em;\n  font-weight: 400;\n  text-transform: uppercase;\n}\n\n.diary-page .diary-prose {\n  font-size: 1.08rem;\n  line-height: 1.7;\n  color: var(--ink-soft);\n}\n\n.diary-page .diary-prose h3 {\n  font-size: 0.78rem;\n  letter-spacing: 0.2em;\n  color: var(--ink);\n  font-weight: 600;\n}\n\n.diary-page .diary-prose h4 {\n  font-family: var(--font-display);\n  font-size: 1.4rem;\n  letter-spacing: 0.04em;\n  font-weight: 400;\n  text-transform: uppercase;\n  color: var(--ink);\n}\n\n.diary-page .diary-prose a {\n  color: var(--accent);\n  border-bottom-color: currentColor;\n  font-size: 0.65em;\n}\n\n.diary-page .diary-prose a:hover {\n  color: var(--ink);\n}\n\n.diary-page .diary-prose strong {\n  color: var(--ink);\n}\n\n.diary-page .diary-prose ul > li::before {\n  background: var(--accent);\n}\n\n.diary-page .diary-prose ol > li::marker {\n  color: var(--accent);\n}\n\n.diary-page .diary-prose blockquote {\n  border-left-color: var(--accent);\n  color: var(--ink);\n}\n\n.diary-page .diary-prose hr {\n  border-top-color: var(--rule);\n}\n\n.diary-page .diary-prose pre {\n  background: var(--paper-alt);\n  border-color: var(--rule);\n}\n\n.diary-page .diary-card--outline .diary-card-inner {\n  padding: 1.75rem;\n  border: 1px solid var(--rule);\n  border-radius: 0;\n  position: relative;\n  background: linear-gradient(135deg, rgba(255, 179, 71, 0.04) 0%, transparent 50%);\n  transition: border-color 200ms ease;\n}\n\n.diary-page .diary-card--outline .diary-card-inner:hover {\n  border-color: var(--accent);\n}\n\n.diary-page .diary-card--outline .diary-card-title {\n  font-size: 1.5rem;\n}\n\n.diary-page .diary-card--tile .diary-card-inner {\n  padding: 1.75rem;\n  background: var(--paper-alt);\n  border: 1px solid transparent;\n  border-radius: 0;\n  transition: border-color 200ms ease;\n}\n\n.diary-page .diary-card--tile .diary-card-inner:hover {\n  border-color: var(--accent);\n}\n\n.diary-page .diary-card--tile .diary-card-title {\n  font-size: 1.35rem;\n}\n\n.diary-page .diary-card--numbered .diary-card-inner {\n  border-left: 3px solid var(--rule);\n  padding-left: 1.5rem;\n  margin-left: 0.5rem;\n  position: relative;\n  transition: border-color 200ms ease;\n}\n\n.diary-page .diary-card--numbered .diary-card-inner:hover {\n  border-left-color: var(--accent);\n}\n\n.diary-page .diary-card--numbered .diary-card-index {\n  font-size: 2.75rem;\n  color: var(--accent);\n  position: absolute;\n  left: -0.6rem;\n  top: 0;\n  background: var(--paper);\n  padding-inline: 0.2rem;\n}\n\n.diary-page .diary-card--numbered .diary-card-title {\n  font-size: 1.3rem;\n}\n\n.diary-page .diary-card--stat .diary-card-inner {\n  padding-top: 1.25rem;\n  border-top: 3px solid var(--accent);\n}\n\n.diary-page .diary-card-figure {\n  font-size: clamp(3rem, 10cqi, 4.5rem);\n  color: var(--accent);\n  text-shadow: 0 0 40px rgba(255, 179, 71, 0.2);\n}\n\n.diary-page .diary-card--timeline .diary-card-inner {\n  padding-left: 2rem;\n}\n\n.diary-page .diary-card--timeline .diary-card-inner::before {\n  background: var(--rule);\n}\n\n.diary-page .diary-card--timeline .diary-card-inner::after {\n  background: var(--accent);\n  box-shadow: 0 0 0 4px var(--paper), 0 0 12px rgba(255, 179, 71, 0.4);\n}\n\n.diary-page .diary-card-thread {\n  border-color: var(--accent);\n  color: var(--accent);\n  font-size: 0.7rem;\n  letter-spacing: 0.06em;\n  background: transparent;\n  transition: background 200ms ease, color 200ms ease;\n}\n\n.diary-page .diary-card-thread:hover {\n  background: var(--accent);\n  color: var(--accent-ink);\n}\n\n.diary-page .diary-card-lede {\n  border-left-color: var(--accent);\n  font-size: 1.25rem;\n  line-height: 1.5;\n  color: var(--ink);\n}\n\n.diary-page .diary-markets-wrap {\n  margin-bottom: 2.5rem;\n}\n\n.diary-page .diary-markets-label {\n  font-size: 0.7rem;\n  letter-spacing: 0.18em;\n  color: var(--muted);\n}\n\n.diary-page .diary-spark {\n  padding: 1rem 1.1rem 0.8rem;\n  background: var(--paper-alt);\n  border: 1px solid var(--rule);\n  border-radius: 0;\n}\n\n.diary-page .diary-spark-label {\n  font-size: 0.72rem;\n  color: var(--muted);\n}\n\n.diary-page .diary-spark-value {\n  font-size: 0.95rem;\n  font-weight: 600;\n  color: var(--ink);\n}\n\n.diary-page .diary-spark-change {\n  font-size: 0.72rem;\n  font-weight: 600;\n}\n\n.diary-page .diary-spark.is-up {\n  color: #8ba888;\n}\n\n.diary-page .diary-spark.is-down {\n  color: var(--accent);\n}\n\n.diary-page .diary-spark .diary-spark-label {\n  color: var(--muted);\n}\n\n.diary-page .diary-spark .diary-spark-value {\n  color: var(--ink);\n}\n\n.diary-page .diary-spark-line polyline {\n  stroke: currentColor;\n}\n\n.diary-page .diary-footer {\n  border-top-color: var(--rule);\n  font-size: 0.85rem;\n}\n\n.diary-page .diary-footer a {\n  color: var(--ink);\n  letter-spacing: 0.02em;\n}\n\n.diary-page .diary-footer a:hover {\n  color: var(--accent);\n}\n\n.diary-page .diary-card--banner .diary-card-title {\n  background: var(--accent);\n  color: var(--accent-ink);\n}\n\n.diary-page .diary-prose a {\n  white-space: normal !important;\n}\n\n.diary-page .diary-prose > * + * {\n  margin-top: 1.1em;\n}\n\n.diary-page .diary-card-body {\n  font-size: 1.06rem;\n  line-height: 1.7;\n}\n\n@media (min-width: 1024px) {\n  .diary-page .diary-body {\n    gap: 4.5rem;\n  }\n\n  .diary-page .diary-toc {\n    margin-top: 3.5rem;\n  }\n\n  .diary-page .diary-section {\n    padding-block: 3.5rem;\n  }\n}\n\n@media (max-width: 1023px) {\n  .diary-page .diary-toc {\n    margin-inline: -1.25rem;\n    padding-inline: 1.25rem;\n  }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .diary-page .diary-card--outline .diary-card-inner,\n  .diary-page .diary-card--tile .diary-card-inner,\n  .diary-page .diary-card--numbered .diary-card-inner,\n  .diary-page .diary-card-thread {\n    transition: none;\n  }\n}"
+  }
 }
