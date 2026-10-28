@@ -342,3 +342,9 @@ def test_a_header_background_must_keep_its_text_readable():
     # other headers carry --ink, --ink-soft, --muted and --accent
     with pytest.raises(ValueError, match=r"#111111.*--ink #16140f"):
         validate(VALID + ".diary-page .diary-hero-inner { background: linear-gradient(#ececea, #111111); }", IDS)
+
+
+def test_only_the_page_background_has_to_be_light_or_dark():
+    # 2026-10-28: holding --paper-alt to it too left the designer trading tint for lightness on the
+    # header (#c2e0ca, 0.69) until it gave up; contrast with --ink already keeps the header light
+    assert validate(palette("good", "#e1f2e5", "#c2e0ca", *GOOD[3:]), IDS)["mood"] == "good"

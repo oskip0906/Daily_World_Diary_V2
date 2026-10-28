@@ -86,7 +86,7 @@ HUES = {"red": (340, 15), "amber": (18, 50), "green": (80, 165), "blue": (190, 2
 # how far apart a colour's strongest and weakest RGB channels (0-255) are: its amount of colour
 TINTED, STRONG = 16, 80  # --paper/--paper-alt at least TINTED, --accent at least STRONG, in the mood's hue
 GREY_PAPER, GREY_ACCENT = 6, 24  # neutral: at most this much colour
-LIGHT, DARK = 0.7, 0.05  # relative luminance of --paper and --paper-alt on light and dark pages
+LIGHT, DARK = 0.7, 0.05  # relative luminance of --paper on light and dark pages
 
 COLOR_TOKENS = ("--paper", "--paper-alt", "--ink", "--ink-soft", "--muted", "--accent", "--accent-ink", "--rule")
 FONT_TOKENS = ("--font-display", "--font-body", "--font-ui")
@@ -231,7 +231,7 @@ If one story dominates the day, it sets the mood. When good and bad news cancel 
 
 Your palette is checked against the mood. A colour's amount of colour is how far apart its strongest and weakest RGB channels are: #2a1013 has 26 (42 vs 16), #161414 has 2. Its hue must fall in the family: {", ".join(f"{family} {lo}-{hi}°" for family, (lo, hi) in HUES.items())}.
 - good, bad, tragic and tense: --paper and --paper-alt are both tinted in the mood's hue (at least {TINTED}), and --accent is a strong colour of that hue (at least {STRONG}).
-- good pages are light: --paper and --paper-alt at relative luminance {LIGHT} or more. bad pages are dark: {DARK} or less.
+- good pages are light: --paper at relative luminance {LIGHT} or more. bad pages are dark: --paper at {DARK} or less.
 - neutral pages have no colour: --paper and --paper-alt at most {GREY_PAPER} (white or near-black), --accent at most {GREY_ACCENT} (black, white or grey).
 - Every set of tokens you write is checked, so don't add a dark-mode (prefers-color-scheme) version: the mood decides light or dark.
 Keep the other colours you use (gradients, ornaments, borders, section tints) in the same family, so nothing contradicts the mood.
@@ -644,8 +644,10 @@ def _check_mood(mood: str, tokens: dict, where: str) -> None:
             if amount < need or not (lo <= hue <= hi if lo < hi else hue >= lo or hue <= hi):
                 wrong.append(f"{t} {tokens[t]} is hue {hue:.0f}° with {amount} of colour; {family} needs "
                              f"{lo}-{hi}° and at least {need}")
+        # only the page background: 2026-10-28's designer, also held to it on --paper-alt, traded tint
+        # for lightness on the header until it gave up; contrast with --ink keeps the header close anyway
         lum = _luminance(tokens[t])
-        if t != "--accent" and (shade == "light" and lum < LIGHT or shade == "dark" and lum > DARK):
+        if t == "--paper" and (shade == "light" and lum < LIGHT or shade == "dark" and lum > DARK):
             wrong.append(f"{t} {tokens[t]} has luminance {lum:.2f}, but a {mood} page is {shade} "
                          f"(light: at least {LIGHT}, dark: at most {DARK})")
     if wrong:

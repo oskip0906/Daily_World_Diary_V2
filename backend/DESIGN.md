@@ -236,7 +236,7 @@ and rejects it unless:
 - the colours match the mood. A colour's "amount of colour" is how far apart its strongest and
   weakest RGB channels are (0-255). For good, bad, tragic and tense, `--paper` and `--paper-alt`
   need at least 16 in the mood's hue and `--accent` at least 80 (hues: red 340-15°, amber 18-50°,
-  green 80-165°, blue 190-250°); good pages are light (luminance 0.7+), bad ones dark (0.05 or less).
+  green 80-165°, blue 190-250°); a good page's `--paper` is light (luminance 0.7+), a bad one's dark (0.05 or less).
   Neutral allows at most 6 on the papers and 24 on the accent. Variants are held to the same mood,
   so a good day can't turn dark in dark mode.
 
