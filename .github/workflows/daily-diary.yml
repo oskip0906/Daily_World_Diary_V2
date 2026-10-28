@@ -1,9 +1,12 @@
 name: daily-diary
 on:
   schedule:
-    # off the hour: GitHub drops scheduled events at :00 under load
+    # GitHub runs these as whoever last committed to them, so only the repo owner should edit them:
+    # commits by Claude <noreply@anthropic.com> belong to an outside account, and no run ever fired
+    # off the hour: GitHub delays or drops scheduled events at :00 under load
     - cron: "17 13 * * *"   # 9:17am EDT
     - cron: "17 14 * * *"   # 9:17am EST
+    - cron: "37 17 * * *"   # midday catch-up: generates only if the morning runs were dropped
   workflow_dispatch:
     inputs:
       date:
