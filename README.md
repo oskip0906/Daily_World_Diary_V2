@@ -4,7 +4,7 @@ An AI newsroom that writes, designs and publishes a new edition of the world eve
 
 ## ✨ Features
 
-- 📰 **Daily edition**: politics, finance, entertainment, music, markets and an outlook, written from news scraped that morning (Google News, Spotify, Yahoo Finance)
+- 📰 **Daily edition**: politics, finance, entertainment, sports, music, markets and an outlook, written from news scraped that morning (Google News, ESPN, Spotify, Yahoo Finance)
 - 🎨 **A new design every day**: an AI art director reads the day's news and sets the colours by its mood (dark red for a bad day, blue for a tragic one, light green for a good one, amber for a tense one, plain white or black for a quiet one), picks header styles, card components and layouts, writes the CSS, and must look different from yesterday
 - 🧵 **Story threads**: developing stories are linked across days, each with its own timeline page
 - 📊 **Market sparklines** for every index and sector

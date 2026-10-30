@@ -21,10 +21,11 @@ Section ids are load-bearing: `TableOfContents` anchors to them, so they must no
 | 1 | `political-news` | `political-analyst` | Google News: Politics + World |
 | 2 | `financial-news` | `financial-analyst` | Google News: Business |
 | 3 | `entertainment-news` | `entertainment-curator` | Google News: Entertainment |
-| 4 | `music-releases` | `music-curator` | Spotify Web API: the week's new albums and singles |
-| 5 | `stock-analysis` | `stock-analyst` | Yahoo Finance: IPOs, indices, sectors, major stocks, movers |
-| — | none: becomes `metadata.summary` | `synthesis-agent` | none: reads sections 1–5 |
-| 7 | `outlook` | `outlook-agent` | none: reads sections 1–5 |
+| 4 | `sports` | `sports-analyst` | ESPN site API: last night's final scores and the latest headlines |
+| 5 | `music-releases` | `music-curator` | Spotify Web API: the week's new albums and singles |
+| 6 | `stock-analysis` | `stock-analyst` | Yahoo Finance: IPOs, indices, sectors, major stocks, movers |
+| — | none: becomes `metadata.summary` | `synthesis-agent` | none: reads sections 1–6 |
+| 8 | `outlook` | `outlook-agent` | none: reads sections 1–6 |
 
 Two further facts from the frontend that shape the design:
 
@@ -44,7 +45,7 @@ GitHub Action, 9am New York                                   push ──▶ sit
 
 Four deliberate calls, each with its reasoning:
 
-**Scrape first, then write.** Each of the five gathering agents gets its material from the source
+**Scrape first, then write.** Each of the six gathering agents gets its material from the source
 that suits its section (§6), never from the model's own searching. The model only writes; every link
 on the page comes from scraped data, so it cannot invent a URL or a source.
 
@@ -55,8 +56,8 @@ would add migrations, a connection pool, an ORM and a schema in a second languag
 this workload needs. `store.py` is the seam: swap it for Postgres the day you need full-text search
 or a second concurrent writer.
 
-**LangGraph orchestrates the agents.** The pipeline is a `StateGraph` (§5): the five gatherers fan
-out from `START`, both synthesisers wait on all five, and `assemble` waits on both. This makes the
+**LangGraph orchestrates the agents.** The pipeline is a `StateGraph` (§5): the six gatherers fan
+out from `START`, both synthesisers wait on all six, and `assemble` waits on both. This makes the
 dependency structure explicit instead of implied by `await` order, and leaves room for what LangGraph
 is good at when it is needed: conditional branches, checkpointed resume, human review steps, or
 streaming progress. Only `langgraph` itself is used; the model call stays on the raw `openai` SDK.
@@ -130,6 +131,7 @@ A LangGraph `StateGraph`, built from the same `AGENTS` tuple:
         ┌─ political-analyst ─────┐
         ├─ financial-analyst ─────┤     ┌─ synthesis-agent ─┐
 START ──┼─ entertainment-curator ─┼──▶──┤                   ├──▶ design ──▶ assemble ──▶ threads ──▶ END
+        ├─ sports-analyst ────────┤
         ├─ music-curator ─────────┤     └─ outlook-agent ───┘
         └─ stock-analyst ─────────┘
    each gatherer: scrape (thread) → write (model)
@@ -152,9 +154,9 @@ def agent_node(agent: Agent, run=None, scrape=None):
     return node
 ```
 
-Scrapers are blocking I/O, so they run in threads; the five gatherers stay parallel. `briefing` joins
+Scrapers are blocking I/O, so they run in threads; the six gatherers stay parallel. `briefing` joins
 the gatherers' finished markdown (links removed) as `## {section_title}\n{markdown}`, in `order`. The
-`operator.or_` reducer on `results` is what lets five nodes write the same key in one step.
+`operator.or_` reducer on `results` is what lets six nodes write the same key in one step.
 
 `assemble` drops a leading heading that repeats the section title, renders each markdown blob to
 HTML, sorts by `order`, and builds `metadata`. The `synthesis-agent` writes no section: its one
@@ -333,10 +335,18 @@ Google News article URLs, which redirect to the publisher.
 
 **Spotify (music).** Client-credentials auth (`SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`), then
 `GET /v1/search?q=tag:new&type=album&market=US`: albums and singles released in the past two weeks,
-10 per page, up to 5 pages. `/v1/browse/new-releases` would be the obvious endpoint, but Spotify marks
-it deprecated. The gatherer keeps releases dated in the 7 days up to the entry's date, newest first.
+10 per page. Each query stops at 100 results, mostly the last two days' singles, so the gatherer
+also runs `tag:new a`, `tag:new e` … `tag:new u` (words starting with each vowel) to reach the previous
+Friday's albums. `/v1/browse/new-releases` would be the obvious endpoint, but it is deprecated
+and returns 403 for this app. The gatherer keeps releases dated in the 7 days up to the entry's date, newest first.
 Search results don't include popularity or streaming numbers, so the music prompt forbids inventing
 them. Missing credentials raise, so the music section is omitted rather than written from nothing.
+
+**ESPN (sports).** The public site API, no key: `site.api.espn.com/apis/site/v2/sports/{league}/scoreboard?dates=D-1`
+for completed games (with team records, ESPN's one-line recap, and the series standing in the
+playoffs) and `/news` for headlines, across NFL, NBA, MLB, NHL, college football, the Premier
+League and the Champions League. Games with a note or a series ("World Series - Game 5") lead. `/news` only lists
+the latest stories, so headlines are filtered to the window and a backfilled date gets scores only.
 
 **Yahoo Finance via `yfinance` (stocks).** Last-session closes and one-day changes for the major
 indices (S&P 500, Dow, Nasdaq, Russell 2000, VIX), the 11 SPDR sector ETFs, the ten largest US
@@ -462,7 +472,7 @@ must be committed by a repo collaborator (since 4904815: `oskip0906 <oscar.pang0
 never by an agent's own identity.
 
 Repo settings it needs: secrets `OPENROUTER_API_KEY`, `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`,
-and the variable `OPENROUTER_MODEL`. Google News and Yahoo need no keys.
+and the variable `OPENROUTER_MODEL`. Google News, ESPN and Yahoo need no keys.
 
 `workflow_dispatch` covers the rest from the Actions tab. A date input backfills that day, and
 skips it if a file already exists, matching `store.write`'s refuse-to-clobber rule (§8). To
