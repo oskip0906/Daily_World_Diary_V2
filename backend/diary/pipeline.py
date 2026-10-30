@@ -1,5 +1,5 @@
-"""LangGraph pipeline: five gatherers (scrape, then write) fan out from START, both synthesisers
-wait on all five, the designer reads the finished entry, assemble writes it up, and the last step
+"""LangGraph pipeline: six gatherers (scrape, then write) fan out from START, both synthesisers
+wait on all six, the designer reads the finished entry, assemble writes it up, and the last step
 links its stories to the week's threads."""
 
 import asyncio
@@ -49,7 +49,7 @@ def agent_node(agent: Agent, run=None, scrape=None):
         date = state["date"]
         try:
             if agent.gathers:
-                # scrapers are blocking I/O; a thread keeps the five gatherers parallel
+                # scrapers are blocking I/O; a thread keeps the gatherers parallel
                 material = await asyncio.to_thread(scrape or gather, agent, date)
                 result = await (run or run_agent)(agent, date, material=material)
             else:
@@ -162,7 +162,7 @@ def build(run=None, scrape=None, design=None, link=None):
     for a in gatherers:
         g.add_edge(START, a)
     for s in synthesisers:
-        g.add_edge(gatherers, s)  # list source = wait for all five
+        g.add_edge(gatherers, s)  # list source = wait for all gatherers
     g.add_edge(synthesisers, "design")
     g.add_node("threads", threads_node(link))
     g.add_edge("design", "assemble")

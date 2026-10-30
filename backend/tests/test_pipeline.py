@@ -9,7 +9,7 @@ from diary.prompts import AGENTS
 from diary.sources import Item, Material
 
 GATHERERS = [a for a in AGENTS if a.gathers]
-SECTION_IDS = ["political-news", "financial-news", "entertainment-news", "music-releases",
+SECTION_IDS = ["political-news", "financial-news", "entertainment-news", "sports", "music-releases",
                "stock-analysis", "outlook"]
 THREAD = {"id": "serbia-protests", "title": "Serbia's protests", "story": "political-news/1", "day": 2,
           "follows": ["2026-10-23/political-news/2"]}
@@ -55,13 +55,13 @@ def generate(date="2026-10-24"):
 def test_sections_match_the_frontend_contract(contexts):
     entry = generate()
     assert [s["id"] for s in entry["sections"]] == SECTION_IDS
-    assert [s["order"] for s in entry["sections"]] == [1, 2, 3, 4, 5, 7]
+    assert [s["order"] for s in entry["sections"]] == [1, 2, 3, 4, 5, 6, 8]
     assert entry["sections"][0]["title"] == "Political News"
     assert entry["sections"][0]["content"].startswith("<h3>")
     pipeline.check_contract(entry)
 
 
-def test_synthesisers_receive_all_five_gatherer_sections(contexts):
+def test_synthesisers_receive_every_gatherer_section(contexts):
     generate()
     for synth in ("synthesis-agent", "outlook-agent"):
         for a in GATHERERS:
@@ -135,7 +135,7 @@ def test_a_crashing_threads_step_still_writes_the_entry(contexts, monkeypatch):
 
     monkeypatch.setattr(pipeline, "run_threads", boom)
     entry = generate()
-    assert "threads" not in entry and len(entry["sections"]) == 6
+    assert "threads" not in entry and len(entry["sections"]) == 7
 
 
 def test_no_theme_when_the_designer_gives_up(contexts, monkeypatch):
@@ -145,7 +145,7 @@ def test_no_theme_when_the_designer_gives_up(contexts, monkeypatch):
     monkeypatch.setattr(pipeline, "run_design", gave_up)
     entry = generate()
     assert "theme" not in entry
-    assert len(entry["sections"]) == 6
+    assert len(entry["sections"]) == 7
 
 
 def test_a_crashing_designer_still_writes_the_entry(contexts, monkeypatch):
@@ -154,14 +154,14 @@ def test_a_crashing_designer_still_writes_the_entry(contexts, monkeypatch):
 
     monkeypatch.setattr(pipeline, "run_design", boom)
     entry = generate()
-    assert "theme" not in entry and len(entry["sections"]) == 6
+    assert "theme" not in entry and len(entry["sections"]) == 7
 
 
 def test_run_records_model_usage_and_prompt_versions(contexts):
     entry = generate()
     assert entry["model"] == "vendor/model"
-    # seven agents, the designer and the threads step
-    assert entry["usage"] == {"prompt_tokens": 770, "completion_tokens": 77, "cost": pytest.approx(0.076)}
+    # eight agents, the designer and the threads step
+    assert entry["usage"] == {"prompt_tokens": 870, "completion_tokens": 87, "cost": pytest.approx(0.086)}
     assert entry["promptVersions"] == {a.agent_id: a.version for a in AGENTS}
 
 
@@ -232,7 +232,7 @@ def test_a_failed_scrape_omits_only_its_section(contexts, monkeypatch):
     monkeypatch.setattr(pipeline, "gather", flaky)
     entry = generate()
     assert "music-releases" not in [s["id"] for s in entry["sections"]]
-    assert len(entry["sections"]) == 5
+    assert len(entry["sections"]) == 6
 
 
 def test_the_briefing_drops_links(contexts, monkeypatch):

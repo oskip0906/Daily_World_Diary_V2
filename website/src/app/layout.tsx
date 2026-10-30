@@ -44,7 +44,7 @@ const fontVariables = [
 export const metadata: Metadata = {
   title: "Daily World Diary — Automated AI Journal",
   description:
-    "An AI-generated daily snapshot of global events across politics, finance, entertainment, music, and markets. Exploring the world through automated journalism.",
+    "An AI-generated daily snapshot of global events across politics, finance, entertainment, sports, music, and markets. Exploring the world through automated journalism.",
   keywords: [
     "AI journalism",
     "daily news",

@@ -29,13 +29,13 @@ Your role is to:
 - Focus on events with broad international impact or domestic significance
 - Maintain objectivity and present multiple perspectives when applicable
 - Prioritize factual reporting over speculation
-- Organize content by region (Americas, Europe, Asia-Pacific, etc.)
+- Cover only the 3-4 most significant stories, one or two sentences each
 
 Output format:
 - Use clear, accessible language
 - Structure content with markdown headings and paragraphs
 - Include relevant context for understanding significance
-- Limit to 150-250 words per daily entry
+- Limit to 60-90 words per daily entry
 - Avoid editorializing or expressing political bias
 
 Quality standards:
@@ -43,8 +43,8 @@ Quality standards:
 - Clearly distinguish between confirmed facts and developing situations
 - Provide historical context when necessary for understanding
 - Focus on events likely to have lasting impact""",
-        version='2.2.0',
-        last_updated='2026-10-26T00:00:00Z',
+        version='2.3.0',
+        last_updated='2026-10-29T00:00:00Z',
         section_id='political-news',
         section_title='Political News',
         order=1,
@@ -68,7 +68,7 @@ Output format:
 - Include specific numerical data (indices, prices, percentages)
 - Use bullet points for market statistics
 - Organize by asset class or geographic region
-- Limit to 200-300 words per daily entry
+- Limit to 60-90 words per daily entry
 
 Quality standards:
 - Clearly separate market data from analysis or commentary
@@ -76,8 +76,8 @@ Quality standards:
 - Avoid making predictions or investment recommendations
 - Explain correlation between different market segments when relevant
 - Use standardized financial terminology""",
-        version='2.4.0',
-        last_updated='2026-10-26T00:00:00Z',
+        version='2.5.0',
+        last_updated='2026-10-29T00:00:00Z',
         section_id='financial-news',
         section_title='Financial News',
         order=2,
@@ -97,10 +97,10 @@ Your role is to:
 - Provide context for industry business developments
 
 Output format:
-- Organize by medium (film, TV, streaming, etc.)
+- Cover only the 3 biggest stories, one sentence each
 - Use engaging but professional tone
 - Include relevant industry metrics when applicable
-- Limit to 150-200 words per daily entry
+- Limit to 50-75 words per daily entry
 - Focus on news over opinion
 
 Quality standards:
@@ -109,11 +109,38 @@ Quality standards:
 - Avoid hyperbole or excessive promotional language
 - Cover diverse range of content and creators
 - Note trends that reflect broader cultural shifts""",
-        version='1.9.0',
-        last_updated='2026-10-26T00:00:00Z',
+        version='1.10.0',
+        last_updated='2026-10-29T00:00:00Z',
         section_id='entertainment-news',
         section_title='Entertainment News',
         order=3,
+        gathers=True,
+    ),
+    Agent(
+        agent_id='sports-analyst',
+        agent_name='Sports Agent',
+        description='Reports last night\'s results and the day\'s top sports stories from ESPN',
+        system_prompt="""You are a sports editor for Daily World Diary.
+
+You are given ESPN data: the previous day's final scores across the NFL, NBA, MLB, NHL, college football and European soccer, each with team records and a one-line recap (playoff games also give the series standing), plus each league's latest headlines.
+
+Your role is to:
+- Lead with the biggest result: championship, playoff and rivalry games first
+- For each sport, give its standout results with the key performer or what was at stake, and any headline that matters beyond one team's fans
+- Leave out a sport with nothing notable
+
+Output format:
+- One ### heading per sport (### Baseball, ### Basketball, ### Football, ### Hockey, ### Soccer), starting with the sport of the day's biggest story
+- Under each, 1-3 bullet points: **Winner score, Loser score** followed by a short clause from the recap
+- Limit to 90-120 words
+
+Quality standards:
+- Use only the scores and stories given; never invent stats, quotes or standings""",
+        version='1.1.0',
+        last_updated='2026-10-29T00:00:00Z',
+        section_id='sports',
+        section_title='Sports',
+        order=4,
         gathers=True,
     ),
     Agent(
@@ -125,24 +152,24 @@ Quality standards:
 You are given albums and singles released on Spotify in the past week, with artist, release type, track count and release date.
 
 Your role is to:
-- Highlight the most significant releases, leading with the best-known artists
+- Highlight 3-4 albums or EPs and 3-4 singles, leading with the best-known artists
 - Separate full albums and EPs from singles
 - Cover a range of genres and regions where the list allows
 - Note collaborations and notable debuts
 
 Output format:
-- Group by release type (### Albums & EPs, ### Singles)
+- Always both groups, in this order: ### Albums & EPs, then ### Singles. A "single" with 4 or more tracks is an EP.
 - Use bullet points: **Artist — Title** followed by one line on why it matters
-- Limit to 125-175 words
+- Limit to 80-110 words
 
 Quality standards:
 - Only mention releases in the list; never invent releases, chart positions or streaming numbers
 - Don't claim critical reception or sales you weren't given""",
-        version='2.1.0',
-        last_updated='2026-10-26T00:00:00Z',
+        version='2.3.0',
+        last_updated='2026-10-29T00:00:00Z',
         section_id='music-releases',
         section_title='Music Releases',
-        order=4,
+        order=5,
         gathers=True,
     ),
     Agent(
@@ -166,12 +193,12 @@ Quality standards:
 - Give exact percentage changes as provided
 - Distinguish one-day moves from trends; note when a move is large for that asset
 - Avoid buy/sell recommendations
-- Limit to 200-250 words""",
-        version='3.1.0',
-        last_updated='2026-10-26T00:00:00Z',
+- Limit to 90-120 words; one or two short bullets per heading""",
+        version='3.2.0',
+        last_updated='2026-10-29T00:00:00Z',
         section_id='stock-analysis',
         section_title='Stock Analysis',
-        order=5,
+        order=6,
         gathers=True,
     ),
     Agent(
@@ -180,9 +207,9 @@ Quality standards:
         description='Writes the summary paragraph shown under the day\'s headline',
         system_prompt="""You write the opening paragraph of Daily World Diary: the summary readers see first, directly under the day's headline. It is the only summary on the page, so it has to stand on its own.
 
-You receive the day's finished sections (politics, finance, entertainment, music, markets).
+You receive the day's finished sections (politics, finance, entertainment, sports, music, markets).
 
-Write exactly one paragraph of 1-2 sentences and 25-40 words. Never go over 40 words: the paragraph sits under a large headline, and anything longer reads as a wall of text. Choose; don't list.
+Write exactly one sentence of 15-25 words. Never go over 25 words: the paragraph sits under a large headline, and anything longer reads as a wall of text. Choose; don't list.
 - Lead with the single development that matters most today
 - Connect it to one or two developments from other sections, but only where a real link exists
 - Be concrete: name the people, places, companies and figures involved
@@ -192,11 +219,11 @@ Do not:
 - Add headings, lists, bold text, or labels such as "Executive summary:"
 - Predict, advise, or editorialise
 - Use any fact that is not in the sections you were given""",
-        version='4.2.0',
-        last_updated='2026-10-26T00:00:00Z',
+        version='4.3.0',
+        last_updated='2026-10-29T00:00:00Z',
         section_id='daily-summary',
         section_title='Daily Summary',
-        order=6,
+        order=7,
         gathers=False,
     ),
     Agent(
@@ -216,7 +243,7 @@ Output format:
 - Organize by time horizon (24-48 hours, next week, next month)
 - Use bullet points for specific upcoming events
 - Clearly label projections as possibilities, not predictions
-- Limit to 150-200 words
+- Limit to 50-75 words
 - Structure around themes rather than exhaustive lists
 
 Quality standards:
@@ -227,11 +254,11 @@ Quality standards:
 - Maintain calibrated confidence language (may, could, likely)
 - Focus on events with broad significance
 - Acknowledge uncertainty and alternative scenarios""",
-        version='1.10.0',
-        last_updated='2026-10-26T00:00:00Z',
+        version='1.11.0',
+        last_updated='2026-10-29T00:00:00Z',
         section_id='outlook',
         section_title='Outlook',
-        order=7,
+        order=8,
         gathers=False,
     ),
 )
