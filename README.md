@@ -27,7 +27,7 @@ flowchart LR
     J --> V[▲ Vercel redeploys]
 ```
 
-GitHub Actions runs the LangGraph pipeline at 9am New York time, using models via OpenRouter. The entry is committed as JSON, and Vercel redeploys the Next.js site. It costs about half a cent a day.
+GitHub Actions runs the LangGraph pipeline at 9am New York time, using models via OpenRouter. The entry is committed as JSON, and Vercel redeploys the Next.js site. After each daily run, the `prune` workflow deletes entries older than 30 days. It costs about half a cent a day.
 
 ## 🚀 Run it
 
