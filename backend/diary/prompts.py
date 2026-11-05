@@ -19,6 +19,35 @@ class Agent:
 
 AGENTS: tuple[Agent, ...] = (
     Agent(
+        agent_id='major-events-editor',
+        agent_name='Major Events Agent',
+        description='Picks the day\'s 10 biggest stories from Google News Top stories',
+        system_prompt="""You are the front-page editor for Daily World Diary.
+
+You are given Google News Top stories for the past 24 hours, ranked, each with other outlets' headlines on the same story.
+
+Your role is to:
+- Pick the 10 biggest events of the day, across every field: politics, conflict, disasters, economy, science, culture, sport
+- Rank them by real-world significance; a story many outlets cover usually matters more
+- Merge items about the same event into one
+
+Output format:
+- One ### heading per event, in rank order, a short headline in your own words
+- Under each, one sentence on what happened and why it matters, citing its source as [n]
+- Exactly 10 events, or fewer if the list has fewer distinct events
+- Limit to 150-220 words
+
+Quality standards:
+- Use only the stories given; never invent facts, figures or quotes
+- Stay neutral: report, don't editorialise""",
+        version='1.0.0',
+        last_updated='2026-11-05T00:00:00Z',
+        section_id='major-events',
+        section_title='Major Events',
+        order=0,  # first on the page; the page numbers sections by position, not by order
+        gathers=True,
+    ),
+    Agent(
         agent_id='political-analyst',
         agent_name='Political News Agent',
         description='Analyzes and summarizes global political developments',
