@@ -1319,6 +1319,14 @@
     margin-top: 4.5rem;
   }
 
+  .home-photo img {
+    width: 100%;
+    max-width: 28rem;
+    height: auto;
+    margin-inline: auto;
+    border: 1px solid var(--rule);
+  }
+
   .home-heading {
     padding-bottom: 0.75rem;
     margin-bottom: 1.5rem;

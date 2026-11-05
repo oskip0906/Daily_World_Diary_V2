@@ -4,6 +4,7 @@
  */
 
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { CalendarGrid } from "@/components/CalendarGrid";
@@ -82,6 +83,11 @@ export default async function Home() {
         ) : (
           <p className="home-empty">The first edition is on its way.</p>
         )}
+
+        <figure className="home-block home-photo">
+          <Image src="/homepage-photo.jpg" width={1490} height={1988} sizes="(min-width: 480px) 28rem, 100vw"
+                 alt="Mirror selfie in a white Stüssy 8-ball zip hoodie with a dark green Arc'teryx crossbody bag" />
+        </figure>
 
         <section className="home-block" aria-labelledby="home-archive">
           <h2 id="home-archive" className="home-heading">Every edition</h2>
