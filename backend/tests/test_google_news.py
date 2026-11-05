@@ -52,3 +52,11 @@ def test_past_dates_fall_back_to_the_dated_search_feed(monkeypatch):
     material = google_news.gather(("POLITICS",), "politics", "2026-10-25")
     assert "after:2026-10-24" in urls[-1] and "before:2026-10-25" in urls[-1]
     assert material.items[0].publisher == "NPR"
+
+
+def test_top_stories_read_the_front_page_feed(monkeypatch):
+    urls = []
+    monkeypatch.setattr(google_news, "fetch", lambda url: urls.append(url) or TOPIC)
+    monkeypatch.setattr(google_news, "MIN_ITEMS", 1)
+    google_news.gather(("TOP",), "breaking news", "2026-10-26")
+    assert urls == [google_news.TOP_URL]

@@ -11,6 +11,7 @@ from urllib.parse import quote_plus
 from .common import Item, Material, get as fetch, window
 
 TOPIC_URL = "https://news.google.com/rss/headlines/section/topic/{topic}?hl=en-US&gl=US&ceid=US:en"
+TOP_URL = "https://news.google.com/rss?hl=en-US&gl=US&ceid=US:en"  # the front page: Top stories, ranked
 SEARCH_URL = "https://news.google.com/rss/search?q={query}+after:{start}+before:{end}&hl=en-US&gl=US&ceid=US:en"
 MIN_ITEMS = 10
 MAX_ITEMS = 30
@@ -32,7 +33,7 @@ def parse(xml: bytes) -> list[Item]:
 
 def gather(topics: tuple[str, ...], query: str, date: str) -> Material:
     start, end = window(date)
-    feeds = [parse(fetch(TOPIC_URL.format(topic=t))) for t in topics]
+    feeds = [parse(fetch(TOP_URL if t == "TOP" else TOPIC_URL.format(topic=t))) for t in topics]
     ranked = [i for i in chain.from_iterable(zip_longest(*feeds)) if i]  # interleave: keep each feed's ranking
     items = [i for i in ranked if start < i.published <= end]
     if len(items) < MIN_ITEMS:

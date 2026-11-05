@@ -4,6 +4,7 @@ from . import espn, google_news, spotify, yahoo
 from .common import Item, Material
 
 GATHERERS = {
+    "major-events-editor": lambda date: google_news.gather(("TOP",), "breaking news", date),
     "political-analyst": lambda date: google_news.gather(("POLITICS", "WORLD"), "politics", date),
     "financial-analyst": lambda date: google_news.gather(("BUSINESS",), "business", date),
     "entertainment-curator": lambda date: google_news.gather(("ENTERTAINMENT",), "entertainment", date),
