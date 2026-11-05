@@ -31,13 +31,19 @@ const SPOTIFY_LINK =
  * which the regex limits to a type keyword and a 22-character base62 id, so nothing else reaches it.
  */
 export function embedSpotify(html: string): string {
+  // the model often cites a release twice (after its title and after its sentence): one player
+  // per release, at its last citation, so it follows the text; earlier citations are dropped
+  const last = new Map<string, number>();
+  for (const m of html.matchAll(SPOTIFY_LINK)) last.set(m[2], m.index);
   return html.replace(
     SPOTIFY_LINK,
     // the sentence's own punctuation stays with the sentence, before the player
-    (_, type: string, id: string, punctuation: string) =>
-      `${punctuation}<iframe class="diary-embed" src="https://open.spotify.com/embed/${type}/${id}" height="152" ` +
-      `loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" ` +
-      `title="Play on Spotify"></iframe>`
+    (_, type: string, id: string, punctuation: string, offset: number) =>
+      offset !== last.get(id)
+        ? punctuation
+        : `${punctuation}<iframe class="diary-embed" src="https://open.spotify.com/embed/${type}/${id}" height="152" ` +
+          `loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" ` +
+          `title="Play on Spotify"></iframe>`
   );
 }
 
