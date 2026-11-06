@@ -4,9 +4,9 @@ on:
     # GitHub runs these as whoever last committed to them, so only the repo owner should edit them:
     # commits by Claude <noreply@anthropic.com> belong to an outside account, and no run ever fired
     # off the hour: GitHub delays or drops scheduled events at :00 under load
-    - cron: "17 13 * * *"   # 9:17am EDT
-    - cron: "17 14 * * *"   # 9:17am EST
-    - cron: "37 17 * * *"   # midday catch-up: generates only if the morning runs were dropped
+    - cron: "17 2 * * *"    # 10:17pm EDT (9:17pm EST: finds yesterday's entry and skips)
+    - cron: "17 3 * * *"    # 10:17pm EST (11:17pm EDT: finds today's entry and skips)
+    - cron: "37 13 * * *"   # next-morning catch-up: generates only if both night runs were dropped
   workflow_dispatch:
     inputs:
       date:
@@ -21,16 +21,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # GitHub cron is UTC-only: both schedules fire, and this guard lets exactly one generate
+      # GitHub cron is UTC-only: every schedule fires, and this guard lets exactly one generate.
+      # The date is the latest New York day whose 10pm has passed, so a run before 10pm catches up yesterday
       - id: when
         env:
           INPUT_DATE: ${{ inputs.date }}
         run: |
-          d="${INPUT_DATE:-$(TZ=America/New_York date +%F)}"
+          if [ "$(TZ=America/New_York date +%-H)" -ge 22 ]; then d=$(TZ=America/New_York date +%F)
+          else d=$(TZ=America/New_York date -d yesterday +%F); fi
+          d="${INPUT_DATE:-$d}"
           echo "date=$d" >> "$GITHUB_OUTPUT"
-          if [ -z "$INPUT_DATE" ] && [ "$(TZ=America/New_York date +%-H)" -lt 9 ]; then
-            echo "skip=1" >> "$GITHUB_OUTPUT"
-          fi
           if [ -f "website/data/$d.json" ]; then echo "skip=1" >> "$GITHUB_OUTPUT"; fi
       - if: steps.when.outputs.skip != '1'
         uses: actions/setup-python@v5
