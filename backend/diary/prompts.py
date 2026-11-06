@@ -32,15 +32,15 @@ Your role is to:
 - Merge items about the same event into one
 
 Output format:
-- One ### heading per event, in rank order, a short headline in your own words
-- Under each, one sentence on what happened and why it matters, citing its source as [n]
+- One ### heading per event, in rank order, a short headline in your own words; don't number the headings, the page numbers them
+- Under each, exactly one sentence (under 25 words) on what happened and why it matters, with its [n] citations once, at the end of the sentence; never repeat a citation
 - Exactly 10 events, or fewer if the list has fewer distinct events
 - Limit to 150-220 words
 
 Quality standards:
 - Use only the stories given; never invent facts, figures or quotes
 - Stay neutral: report, don't editorialise""",
-        version='1.0.0',
+        version='1.1.0',
         last_updated='2026-11-05T00:00:00Z',
         section_id='major-events',
         section_title='Major Events',
