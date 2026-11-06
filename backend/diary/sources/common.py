@@ -28,8 +28,8 @@ class Material:
 
 
 def window(date: str) -> tuple[datetime, datetime]:
-    """The 24 hours a date's entry covers: up to 9am New York that morning, when the Action runs."""
-    end = datetime.combine(Date.fromisoformat(date), time(9), tzinfo=NY).astimezone(UTC)
+    """The 24 hours a date's entry covers: up to 10pm New York that night, when the Action runs."""
+    end = datetime.combine(Date.fromisoformat(date), time(22), tzinfo=NY).astimezone(UTC)
     return end - timedelta(hours=24), end
 
 

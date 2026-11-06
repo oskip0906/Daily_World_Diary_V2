@@ -1,4 +1,4 @@
-"""ESPN's public site API (no key): the previous day's final scores, with records and a one-line recap,
+"""ESPN's public site API (no key): the day's final scores, with records and a one-line recap,
 and each league's latest headlines."""
 
 import json
@@ -11,6 +11,8 @@ LEAGUES = {"football/nfl": "NFL", "basketball/nba": "NBA", "baseball/mlb": "MLB"
            "football/college-football": "College Football", "soccer/eng.1": "Premier League",
            "soccer/uefa.champions": "Champions League"}
 MAX_ITEMS = 40
+# games that start in the last 3 hours before the 10pm run are often still on: they go in the next entry
+SETTLE = timedelta(hours=3)
 
 
 def record(team: dict) -> str:
@@ -30,7 +32,7 @@ def parse_scores(board: dict, league: str) -> list[Item]:
         marks = ((c.get("notes") or [{}])[0].get("headline", ""), (c.get("series") or {}).get("summary", ""))
         items.append(Item(f"{league}: {score}" + (f". {recap}" if recap else ""),
                           (e.get("links") or [{}])[0].get("href", "https://www.espn.com"), "ESPN",
-                          " · ".join(m for m in marks if m)))
+                          " · ".join(m for m in marks if m), datetime.fromisoformat(e["date"])))
     return items
 
 
@@ -42,10 +44,13 @@ def parse_news(news: dict, league: str) -> list[Item]:
 
 def gather(date: str) -> Material:
     start, end = window(date)
-    day = (Date.fromisoformat(date) - timedelta(days=1)).strftime("%Y%m%d")  # last night's games
+    d = Date.fromisoformat(date)
     scores, news = [], []
     for path, league in LEAGUES.items():
-        scores += parse_scores(json.loads(get(f"{BASE.format(league=path)}/scoreboard?dates={day}")), league)
+        # shortcut: a game that starts before 7pm and is still on at 10pm is never reported; rare (extra innings)
+        for day in (d - timedelta(days=1), d):
+            board = json.loads(get(f"{BASE.format(league=path)}/scoreboard?dates={day:%Y%m%d}"))
+            scores += [i for i in parse_scores(board, league) if start - SETTLE <= i.published < end - SETTLE]
         # shortcut: /news only lists the latest stories, so a backfilled date gets scores only
         news += [i for i in parse_news(json.loads(get(f"{BASE.format(league=path)}/news?limit=10")), league)
                  if start < i.published <= end]

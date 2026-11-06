@@ -148,10 +148,10 @@ Quality standards:
     Agent(
         agent_id='sports-analyst',
         agent_name='Sports Agent',
-        description='Reports last night\'s results and the day\'s top sports stories from ESPN',
+        description='Reports the day\'s results and top sports stories from ESPN',
         system_prompt="""You are a sports editor for Daily World Diary.
 
-You are given ESPN data: the previous day's final scores across the NFL, NBA, MLB, NHL, college football and European soccer, each with team records and a one-line recap (playoff games also give the series standing), plus each league's latest headlines.
+You are given ESPN data: the day's final scores (games that started between 7pm the evening before and 7pm today) across the NFL, NBA, MLB, NHL, college football and European soccer, each with team records and a one-line recap (playoff games also give the series standing), plus each league's latest headlines.
 
 Your role is to:
 - Lead with the biggest result: championship, playoff and rivalry games first
@@ -165,8 +165,8 @@ Output format:
 
 Quality standards:
 - Use only the scores and stories given; never invent stats, quotes or standings""",
-        version='1.1.0',
-        last_updated='2026-10-29T00:00:00Z',
+        version='1.2.0',
+        last_updated='2026-11-06T00:00:00Z',
         section_id='sports',
         section_title='Sports',
         order=4,

@@ -25,8 +25,8 @@ def test_changes_use_the_last_session_before_the_date():
     assert close == 7623.68 and pct == pytest.approx(0.3116, abs=1e-3)
 
 
-def test_changes_ignore_sessions_on_or_after_the_date():
-    session, moves = yahoo.changes(closes(), "2026-10-23")
+def test_changes_include_the_dates_own_session_and_ignore_later_ones():
+    session, moves = yahoo.changes(closes(), "2026-10-22")  # the run is at 10pm, after the close
     assert session == "2026-10-22" and moves["NVDA"][0] == 210.0
 
 
@@ -52,7 +52,7 @@ def test_material_has_tables_and_citable_ipos():
 
 
 def test_charts_carry_each_index_and_sector_session_but_not_stocks():
-    material = yahoo.build(closes(), IPOS, MOVERS, "2026-10-23")  # the 23rd itself is excluded
+    material = yahoo.build(closes(), IPOS, MOVERS, "2026-10-22")  # the 23rd is after the date
     assert material.charts == [{"group": "Indices", "label": "S&P 500", "symbol": "^GSPC", "change": -1.3,
                                 "closes": [7700.0, 7600.0]}]
 

@@ -23,9 +23,9 @@ def test_parse_keeps_other_outlets_coverage_as_detail():
     assert "BBC" not in detail  # the item's own outlet isn't repeated
 
 
-def test_window_is_the_24_hours_up_to_9am_new_york():
+def test_window_is_the_24_hours_up_to_10pm_new_york():
     start, end = window("2026-10-26")
-    assert end == datetime(2026, 10, 26, 13, 0, tzinfo=timezone.utc)  # 9am EDT
+    assert end == datetime(2026, 10, 27, 2, 0, tzinfo=timezone.utc)  # 10pm EDT
     assert (end - start).total_seconds() == 24 * 3600
 
 
@@ -50,7 +50,7 @@ def test_past_dates_fall_back_to_the_dated_search_feed(monkeypatch):
     urls = []
     monkeypatch.setattr(google_news, "fetch", lambda url: urls.append(url) or (SEARCH if "search" in url else TOPIC))
     material = google_news.gather(("POLITICS",), "politics", "2026-10-25")
-    assert "after:2026-10-24" in urls[-1] and "before:2026-10-25" in urls[-1]
+    assert "after:2026-10-25" in urls[-1] and "before:2026-10-26" in urls[-1]
     assert material.items[0].publisher == "NPR"
 
 

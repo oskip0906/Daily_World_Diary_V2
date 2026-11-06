@@ -39,6 +39,6 @@ def gather(topics: tuple[str, ...], query: str, date: str) -> Material:
     if len(items) < MIN_ITEMS:
         # topic feeds only hold the last ~2 days; a backfilled date needs the dated search feed
         d = Date.fromisoformat(date)
-        items = parse(fetch(SEARCH_URL.format(query=quote_plus(query), start=d - timedelta(days=1), end=d)))
+        items = parse(fetch(SEARCH_URL.format(query=quote_plus(query), start=d, end=d + timedelta(days=1))))
     unique = list({i.title: i for i in reversed(items)}.values())[::-1]  # first occurrence wins
     return Material(unique[:MAX_ITEMS])

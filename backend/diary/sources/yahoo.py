@@ -32,8 +32,8 @@ def quote_url(symbol: str) -> str:
 
 
 def changes(close: pd.DataFrame, date: str) -> tuple[str, dict[str, tuple[float, float]]]:
-    """Close and % change for the last session before `date`, per symbol."""
-    before = close[close.index < pd.Timestamp(date)]
+    """Close and % change for the last session on or before `date` (the run is after the close), per symbol."""
+    before = close[close.index <= pd.Timestamp(date)]
     # crypto trades on weekends, so the session is the last day most symbols traded
     session = before.dropna(thresh=max(1, len(before.columns) // 2)).index[-1].date().isoformat()
     moves = {}
@@ -82,7 +82,7 @@ def ensure_ipo_section(ipo_items: list[Item], md: str) -> str:
 
 def charts(close: pd.DataFrame, date: str, moves: dict) -> list[dict]:
     """Every session's close in the download window, for the indices and sectors."""
-    before = close[close.index < pd.Timestamp(date)]
+    before = close[close.index <= pd.Timestamp(date)]
     return [{"group": group, "label": name, "symbol": s, "change": round(moves[s][1], 2),
              "closes": [round(float(v), 2) for v in before[s].dropna()]}
             for group, names in (("Indices", INDICES), ("Sectors", SECTORS)) for s, name in names.items()
@@ -108,7 +108,7 @@ def gather(date: str) -> Material:
     symbols = [s for _, names in GROUPS for s in names]
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")  # yfinance's pandas deprecation noise
-        close = yf.download(symbols, start=d - timedelta(days=10), end=d, progress=False, auto_adjust=False)["Close"]
+        close = yf.download(symbols, start=d - timedelta(days=10), end=d + timedelta(days=1), progress=False, auto_adjust=False)["Close"]
         calendar = yf.Calendars(start=d - timedelta(days=7), end=d + timedelta(days=7)).get_ipo_info_calendar(limit=50)
         records = [] if calendar.empty else json.loads(calendar.reset_index().to_json(orient="records", date_format="iso"))
         screens = {key: yf.screen(key, count=5)["quotes"] for key in SCREENS}

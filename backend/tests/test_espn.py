@@ -3,7 +3,8 @@ import json
 from diary.sources import espn
 
 
-def game(home, away, home_score, away_score, note=None, completed=True, series=None, recap=None, records=()):
+def game(home, away, home_score, away_score, note=None, completed=True, series=None, recap=None, records=(),
+         start="2026-10-29T00:08Z"):
     """Shape of an event in ESPN's /scoreboard response, trimmed to the fields the parser reads."""
     def side(name, score, other, rec):
         return {"team": {"displayName": name}, "score": score, "winner": int(score) > int(other)} | (
@@ -15,7 +16,7 @@ def game(home, away, home_score, away_score, note=None, completed=True, series=N
         comp["series"] = {"type": "playoff", "summary": series}
     if recap:
         comp["headlines"] = [{"shortLinkText": recap}]
-    return {"competitions": [comp], "status": {"type": {"completed": completed}},
+    return {"date": start, "competitions": [comp], "status": {"type": {"completed": completed}},
             "links": [{"href": f"https://www.espn.com/game/{home}"}]}
 
 
@@ -40,14 +41,19 @@ def test_a_routine_game_has_no_detail_so_it_does_not_jump_the_queue():
 
 
 def test_gather_leads_with_noted_games_and_keeps_news_in_the_window(monkeypatch):
+    # the 29th's entry: games that started from 7pm on the 28th to 7pm on the 29th (EDT)
+    boards = {"20261028": [game("A", "B", "2", "1", start="2026-10-28T23:10Z"),
+                           game("Rays", "Brewers", "1", "4", "World Series"),
+                           game("Early", "Game", "3", "0", start="2026-10-28T17:00Z")],  # the 28th's entry had it
+              "20261029": [game("Day", "Game", "6", "2", start="2026-10-29T17:05Z"),
+                           game("Late", "Game", "5", "4", start="2026-10-29T23:30Z")]}  # the 30th's entry gets it
     def fake_get(url):
         if "baseball/mlb/scoreboard" in url:
-            assert "dates=20261028" in url
-            return json.dumps({"events": [game("A", "B", "2", "1"), game("Rays", "Brewers", "1", "4", "World Series")]})
+            return json.dumps({"events": boards[url.split("dates=")[1]]})
         if "football/nfl/news" in url:
             return json.dumps({"articles": [article("fresh", "2026-10-29T11:00:00Z"),
                                             article("stale", "2026-10-27T11:00:00Z")]})
         return json.dumps({})
     monkeypatch.setattr(espn, "get", fake_get)
     titles = [i.title for i in espn.gather("2026-10-29").items]
-    assert titles == ["MLB: Brewers 4, Rays 1", "MLB: A 2, B 1", "NFL: fresh"]
+    assert titles == ["MLB: Brewers 4, Rays 1", "MLB: A 2, B 1", "MLB: Day 6, Game 2", "NFL: fresh"]

@@ -9,7 +9,7 @@
 | `GET /api/diary/dates` | `{ "data": string[] }` | ISO dates, used to light up calendar cells |
 | `GET /api/diary/{date}` | `{ "data": DiaryEntry }` | `400` on bad format, `404` on missing |
 
-Pages: `/` redirects to today's entry (New York date), or to the latest one before 9am when today's
+Pages: `/` redirects to today's entry (New York date), or to the latest one before 10pm when today's
 doesn't exist yet. `/diary/{date}` shows an entry, and its "All editions" link goes to the home page.
 
 Types are frozen in `website/src/types/index.ts`. The backend emits exactly those, camelCase included.
@@ -22,7 +22,7 @@ Section ids are load-bearing: `TableOfContents` anchors to them, so they must no
 | 1 | `political-news` | `political-analyst` | Google News: Politics + World |
 | 2 | `financial-news` | `financial-analyst` | Google News: Business |
 | 3 | `entertainment-news` | `entertainment-curator` | Google News: Entertainment |
-| 4 | `sports` | `sports-analyst` | ESPN site API: last night's final scores and the latest headlines |
+| 4 | `sports` | `sports-analyst` | ESPN site API: the day's final scores and the latest headlines |
 | 5 | `music-releases` | `music-curator` | Spotify Web API: the week's new albums and singles |
 | 6 | `stock-analysis` | `stock-analyst` | Yahoo Finance: IPOs, indices, sectors, major stocks, movers |
 | — | none: becomes `metadata.summary` | `synthesis-agent` | none: reads sections 0–6 |
@@ -38,7 +38,7 @@ Two further facts from the frontend that shape the design:
 ## 2. Shape: a scheduled CLI that commits JSON to the repo
 
 ```
-GitHub Action, 9am New York                                   push ──▶ site redeploys
+GitHub Action, 10pm New York                                  push ──▶ site redeploys
   python -m diary.generate ──▶ website/data/2026-10-25.json ──▶ git commit + push
                                           ▲
                         Next route handlers read these files (§9)
@@ -64,7 +64,7 @@ is good at when it is needed: conditional branches, checkpointed resume, human r
 streaming progress. Only `langgraph` itself is used; the model call stays on the raw `openai` SDK.
 
 **The repo is the database; there is no Python server.** `python -m diary.generate --date X` writes
-a file, a GitHub Action runs it every morning and commits the result (§10), and the push redeploys
+a file, a GitHub Action runs it every night and commits the result (§10), and the push redeploys
 the site. Nothing to host, nothing to keep running, no database credentials. The trade: a new entry
 appears after the redeploy (~1–2 min), and regenerating a day means re-running the Action, not
 clicking something on the site.
@@ -323,7 +323,7 @@ survive to the next run anyway.
 
 Every gatherer returns a `Material`: a list of citable `Item(title, url, publisher, detail)`, optional
 preformatted `data` (figures the model reads but doesn't cite by number), and an optional `ensure`
-step applied to the model's output. The window an entry covers is **the 24 hours up to 9am New York
+step applied to the model's output. The window an entry covers is **the 24 hours up to 10pm New York
 on its date**, when the Action runs.
 
 **Google News (major events, political, financial, entertainment).** Major Events reads the front page,
@@ -333,7 +333,7 @@ on its date**, when the Action runs.
 outlets' headlines on the same story, which go to the model as context. Two topics are interleaved to
 keep both rankings, deduplicated by headline, filtered to the window, and capped at 30. Topic feeds
 only hold the last ~2 days, so when fewer than 10 items fall in the window (a backfilled date), the
-gatherer switches to the dated search feed (`/rss/search?q=politics+after:D-1+before:D`). Links are
+gatherer switches to the dated search feed (`/rss/search?q=politics+after:D+before:D+1`). Links are
 Google News article URLs, which redirect to the publisher.
 
 **Spotify (music).** Client-credentials auth (`SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`), then
@@ -345,13 +345,14 @@ and returns 403 for this app. The gatherer keeps releases dated in the 7 days up
 Search results don't include popularity or streaming numbers, so the music prompt forbids inventing
 them. Missing credentials raise, so the music section is omitted rather than written from nothing.
 
-**ESPN (sports).** The public site API, no key: `site.api.espn.com/apis/site/v2/sports/{league}/scoreboard?dates=D-1`
-for completed games (with team records, ESPN's one-line recap, and the series standing in the
+**ESPN (sports).** The public site API, no key: `site.api.espn.com/apis/site/v2/sports/{league}/scoreboard?dates=D-1` and `D`
+for completed games that started from 7pm the evening before to 7pm on the date (a game that starts
+later is often still on at 10pm, so it goes in the next entry) (with team records, ESPN's one-line recap, and the series standing in the
 playoffs) and `/news` for headlines, across NFL, NBA, MLB, NHL, college football, the Premier
 League and the Champions League. Games with a note or a series ("World Series - Game 5") lead. `/news` only lists
 the latest stories, so headlines are filtered to the window and a backfilled date gets scores only.
 
-**Yahoo Finance via `yfinance` (stocks).** Last-session closes and one-day changes for the major
+**Yahoo Finance via `yfinance` (stocks).** The date's own closes (the run is after the close; a weekend reports Friday) and one-day changes for the major
 indices (S&P 500, Dow, Nasdaq, Russell 2000, VIX), the 11 SPDR sector ETFs, the ten largest US
 companies, and the 10-year yield, oil, gold and bitcoin; the IPO calendar for ±7 days (funds, ETFs,
 trusts, rights, units, warrants and preferred-stock offerings dropped); and the day's top gainers,
@@ -454,18 +455,20 @@ certain: `outputFileTracingIncludes: { "/api/**": ["./data/**"] }`.
 The pages fetch their own `/api/*` routes, building the URL from `NEXT_PUBLIC_BASE_URL`, then
 Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, then `http://localhost:3000`.
 
-## 10. Running it — a GitHub Action at 9am New York time
+## 10. Running it — a GitHub Action at 10pm New York time
 
-The entry for a date is generated that morning, so it covers the previous day's news and the
-previous session's market close.
+The entry for a date is generated that night, so it covers that day's news and that session's market
+close. (Until 2026-11-05 it ran at 9am and covered the day before; the 2026-11-05 entry is the last of
+those, so 9am-10pm on Nov 5 is in no entry.)
 
-GitHub cron runs in **UTC only**, and 9am New York is 13:00 UTC in summer (EDT) and 14:00 UTC in
-winter (EST). So `.github/workflows/daily-diary.yml` schedules both, at 17 past (GitHub may delay or
-drop scheduled runs at the top of the hour under load), and lets a guard decide: it generates only
-when it is at least 9am in New York **and** today's file does not exist yet. In summer the 13:17 run
-generates and the 14:17 run finds the file and exits; in winter the 13:17 run is 8am and skips. The
-same guard absorbs GitHub's scheduling delays, and a third run at 17:37 UTC catches the day up when
-GitHub dropped both morning runs (otherwise it finds the file and exits).
+GitHub cron runs in **UTC only**, and 10pm New York is 02:00 UTC the next day in summer (EDT) and
+03:00 UTC in winter (EST). So `.github/workflows/daily-diary.yml` schedules both, at 17 past (GitHub may
+delay or drop scheduled runs at the top of the hour under load), and lets a guard decide: it picks the
+latest New York day whose 10pm has passed and generates it only if its file does not exist yet. In
+summer the 02:17 run generates and the 03:17 run finds the file and exits; in winter the 02:17 run is
+9:17pm, picks yesterday, finds it and exits. A run GitHub delays past midnight still picks the right
+day, and a third run at 13:37 UTC (the next morning) catches the day up when GitHub dropped both night
+runs.
 
 **Who commits the cron lines matters.** GitHub runs a schedule as the user who last committed to its
 cron lines. Commits authored as `Claude <noreply@anthropic.com>` link to an outside GitHub account

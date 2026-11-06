@@ -41,7 +41,7 @@ export default async function Home() {
   const theme = readTheme((await cookies()).get(THEME_COOKIE)?.value);
   const today = todayInNewYork();
   const dates = await getAvailableDates();
-  // before 9am New York, today's entry doesn't exist yet: lead with the latest one
+  // before 10pm New York, today's entry doesn't exist yet: lead with the latest one
   const latestDate = dates.filter((d) => d <= today).at(-1);
   const latest = latestDate ? await getDiaryEntry(latestDate) : null;
   const shown = parseDate(latestDate ?? today);
@@ -55,7 +55,7 @@ export default async function Home() {
             <ThemePicker current={theme} />
           </div>
           <h1 className="home-wordmark">Daily World Diary</h1>
-          <p className="home-tagline">The world, written and designed fresh every morning by AI.</p>
+          <p className="home-tagline">The world, written and designed fresh every night by AI.</p>
         </div>
       </header>
 
