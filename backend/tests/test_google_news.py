@@ -23,9 +23,9 @@ def test_parse_keeps_other_outlets_coverage_as_detail():
     assert "BBC" not in detail  # the item's own outlet isn't repeated
 
 
-def test_window_is_the_24_hours_up_to_10pm_new_york():
+def test_window_is_the_24_hours_up_to_5pm_new_york():
     start, end = window("2026-10-26")
-    assert end == datetime(2026, 10, 27, 2, 0, tzinfo=timezone.utc)  # 10pm EDT
+    assert end == datetime(2026, 10, 26, 21, 0, tzinfo=timezone.utc)  # 5pm EDT
     assert (end - start).total_seconds() == 24 * 3600
 
 

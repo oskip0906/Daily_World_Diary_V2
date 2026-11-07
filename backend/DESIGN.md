@@ -9,7 +9,7 @@
 | `GET /api/diary/dates` | `{ "data": string[] }` | ISO dates, used to light up calendar cells |
 | `GET /api/diary/{date}` | `{ "data": DiaryEntry }` | `400` on bad format, `404` on missing |
 
-Pages: `/` redirects to today's entry (New York date), or to the latest one before 10pm when today's
+Pages: `/` redirects to today's entry (New York date), or to the latest one before 5pm when today's
 doesn't exist yet. `/diary/{date}` shows an entry, and its "All editions" link goes to the home page.
 
 Types are frozen in `website/src/types/index.ts`. The backend emits exactly those, camelCase included.
@@ -38,7 +38,7 @@ Two further facts from the frontend that shape the design:
 ## 2. Shape: a scheduled CLI that commits JSON to the repo
 
 ```
-GitHub Action, 10pm New York                                  push ──▶ site redeploys
+GitHub Action, 5pm New York                                   push ──▶ site redeploys
   python -m diary.generate ──▶ website/data/2026-10-25.json ──▶ git commit + push
                                           ▲
                         Next route handlers read these files (§9)
@@ -64,7 +64,7 @@ is good at when it is needed: conditional branches, checkpointed resume, human r
 streaming progress. Only `langgraph` itself is used; the model call stays on the raw `openai` SDK.
 
 **The repo is the database; there is no Python server.** `python -m diary.generate --date X` writes
-a file, a GitHub Action runs it every night and commits the result (§10), and the push redeploys
+a file, a GitHub Action runs it every evening and commits the result (§10), and the push redeploys
 the site. Nothing to host, nothing to keep running, no database credentials. The trade: a new entry
 appears after the redeploy (~1–2 min), and regenerating a day means re-running the Action, not
 clicking something on the site.
@@ -323,7 +323,7 @@ survive to the next run anyway.
 
 Every gatherer returns a `Material`: a list of citable `Item(title, url, publisher, detail)`, optional
 preformatted `data` (figures the model reads but doesn't cite by number), and an optional `ensure`
-step applied to the model's output. The window an entry covers is **the 24 hours up to 10pm New York
+step applied to the model's output. The window an entry covers is **the 24 hours up to 5pm New York
 on its date**, when the Action runs.
 
 **Google News (major events, political, financial, entertainment).** Major Events reads the front page,
@@ -346,8 +346,8 @@ Search results don't include popularity or streaming numbers, so the music promp
 them. Missing credentials raise, so the music section is omitted rather than written from nothing.
 
 **ESPN (sports).** The public site API, no key: `site.api.espn.com/apis/site/v2/sports/{league}/scoreboard?dates=D-1` and `D`
-for completed games that started from 7pm the evening before to 7pm on the date (a game that starts
-later is often still on at 10pm, so it goes in the next entry) (with team records, ESPN's one-line recap, and the series standing in the
+for completed games that started from 2pm the day before to 2pm on the date (a game that starts
+later is often still on at 5pm, so it goes in the next entry) (with team records, ESPN's one-line recap, and the series standing in the
 playoffs) and `/news` for headlines, across NFL, NBA, MLB, NHL, college football, the Premier
 League and the Champions League. Games with a note or a series ("World Series - Game 5") lead. `/news` only lists
 the latest stories, so headlines are filtered to the window and a backfilled date gets scores only.
@@ -455,20 +455,23 @@ certain: `outputFileTracingIncludes: { "/api/**": ["./data/**"] }`.
 The pages fetch their own `/api/*` routes, building the URL from `NEXT_PUBLIC_BASE_URL`, then
 Vercel's `VERCEL_PROJECT_PRODUCTION_URL`, then `http://localhost:3000`.
 
-## 10. Running it — a GitHub Action at 10pm New York time
+## 10. Running it — a GitHub Action at 5pm New York time
 
-The entry for a date is generated that night, so it covers that day's news and that session's market
+The entry for a date is generated that evening, so it covers that day's news and that session's market
 close. (Until 2026-11-05 it ran at 9am and covered the day before; the 2026-11-05 entry is the last of
-those, so 9am-10pm on Nov 5 is in no entry.)
+those, so 9am-5pm on Nov 5 is in no entry.)
 
-GitHub cron runs in **UTC only**, and 10pm New York is 02:00 UTC the next day in summer (EDT) and
-03:00 UTC in winter (EST). So `.github/workflows/daily-diary.yml` schedules both, at 17 past (GitHub may
+GitHub cron runs in **UTC only**, and 5pm New York is 21:00 UTC in summer (EDT) and
+22:00 UTC in winter (EST). So `.github/workflows/daily-diary.yml` schedules both, at 17 past (GitHub may
 delay or drop scheduled runs at the top of the hour under load), and lets a guard decide: it picks the
-latest New York day whose 10pm has passed and generates it only if its file does not exist yet. In
-summer the 02:17 run generates and the 03:17 run finds the file and exits; in winter the 02:17 run is
-9:17pm, picks yesterday, finds it and exits. A run GitHub delays past midnight still picks the right
-day, and a third run at 13:37 UTC (the next morning) catches the day up when GitHub dropped both night
+latest New York day whose 5pm has passed and generates it only if its file does not exist yet. In
+summer the 21:17 run generates and the 22:17 run finds the file and exits; in winter the 21:17 run is
+4:17pm, picks yesterday, finds it and exits. A run GitHub delays past midnight still picks the right
+day, and a third run at 13:37 UTC (the next morning) catches the day up when GitHub dropped both evening
 runs.
+
+The cron time is the earliest an entry can appear, not a promise: from 2026-10-28 to 11-06 GitHub started
+every scheduled run 3 to 9 hours late, though none was dropped. Manual runs start within seconds.
 
 **Who commits the cron lines matters.** GitHub runs a schedule as the user who last committed to its
 cron lines. Commits authored as `Claude <noreply@anthropic.com>` link to an outside GitHub account

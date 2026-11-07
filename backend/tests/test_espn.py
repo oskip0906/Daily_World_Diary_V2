@@ -41,7 +41,7 @@ def test_a_routine_game_has_no_detail_so_it_does_not_jump_the_queue():
 
 
 def test_gather_leads_with_noted_games_and_keeps_news_in_the_window(monkeypatch):
-    # the 29th's entry: games that started from 7pm on the 28th to 7pm on the 29th (EDT)
+    # the 29th's entry: games that started from 2pm on the 28th to 2pm on the 29th (EDT)
     boards = {"20261028": [game("A", "B", "2", "1", start="2026-10-28T23:10Z"),
                            game("Rays", "Brewers", "1", "4", "World Series"),
                            game("Early", "Game", "3", "0", start="2026-10-28T17:00Z")],  # the 28th's entry had it

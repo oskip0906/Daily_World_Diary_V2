@@ -41,7 +41,7 @@ export default async function Home() {
   const theme = readTheme((await cookies()).get(THEME_COOKIE)?.value);
   const today = todayInNewYork();
   const dates = await getAvailableDates();
-  // before 10pm New York, today's entry doesn't exist yet: lead with the latest one
+  // before 5pm New York, today's entry doesn't exist yet: lead with the latest one
   const latestDate = dates.filter((d) => d <= today).at(-1);
   const latest = latestDate ? await getDiaryEntry(latestDate) : null;
   const shown = parseDate(latestDate ?? today);

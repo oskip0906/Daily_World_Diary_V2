@@ -151,7 +151,7 @@ Quality standards:
         description='Reports the day\'s results and top sports stories from ESPN',
         system_prompt="""You are a sports editor for Daily World Diary.
 
-You are given ESPN data: the day's final scores (games that started between 7pm the evening before and 7pm today) across the NFL, NBA, MLB, NHL, college football and European soccer, each with team records and a one-line recap (playoff games also give the series standing), plus each league's latest headlines.
+You are given ESPN data: the day's final scores (games that started between 2pm the day before and 2pm today) across the NFL, NBA, MLB, NHL, college football and European soccer, each with team records and a one-line recap (playoff games also give the series standing), plus each league's latest headlines.
 
 Your role is to:
 - Lead with the biggest result: championship, playoff and rivalry games first

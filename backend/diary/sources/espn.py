@@ -11,7 +11,7 @@ LEAGUES = {"football/nfl": "NFL", "basketball/nba": "NBA", "baseball/mlb": "MLB"
            "football/college-football": "College Football", "soccer/eng.1": "Premier League",
            "soccer/uefa.champions": "Champions League"}
 MAX_ITEMS = 40
-# games that start in the last 3 hours before the 10pm run are often still on: they go in the next entry
+# games that start in the last 3 hours before the 5pm run are often still on: they go in the next entry
 SETTLE = timedelta(hours=3)
 
 
@@ -47,7 +47,7 @@ def gather(date: str) -> Material:
     d = Date.fromisoformat(date)
     scores, news = [], []
     for path, league in LEAGUES.items():
-        # shortcut: a game that starts before 7pm and is still on at 10pm is never reported; rare (extra innings)
+        # shortcut: a game that starts before 2pm and is still on at 5pm is never reported; rare (extra innings)
         for day in (d - timedelta(days=1), d):
             board = json.loads(get(f"{BASE.format(league=path)}/scoreboard?dates={day:%Y%m%d}"))
             scores += [i for i in parse_scores(board, league) if start - SETTLE <= i.published < end - SETTLE]

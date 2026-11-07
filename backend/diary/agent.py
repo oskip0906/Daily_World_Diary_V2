@@ -52,7 +52,7 @@ def task(agent: Agent, date: str, context: str | None = None, material: Material
              f"leave the rest out; a reader should finish the section in about a minute.") if m else ""
     if material is not None:
         return (f"Write the {agent.section_title} section of Daily World Diary for {date}, covering the 24 hours "
-                f"up to 10pm New York time on {date}. Use only the material below; add no facts from elsewhere. "
+                f"up to 5pm New York time on {date}. Use only the material below; add no facts from elsewhere. "
                 f"Cite the numbered items you use as [n] right after the sentence they support. "
                 f"{FORMAT}{limit}\n\n{numbered(material)}" + (f"\n\nRemember: at most {m[1]} words." if m else ""))
     return (f"These are the {date} sections of Daily World Diary:\n\n{context}\n\n"

@@ -26,7 +26,7 @@ def test_changes_use_the_last_session_before_the_date():
 
 
 def test_changes_include_the_dates_own_session_and_ignore_later_ones():
-    session, moves = yahoo.changes(closes(), "2026-10-22")  # the run is at 10pm, after the close
+    session, moves = yahoo.changes(closes(), "2026-10-22")  # the run is at 5pm, after the close
     assert session == "2026-10-22" and moves["NVDA"][0] == 210.0
 
 
