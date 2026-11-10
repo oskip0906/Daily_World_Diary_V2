@@ -18,15 +18,16 @@ Section ids are load-bearing: `TableOfContents` anchors to them, so they must no
 
 | order | section `id` | agent `agentId` | material (§6) |
 |---|---|---|---|
-| 0 | `major-events` | `major-events-editor` | Google News: Top stories (front page), the 10 biggest |
+| 0 | `major-events` | `major-events-editor` | Google News: every feed, ranked together (§6); the top 5 |
 | 1 | `political-news` | `political-analyst` | Google News: Politics + World |
 | 2 | `financial-news` | `financial-analyst` | Google News: Business |
-| 3 | `entertainment-news` | `entertainment-curator` | Google News: Entertainment |
-| 4 | `sports` | `sports-analyst` | ESPN site API: the day's final scores and the latest headlines |
-| 5 | `music-releases` | `music-curator` | Spotify Web API: the week's new albums and singles |
-| 6 | `stock-analysis` | `stock-analyst` | Yahoo Finance: IPOs, indices, sectors, major stocks, movers |
-| — | none: becomes `metadata.summary` | `synthesis-agent` | none: reads sections 0–6 |
-| 8 | `outlook` | `outlook-agent` | none: reads sections 0–6 |
+| 3 | `tech-news` | `tech-analyst` | Google News: Technology |
+| 4 | `entertainment-news` | `entertainment-curator` | Google News: Entertainment |
+| 5 | `sports` | `sports-analyst` | ESPN site API: the day's final scores and the latest headlines |
+| 6 | `music-releases` | `music-curator` | Spotify Web API: the week's new albums and singles |
+| 7 | `stock-analysis` | `stock-analyst` | Yahoo Finance: IPOs, indices, sectors, major stocks, movers |
+| — | none: becomes `metadata.summary` | `synthesis-agent` | none: reads sections 0–7 |
+| 9 | `outlook` | `outlook-agent` | none: reads sections 0–7 |
 
 Two further facts from the frontend that shape the design:
 
@@ -46,7 +47,7 @@ GitHub Action, 5pm New York                                   push ──▶ sit
 
 Four deliberate calls, each with its reasoning:
 
-**Scrape first, then write.** Each of the seven gathering agents gets its material from the source
+**Scrape first, then write.** Each of the eight gathering agents gets its material from the source
 that suits its section (§6), never from the model's own searching. The model only writes; every link
 on the page comes from scraped data, so it cannot invent a URL or a source.
 
@@ -57,8 +58,8 @@ would add migrations, a connection pool, an ORM and a schema in a second languag
 this workload needs. `store.py` is the seam: swap it for Postgres the day you need full-text search
 or a second concurrent writer.
 
-**LangGraph orchestrates the agents.** The pipeline is a `StateGraph` (§5): the seven gatherers fan
-out from `START`, both synthesisers wait on all seven, and `assemble` waits on both. This makes the
+**LangGraph orchestrates the agents.** The pipeline is a `StateGraph` (§5): the eight gatherers fan
+out from `START`, both synthesisers wait on all eight, and `assemble` waits on both. This makes the
 dependency structure explicit instead of implied by `await` order, and leaves room for what LangGraph
 is good at when it is needed: conditional branches, checkpointed resume, human review steps, or
 streaming progress. Only `langgraph` itself is used; the model call stays on the raw `openai` SDK.
@@ -132,6 +133,7 @@ A LangGraph `StateGraph`, built from the same `AGENTS` tuple:
         ┌─ major-events-editor ───┐
         ├─ political-analyst ─────┤
         ├─ financial-analyst ─────┤     ┌─ synthesis-agent ─┐
+        ├─ tech-analyst ──────────┤     │                   │
 START ──┼─ entertainment-curator ─┼──▶──┤                   ├──▶ design ──▶ assemble ──▶ threads ──▶ END
         ├─ sports-analyst ────────┤
         ├─ music-curator ─────────┤     └─ outlook-agent ───┘
@@ -156,9 +158,9 @@ def agent_node(agent: Agent, run=None, scrape=None):
     return node
 ```
 
-Scrapers are blocking I/O, so they run in threads; the seven gatherers stay parallel. `briefing` joins
+Scrapers are blocking I/O, so they run in threads; the eight gatherers stay parallel. `briefing` joins
 the gatherers' finished markdown (links removed) as `## {section_title}\n{markdown}`, in `order`. The
-`operator.or_` reducer on `results` is what lets seven nodes write the same key in one step.
+`operator.or_` reducer on `results` is what lets eight nodes write the same key in one step.
 
 `assemble` drops a leading heading that repeats the section title, renders each markdown blob to
 HTML, sorts by `order`, and builds `metadata`. The `synthesis-agent` writes no section: its one
@@ -167,7 +169,7 @@ paragraph, stripped to plain text, is `metadata.summary`, which the page shows u
 frontend hides that section on older entries.) If the design step produced a theme, it goes in
 `theme`.
 
-One agent failing should not lose the other seven, so the node catches its own exception: a failed
+One agent failing should not lose the other eight, so the node catches its own exception: a failed
 scrape (a feed down, Spotify credentials missing) or a failed model call omits that section with a
 logged warning, and the entry still renders. Transient model errors are retried below the graph by the
 `openai` client.
@@ -326,12 +328,22 @@ preformatted `data` (figures the model reads but doesn't cite by number), and an
 step applied to the model's output. The window an entry covers is **the 24 hours up to 5pm New York
 on its date**, when the Action runs.
 
-**Google News (major events, political, financial, entertainment).** Major Events reads the front page,
-`news.google.com/rss` (Top stories, ranked); the others read the section RSS feeds:
-`news.google.com/rss/headlines/section/topic/{TOPIC}` with `POLITICS` + `WORLD`, `BUSINESS`, and
-`ENTERTAINMENT`. Each item is a ranked story with its publisher and, from the description, other
-outlets' headlines on the same story, which go to the model as context. Two topics are interleaved to
-keep both rankings, deduplicated by headline, filtered to the window, and capped at 30. Topic feeds
+**Google News (major events, political, financial, tech, entertainment).** The section RSS feeds,
+`news.google.com/rss/headlines/section/topic/{TOPIC}`, with `POLITICS` + `WORLD`, `BUSINESS`,
+`TECHNOLOGY` and `ENTERTAINMENT`. Major Events reads all of them at once: the front page
+(`news.google.com/rss`, Top stories) and every topic (`WORLD`, `NATION`, `POLITICS`, `BUSINESS`,
+`TECHNOLOGY`, `ENTERTAINMENT`, `SPORTS`, `SCIENCE`, `HEALTH`), and writes up the top 5. Each item is a
+ranked story with its publisher and, from the description, other outlets' headlines on the same story,
+which go to the model as context.
+
+**Ranking by importance and popularity.** Each feed is filtered to the window, then `fuse()` merges the
+feeds into one ranking by reciprocal rank fusion: a story scores `1 / (60 + place)` in every ranking it
+appears in, and the stories are sorted by total. The rankings are Google's own feeds (importance: where
+Google places the story) plus one by how many outlets cover it (popularity). So a story that several
+feeds carry near the top, and that many outlets cover, leads; one top place in a single feed does not
+beat that. The RSS lists at most 5 outlets per story, so the coverage ranking mostly sinks
+single-source stories, and being carried by several feeds weighs more. Stories are deduplicated by
+headline and capped at 30, in ranked order, so the model sees the most important first. Topic feeds
 only hold the last ~2 days, so when fewer than 10 items fall in the window (a backfilled date), the
 gatherer switches to the dated search feed (`/rss/search?q=politics+after:D+before:D+1`). Links are
 Google News article URLs, which redirect to the publisher.
@@ -394,7 +406,7 @@ Disabling it fixed both, and cut output tokens by about 70%. A response with no 
 so the section is omitted (§5) instead of shipping blank.
 
 **The model is one env var (`OPENROUTER_MODEL`), not a constant per agent.** Set it once and all
-eight agents move together. No web-search plugin: the material comes from §6, which also removes the
+ten agents move together. No web-search plugin: the material comes from §6, which also removes the
 per-request search fee.
 
 ## 7. Content format and the XSS hole
@@ -434,7 +446,7 @@ that the API would serve. `force` guards the real failure mode: re-running the C
 already has a good entry both overwrites it and burns the API spend again.
 
 Each entry also records the `model` it was generated with, the summed `usage` (tokens and cost) from
-the eight calls, and `promptVersions` (§4). Three extra keys the frontend ignores.
+the ten calls, and `promptVersions` (§4). Three extra keys the frontend ignores.
 
 ## 9. The frontend
 

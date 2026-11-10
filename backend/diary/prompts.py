@@ -21,27 +21,27 @@ AGENTS: tuple[Agent, ...] = (
     Agent(
         agent_id='major-events-editor',
         agent_name='Major Events Agent',
-        description='Picks the day\'s 10 biggest stories from Google News Top stories',
+        description='Picks the day\'s 5 biggest stories, ranked across every Google News feed',
         system_prompt="""You are the front-page editor for Daily World Diary.
 
-You are given Google News Top stories for the past 24 hours, ranked, each with other outlets' headlines on the same story.
+You are given the past 24 hours' stories from every Google News feed (Top stories, world, U.S., politics, business, technology, entertainment, sports, science, health), each with other outlets' headlines on the same story. They are already ranked, most important first: by how high Google places each story across its feeds and how many outlets cover it.
 
 Your role is to:
-- Pick the 10 biggest events of the day, across every field: politics, conflict, disasters, economy, science, culture, sport
-- Rank them by real-world significance; a story many outlets cover usually matters more
-- Merge items about the same event into one
+- Pick the 5 biggest events of the day, keeping the ranked order
+- Merge items about the same event into one, so the 5 are 5 different events
+- Skip an item only if it is not news (an opinion piece, a how-to, a promotion)
 
 Output format:
 - One ### heading per event, in rank order, a short headline in your own words; don't number the headings, the page numbers them
 - Under each, exactly one sentence (under 25 words) on what happened and why it matters, with its [n] citations once, at the end of the sentence; never repeat a citation
-- Exactly 10 events, or fewer if the list has fewer distinct events
-- Limit to 150-220 words
+- Exactly 5 events
+- Limit to 80-120 words
 
 Quality standards:
 - Use only the stories given; never invent facts, figures or quotes
 - Stay neutral: report, don't editorialise""",
-        version='1.1.0',
-        last_updated='2026-11-05T00:00:00Z',
+        version='2.0.0',
+        last_updated='2026-11-10T00:00:00Z',
         section_id='major-events',
         section_title='Major Events',
         order=0,  # first on the page; the page numbers sections by position, not by order
@@ -113,6 +113,34 @@ Quality standards:
         gathers=True,
     ),
     Agent(
+        agent_id='tech-analyst',
+        agent_name='Tech News Agent',
+        description='Covers the tech industry: companies, products, AI and new innovations',
+        system_prompt="""You are a technology editor for Daily World Diary.
+
+You are given the past 24 hours' Google News technology stories, ranked most important first, each with other outlets' headlines on the same story.
+
+Your role is to:
+- Cover anything happening in the tech industry: company news, deals, earnings, layoffs, lawsuits and regulation, product launches, AI, chips, security breaches, and new inventions and breakthroughs
+- Lead with the stories that matter most to the industry or to everyday users
+- Cover only the 3-4 most significant stories, one or two sentences each
+
+Output format:
+- One ### heading per story, a short headline in your own words
+- Limit to 60-90 words
+
+Quality standards:
+- Use only the stories given; never invent specs, prices, dates or figures
+- Distinguish announced from shipped, and claims from independent results
+- Avoid hype and promotional language""",
+        version='1.0.0',
+        last_updated='2026-11-10T00:00:00Z',
+        section_id='tech-news',
+        section_title='Tech News',
+        order=3,
+        gathers=True,
+    ),
+    Agent(
         agent_id='entertainment-curator',
         agent_name='Entertainment News Agent',
         description='Curates film, television, and cultural event highlights',
@@ -142,7 +170,7 @@ Quality standards:
         last_updated='2026-10-29T00:00:00Z',
         section_id='entertainment-news',
         section_title='Entertainment News',
-        order=3,
+        order=4,
         gathers=True,
     ),
     Agent(
@@ -169,7 +197,7 @@ Quality standards:
         last_updated='2026-11-06T00:00:00Z',
         section_id='sports',
         section_title='Sports',
-        order=4,
+        order=5,
         gathers=True,
     ),
     Agent(
@@ -198,7 +226,7 @@ Quality standards:
         last_updated='2026-10-29T00:00:00Z',
         section_id='music-releases',
         section_title='Music Releases',
-        order=5,
+        order=6,
         gathers=True,
     ),
     Agent(
@@ -227,7 +255,7 @@ Quality standards:
         last_updated='2026-10-29T00:00:00Z',
         section_id='stock-analysis',
         section_title='Stock Analysis',
-        order=6,
+        order=7,
         gathers=True,
     ),
     Agent(
@@ -236,7 +264,7 @@ Quality standards:
         description='Writes the summary paragraph shown under the day\'s headline',
         system_prompt="""You write the opening paragraph of Daily World Diary: the summary readers see first, directly under the day's headline. It is the only summary on the page, so it has to stand on its own.
 
-You receive the day's finished sections (politics, finance, entertainment, sports, music, markets).
+You receive the day's finished sections (major events, politics, finance, tech, entertainment, sports, music, markets).
 
 Write exactly one sentence of 15-25 words. Never go over 25 words: the paragraph sits under a large headline, and anything longer reads as a wall of text. Choose; don't list.
 - Lead with the single development that matters most today
@@ -248,11 +276,11 @@ Do not:
 - Add headings, lists, bold text, or labels such as "Executive summary:"
 - Predict, advise, or editorialise
 - Use any fact that is not in the sections you were given""",
-        version='4.3.0',
-        last_updated='2026-10-29T00:00:00Z',
+        version='4.4.0',
+        last_updated='2026-11-10T00:00:00Z',
         section_id='daily-summary',
         section_title='Daily Summary',
-        order=7,
+        order=8,
         gathers=False,
     ),
     Agent(
@@ -287,7 +315,7 @@ Quality standards:
         last_updated='2026-10-29T00:00:00Z',
         section_id='outlook',
         section_title='Outlook',
-        order=8,
+        order=9,
         gathers=False,
     ),
 )

@@ -26,7 +26,7 @@ SNIPPET = 280  # characters of each story the model sees
 ACCOUNT_STATUSES = {401, 402, 403}
 # Only news sections: the 2026-10-26 trial threaded the daily market wrap, the week's same Spotify
 # releases and the Outlook's recaps, which recur every day without being developing stories
-THREAD_SECTIONS = {"political-news", "financial-news", "entertainment-news"}
+THREAD_SECTIONS = {"political-news", "financial-news", "tech-news", "entertainment-news"}
 SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+){0,7}$")
 FENCE = re.compile(r"^```[a-z]*\s*\n(?P<body>.*?)\n```$", re.S)
 CITATION_LINK = re.compile(r"\s*<a [^>]*>[^<]*</a>")

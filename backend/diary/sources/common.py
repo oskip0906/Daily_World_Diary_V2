@@ -17,6 +17,7 @@ class Item:
     publisher: str
     detail: str = ""
     published: datetime | None = None
+    outlets: int = 1  # outlets in the story's Google News cluster (at most 5 listed); a popularity signal
 
 
 @dataclass

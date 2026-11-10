@@ -1,7 +1,8 @@
+import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from pathlib import Path
 
-from diary.sources import google_news
+from diary.sources import Item, google_news
 from diary.sources.common import window
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -60,3 +61,39 @@ def test_top_stories_read_the_front_page_feed(monkeypatch):
     monkeypatch.setattr(google_news, "MIN_ITEMS", 1)
     google_news.gather(("TOP",), "breaking news", "2026-10-26")
     assert urls == [google_news.TOP_URL]
+
+
+def test_parse_counts_the_outlets_covering_a_story():
+    assert [i.outlets for i in google_news.parse(TOPIC)] == [5] * 6  # the RSS lists at most 5
+    assert all(i.outlets == 1 for i in google_news.parse(SEARCH))  # search results carry no cluster
+
+
+def story(title, outlets=1):
+    return Item(title, f"https://news.example/{title}", "Outlet", outlets=outlets)
+
+
+def test_a_story_high_in_several_feeds_outranks_one_top_place():
+    a, b, c, d = story("a"), story("b"), story("c"), story("d")
+    assert [i.title for i in google_news.fuse([[a, b], [c, b, d]])][0] == "b"
+
+
+def test_wider_coverage_breaks_a_tie_and_each_story_appears_once():
+    a, b = story("a", outlets=1), story("b", outlets=5)
+    fused = google_news.fuse([[a], [b], [b]])
+    assert [i.title for i in fused] == ["b", "a"]
+    assert [i.title for i in google_news.fuse([[a], [story("b", outlets=5)]])] == ["b", "a"]
+
+
+def test_gather_ranks_a_story_in_more_feeds_first(monkeypatch):
+    root = ET.fromstring(TOPIC)
+    channel = root.find("channel")
+    fifth = channel.findall("item")[4]
+    for it in channel.findall("item"):
+        if it is not fifth:
+            channel.remove(it)
+    only_fifth = ET.tostring(root)  # a second feed that carries only the top feed's fifth story
+    monkeypatch.setattr(google_news, "fetch", lambda url: TOPIC if url == google_news.TOP_URL else only_fifth)
+    monkeypatch.setattr(google_news, "MIN_ITEMS", 1)
+    items = google_news.gather(("TOP", "WORLD"), "breaking news", "2026-10-26").items
+    assert items[0].title == google_news.parse(TOPIC)[4].title
+    assert len(items) == len({i.title for i in items})
