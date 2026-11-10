@@ -238,9 +238,10 @@
     display: none;
   }
 
+  /* layered !important beats any theme: 2026-11-09's set gap: 0 for the desktop rail, and the strip ran together */
   .diary-toc-list {
     display: flex;
-    gap: 1.25rem;
+    gap: 1.25rem !important;
   }
 
   .diary-toc-link,
@@ -970,7 +971,7 @@
 
     .diary-toc-list {
       flex-direction: column;
-      gap: 0;
+      gap: 0 !important;
       border-left: 1px solid var(--rule);
     }
 
