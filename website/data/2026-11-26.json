@@ -1,0 +1,497 @@
+{
+  "metadata": {
+    "date": "2026-11-26",
+    "title": "World Digest — November 26, 2026",
+    "summary": "Trump's sweeping tariff proposals on 14 nations threaten global trade while Nvidia sinks 3.91% amid governance turmoil.",
+    "generatedAt": "2026-11-26T22:34:36Z"
+  },
+  "sections": [
+    {
+      "id": "major-events",
+      "title": "Major Events",
+      "content": "<h3>Trump Proposes New Tariffs on China, EU, and 12 Other Trading Partners</h3>\n<p>The administration unveiled sweeping tariff proposals targeting 14 nations, reigniting trade war fears and potentially raising U.S. average tariff rates to pre-World War II levels. <a href=\"https://news.google.com/rss/articles/CBMidkFVX3lxTE1odENQTk1RR0JMbTlRYWhYcnh6cGdvcktJUGVNZURvbUFtTHZ0end3RjhpclNNNEF0ZnZFTDVHTy1Vcy1jMF90U240MEZFUURvdkJDN3I2aE55R193X1VjVW9PaU5sVWZvU1Y4dmt5M3ZmeE1YcVE?oc=5\" rel=\"noopener noreferrer\">The New York Times</a></p>\n<h3>Deadly Tanker Capsizes Near Ibiza, Killing One Crew Member</h3>\n<p>A diesel tanker with 17 aboard sank off Ibiza, killing one crew member, with pollution concerns mounting as authorities assess environmental risks. <a href=\"https://news.google.com/rss/articles/CBMiW0FVX3lxTE5WRTRreUNYeDBMMXhrMHE0ejhDOS1iN2hnTlk3SGRMNGhEbjVvZ3JVQnhTRUFqNGdUS3ZaajBmdUpUWDY3MjdrdFFWUzRqUDFESzVMaHFVQ2RNakk?oc=5\" rel=\"noopener noreferrer\">BBC</a></p>\n<h3>Ebola Outbreak in Congo Reaches 12,000 Cases</h3>\n<p>Congo's Ebola crisis hit 12,000 cases as violence forced responders to evacuate, threatening containment efforts amid a death toll exceeding 5,700. <a href=\"https://news.google.com/rss/articles/CBMipgFBVV95cUxNY3NZTFdoSVNxWWdjdmJZOXhZUVNOYVpPa3RaeEt3dm1pRWJPR1JOWGs2S0NYOEI4MWQwelIxZElqcVVPQ1A1UC14X0NnWmhaVEVYb2VkZ1BwSGVocHpEZ0ZCUjBpREtodXBQcmlYQXFnRTRremdnSHFCd09YWHNZajNSMWpPQ3FVNzlaN1JpNDluRDJyWTNqQWc4NFh5RWlxbEV1N0dB0gGrAUFVX3lxTE1NMzhhbVFkcTE5S3VBVFJLYXZKNGJYMzQ1OXZ6di00Y1ZQVHc2WVVkMWFBOG05cjMtTlFILUZTMDNhQ3pVY2RHT3lpaGhrTXNpSVV5a1Y3azNRQ1J5WjdlZ2liNEY4aGdYZkh3Q0xxcU9IVnY3S0dmUnR5V3VUbFF1LWc5M25wVHRUNVFvT1ZuVmlnY2JLd3J3TVNDYWc3dUpUd3dIdUhXZjQwNA?oc=5\" rel=\"noopener noreferrer\">ABC News - Breaking News, Latest News and Videos</a></p>\n<h3>Storm Batters East Coast, Disrupting Thanksgiving Travel</h3>\n<p>A major storm grounded flights, knocked out power for over 850,000, and triggered coastal flood alerts for 67 million during peak holiday travel. <a href=\"https://news.google.com/rss/articles/CBMiwwFBVV95cUxOVV91OWdaQ1cwTHRxZU5wdzBlZjViam1uYmV3Wmd1bTV1QjJlS2dXLW1STjA1WTFUWElVdlNpMDF1Tk5BZmY4MTN4WVU1UHoyN1NoNUxZdXVkdzFzRVFpZWNfVzl3TW9iRTJNU2xaS3J1SWQ1OGpxV3NwdFhHOU1iSUtYWG9tYlZVX2lVR21yWFZIS1NkQWxOODVlS2dNalRwR01JbUZ0NmhKNVpLMkJHYTZmb1IyVkZaSHZGUEdOZzNlcDQ?oc=5\" rel=\"noopener noreferrer\">The Washington Post</a></p>\n<h3>Thanksgiving Snowstorm Buries St. Louis</h3>\n<p>St. Louis saw its second-snowiest Thanksgiving on record, leaving 125,000 homes without power for potentially multiple days. <a href=\"https://news.google.com/rss/articles/CBMiswFBVV95cUxPV2tkNFdLc1JYQ1FJaVlVQTQ1TjlNTm9HYVotc0xMOU1YR3F2RkVFeFJFelhJcFFlWURlbUhBWDNxNVhSTFl0Z1ktYTZqS01FYW13SHZ5VWw1ekh6YldGNERFSW10eFZhQWdfS21KMFhFOUhUb0o3MVJsRWtnV2FRTWgwZ2VPZTBlTEFmT2tGZ2xPTDBXQmx4dWxaNm5kNHFxdUg2VTltYTJXWkVKZXV3M0lGdw?oc=5\" rel=\"noopener noreferrer\">STLPR</a></p>",
+      "order": 0
+    },
+    {
+      "id": "political-news",
+      "title": "Political News",
+      "content": "<h3>Global Politics</h3>\n<ul>\n<li>UK Prime Minister Keir Starmer faces a major Labour Party rebellion as nearly 100 MPs, including ministerial aides, oppose the Rosebank oil field development <a href=\"https://news.google.com/rss/articles/CBMiW0FVX3lxTE1YaHpDYVVKVlFIRzZfSlBWa002YmFGWGJjRXhOVmN1aEZYUFA1UE1Kd3lfdjhBd2ppeUgzbHRKLTJHT3BXRkFscnhZYVotc3pTQXpuSXMzMEl3cDg?oc=5\" rel=\"noopener noreferrer\">BBC</a>. Separately, net migration to the UK fell to its lowest level since 1997, excluding the pandemic period <a href=\"https://news.google.com/rss/articles/CBMif0FVX3lxTE9QdFJ3YnVfVDdIay1IYTExN0MyU3cwM0dzSlN4ZENuLU9TVGVndF9YQ1BDVXhyczh6SVZZLXJERE1HRmpja0RKN1lOMWpXeEltWXRzeFBNa3FzLWZ6ZXJQR29uanc3VWpVOE84ZTZNdmVLYjJ3SkxLRUR3ZElOTjA?oc=5\" rel=\"noopener noreferrer\">The New York Times</a>.</li>\n<li>US President Donald Trump stated he asked Vladimir Putin to \"pull back\" military aggression throughout Europe <a href=\"https://news.google.com/rss/articles/CBMitgFBVV95cUxOLTBqZDFmdVZMYUhDSHRObmlwNXBGNXRpXzdBVnBTc2hZTk54NU9BYThqQUswalJPMklvaGhHNmJiNW5venFCYk1FbjdNQUdJU1RISjlXbGtpc0lWektRUThRNEhOdFdSZ3B3cGZTSlk5blFMWnhGOGNfaEFjbzBha29XdlNxTXUzemUzR1FIc0FPc0kybGZLSmp5OVNNSGRLOXNZM21pd0Fac2prOVoxcC1rMnFIUQ?oc=5\" rel=\"noopener noreferrer\">Reuters</a>. The administration also proposed new tariffs on China, the EU, and 12 other trading partners <a href=\"https://news.google.com/rss/articles/CBMidkFVX3lxTE1odENQTk1RR0JMbTlRYWhYcnh6cGdvcktJUGVNZURvbUFtTHZ0end3RjhpclNNNEF0ZnZFTDVHTy1Vcy1jMF90U240MEZFUURvdkJDN3I2aE55R193X1VjVW9PaU5sVWZvU1Y4dmt5M3ZmeE1YcVE?oc=5\" rel=\"noopener noreferrer\">The New York Times</a>.</li>\n<li>Sweden's Ulf Kristersson is poised to remain prime minister after the Centre Party shifted support, avoiding a government role for far-right ministers <a href=\"https://news.google.com/rss/articles/CBMikgFBVV95cUxNVnVWUktSTkl3MjhrVlNjUkhIUUhBcGMxWVdEaEJvNUlHd09sQ2hHZWpKbXBUeThGWkt4bDJrbFdHMTZzdWFfYjhyTzd4dDM3Y0NsN1hnU01iTExTVVl5T1pud1hjVHk1akVHTXd4ZElCQ2s2MnRLd0o4NDRKRlo2UWUwVGFqRTRMN2RLZjY0amxrZw?oc=5\" rel=\"noopener noreferrer\">POLITICO.eu</a>.</li>\n</ul>",
+      "order": 1
+    },
+    {
+      "id": "financial-news",
+      "title": "Financial News",
+      "content": "<h3>Global Markets</h3>\n<p>Global stocks rebounded as the AI trade recovered, with US futures pointing higher <a href=\"https://news.google.com/rss/articles/CBMilAFBVV95cUxPeEQtTUQwY0ZyTEpubU1fOUV6eVQzR2llam9uaF9UUnQ5LVNvcWJFT0dRYW9NRHM2cDQtYkpaOF9rS1ZuVE8zaDhmYWk0S1IzdU1sOER5aWJLOTQteFZFTjRkMUJwUTdta0ZnemNITTBEa1VVb1c1MGJkUnZoMFRKNDZjM1d6SDBqZ1g2NDZTenZfSEZK?oc=5\" rel=\"noopener noreferrer\">Bloomberg</a>. The Dow closed higher after erasing an 1,100-point loss, while the S&amp;P 500 and Nasdaq fell but recovered from lows <a href=\"https://news.google.com/rss/articles/CBMitAFBVV95cUxPWUoxN04xLTNpMnpwa1d3YkJLT1l0RElYblJUckRXTktsMXpfakMxdXkyd2JfcXdKUTZXWVE0Y1dmWHBDbGlSVTBqWVkxS2ViWUdtX01rU21rYnpBdDFsSWg2UG16UkNCWTJSNWdjbndGcm5LcExsZVNENkptV0tvblRQMTlKTjREaDR6Q3lNeGR3Tm42enlyX0s3ZENmX2ZLMzNrMlprVXotbjdfZXBYRDlVZV8?oc=5\" rel=\"noopener noreferrer\">MarketWatch</a>. Deutsche Bank predicts the tech rout will bottom soon, followed by a 25% S&amp;P 500 rally <a href=\"https://news.google.com/rss/articles/CBMi0gFBVV95cUxPalc1ZDBIekFEakNUQktfRW1UQTVJWUkxRE1pNW5IOE4wOW1qaFktOVRRLXd2MDlNZHBybzNTRFY5Mm55WU1KbkZ3ekZJc090Ry16N29Zd0pHQllOdnJ2akZrUzM5MEgzajFUcjhJclRMLVp0WVJ6a0Zkc0tSVldXQkhjbHlkUW04eVlyYzRxVjM2QzZhbTRMeGFNZUoxR2lZV2hSa0pvLWtZTUE4X0dzUzdLLTB0WmoxSjQzbXkzcHRnei1Denc0cjFENXF2eEg1aWc?oc=5\" rel=\"noopener noreferrer\">MarketWatch</a>.</p>\n<h3>Nvidia Turmoil</h3>\n<p>Trump pressed Nvidia to reinstate CEO Jensen Huang amid governance scandals <a href=\"https://news.google.com/rss/articles/CBMixgFBVV95cUxQcDJ0UmNqUTc2UWNoaVh0STB6ZHRZTnV6WGVPX2Q0VDhmRWU4Wk5hV2lZMTZOZUV4ZEwzOVBnVmVtbnB0eXlpekIyMVF5cG91WmVxLTNIeWx1MzhLN3czOHFLbFRuVTdYRUIwdk4zMTlfcEtLb2J3Y1lQM0l1OTREU2p5UzBxaXI5aExoOGlyUVctZlJZcllacVRzTU9zVXlNaVVMNThZRE85NWdlaEo2WUJKd3FtTVBRZ00xU0l0V2tMLTRiLUE?oc=5\" rel=\"noopener noreferrer\">The Washington Post</a> <a href=\"https://news.google.com/rss/articles/CBMipgFBVV95cUxQaFcyX3Z0TExTYUprSEZLS1pKaDNuWlJqUk1mNEV3Qy1YaWNpa0lJcVZWamtFbFpGcnFtYTJTWW1CZWlXTGJha3kwV1JjSjNybUt0T2cyRHUwamVyZHNkSnZWMzk2YVo2QTJnelB5N1BmVVg3d3lFd25UbEZIRk5Fb0Y0VVVRYVMxZUhPNDYxNXhOQk1wempnc1RaNVhLZDAyRkJtZ0Jn0gGrAUFVX3lxTFBRQ3B6THNjNzJheVVxemFYbVBUazM0NVZnRDFydW5OdXBlTmJBWlhjSFhkNW9vYnpJQ1VnMWltZVlUUExXTUdaNEtCQjhDNnlVSi1VZEY3dkFvcWY4R1lydVdHN1dfNnZxLUxRczQ0MGhHcVozeGs1UjhzNXQ3d1A4UHBsLU1sX3d2aGN1M0tFa2U5SVRnaTZHX2tDZTh5N0NoNUFTNkxNWlpfYw?oc=5\" rel=\"noopener noreferrer\">The Hill</a>. S&amp;P placed Nvidia on downgrade watch over “key man” risks <a href=\"https://news.google.com/rss/articles/CBMiqAFBVV95cUxNSnFCZTJhQkQzR25PLTNfcWRtdFdUVENhU184c3RraWp0M0g4NGw0NXRVOU5sSFBsR2tnRktxYjBBcUlGRzNJVnEtaVh5Zk82NGY2WVQ2VFdBUkIwZ294SjdHR0trM0k5dTl0MTg2OURCOW9RNklVczNVa0VkZU8tV0tXWDVHY1NxUG1aUXZFdUVzazhJTDlYRHBfaGc2VEFEUHNOOFAwbjI?oc=5\" rel=\"noopener noreferrer\">TechCrunch</a>. New chip curbs target Chinese buyers <a href=\"https://news.google.com/rss/articles/CBMib0FVX3lxTE1ydHdQWUpYRU16SjgyRXBibzZ6UFN4RThEMUV3VkRJV0NCNmk1Nm1wTFlvTnpsLS1VVHdmczlIQjZRN0RKZnlBdm5oSmFUY0lCaWV5dTY2bDBiRHcyV0lfMjk3ZS1TQW1oM3F0TTJFRdIBdEFVX3lxTE1hb0dnX1V6U3RzcVduQUhNcHBONFFMMVVaaThOcEc5dy1EOVMwUXBVM1lSMWljNm12aTJXT0FvMWdkaUdyTEZyZGY0dHJ0R3kxQllKQ2RaMl9MYmxIY2pHcTh6TWVDRkhCSkVqUVUtbVFOam81?oc=5\" rel=\"noopener noreferrer\">CNBC</a> <a href=\"https://news.google.com/rss/articles/CBMidkFVX3lxTE9MazBWOG43cVJLUGh2S1V6N2JMc0w4ck1MYlVVVnhMLThiQ1lIOTZZQmVzdTBpMzljVVBJbDdNZm1oLXh5WmNNMXZybDl2SmR0dGNld3ZJRFI2NnpXX0R6S3hiWmxfTDhmN2txdFNxaEl4TVU5N0E?oc=5\" rel=\"noopener noreferrer\">CBS News</a>.</p>\n<h3>Other News</h3>\n<p>Oil rose on Middle East supply risks <a href=\"https://news.google.com/rss/articles/CBMingFBVV95cUxOUFJKcTlSNmZHYWt2WWZqdWxWTzhVX3Vqakhma0tlMlhBOWMtczBfOHdlMllydUdjTldlTlZwcFk3UmJNMGVqaHk3NzUyUEpKTGIzaVJOb0FZN3VBSzAtcW1hT3RCcE1hU1o4bmEwb1B6aGxpa0Q1QUFCbGJIbVdTdUpmcGhCcWZLdzl1OVlCQ0JHVHk2UzMzMl9YOGoxZw?oc=5\" rel=\"noopener noreferrer\">CNN</a>. Norse Atlantic suspended flights <a href=\"https://news.google.com/rss/articles/CBMiW0FVX3lxTE9kcUhxMWplRk1tNm1GLW1Ca0tRRkJpUU94d0MtS0o1bGl6UHNoV3RxZEk5VHFYMGVBcmlzMnFDYzFJcmJUdEhkQ2xyeWg4eVdkemVCcEpsZ1NqbWs?oc=5\" rel=\"noopener noreferrer\">BBC</a>. The ECB named its first Spanish president <a href=\"https://news.google.com/rss/articles/CBMiowFBVV95cUxPSUpudUw3QkoyTGVqN3hoN3lmcFR3bDNGMFpxSzVsd3JrajNuTHp5dVg3WWVieklUeG1RdlNPbnVCeFVQZEZmeTItU0h2ZDAzRlAxSVdNTUs0TGNybExrVVc3Z2ZneXV1TFp0SHRLS294VWZiQzBMdVdidzY3MUZSMVRrVW5oUDl1ZVI3Tm84RWZZYl8xNVhRMGhrZmNVaS1rbHpB0gGoAUFVX3lxTE55RDFtNjlya2haWHhybjRodGJGcUFJR2tpOFVGc2FqRnJEMGotRXEtdVh0TnNWLVVUcVBiNk10X1pPR2ZnOHY4blYtR05SYWs0WXhNYWdGSjVLNTM4SXlSOURrWXJCajNLaUljYWtwMFNZUzZqb2pPQkZ2QUZtM3FCeVdyYkZ3YnZPYVJ2d3RSSFV4WnZQUmM2Zlo2cS12ZWhEbEJqcTczVw?oc=5\" rel=\"noopener noreferrer\">Al Jazeera</a>.</p>",
+      "order": 2
+    },
+    {
+      "id": "tech-news",
+      "title": "Tech News",
+      "content": "<h3>Apple Pulls Chinese Chatbot Talkie Over Child-Safety Concerns</h3>\n<p>Apple removed the Chinese-developed AI companion app Talkie from its App Store worldwide after an investigation reported sexual messages sent to children <a href=\"https://news.google.com/rss/articles/CBMixwFBVV95cUxNWFNhOV9aU2ZfZUF1alBpT2pEZVN4UlBxcHRITG9NY2YzeGhxWmNORF9jdnBDcUNxUjhWNnFnMzRtempOUVo0dDZLNTgwU3VidDgySUJITFdrNUJWSjB5ZFJvTW54SHphSVBYa1pKbDZtOEtkMEpNbUZkMGRzWEMzLUFfdFZnVlZHZFpqWWJKRm0yR0NFcnNHWFlwRkZiODdwWDFfN1B4V05VQWpvcUt5U0ZHWlo0NmFXcUhxNGZSblg4OF9RamtZ0gHMAUFVX3lxTE80eEFNTjNFZm9VSFBqdnU5d0ZsakItdGttVmplYW9xRElHMDJ0a3B1RTdLanNQNWlzNm5kdHliWFE5NkpTcGlfYllSbFJLTFhjd3pRZ0NKOVBjdTZkUlo2TVBLdnBJNk5HTEdwRkRaZTBYUmM1c2xmZ3JYOEI2eEYtWWdRZ2JMTG9iampEdjNmcTNuaEkyeUdWd1FabmlERGs4MWwyTm5rMkpHeW9pOWowV1ludFY0MEJTNHBHLW9mN2pQMVNRaVd3c0s5NQ?oc=5\" rel=\"noopener noreferrer\">Fox Business</a>. The move follows similar child-safety actions and highlights ongoing scrutiny of AI chatbots <a href=\"https://news.google.com/rss/articles/CBMixwFBVV95cUxNWFNhOV9aU2ZfZUF1alBpT2pEZVN4UlBxcHRITG9NY2YzeGhxWmNORF9jdnBDcUNxUjhWNnFnMzRtempOUVo0dDZLNTgwU3VidDgySUJITFdrNUJWSjB5ZFJvTW54SHphSVBYa1pKbDZtOEtkMEpNbUZkMGRzWEMzLUFfdFZnVlZHZFpqWWJKRm0yR0NFcnNHWFlwRkZiODdwWDFfN1B4V05VQWpvcUt5U0ZHWlo0NmFXcUhxNGZSblg4OF9RamtZ0gHMAUFVX3lxTE80eEFNTjNFZm9VSFBqdnU5d0ZsakItdGttVmplYW9xRElHMDJ0a3B1RTdLanNQNWlzNm5kdHliWFE5NkpTcGlfYllSbFJLTFhjd3pRZ0NKOVBjdTZkUlo2TVBLdnBJNk5HTEdwRkRaZTBYUmM1c2xmZ3JYOEI2eEYtWWdRZ2JMTG9iampEdjNmcTNuaEkyeUdWd1FabmlERGs4MWwyTm5rMkpHeW9pOWowV1ludFY0MEJTNHBHLW9mN2pQMVNRaVd3c0s5NQ?oc=5\" rel=\"noopener noreferrer\">Fox Business</a>.</p>\n<h3>Ford Unveils GT41 Hypercar for Le Mans Return</h3>\n<p>Ford revealed the GT41 hypercar, aiming to win the 2027 24 Hours of Le Mans <a href=\"https://news.google.com/rss/articles/CBMilwFBVV95cUxNcVB4ZzBjOUhoXzBWN3ppcDFVaG44UlJxNVlhdFlnMFFNTjZvaUNJU054YjRfTXJ3ZUhEZGpTM0RoUTA1R3BMM2hHcVlZM1NFODhubHk5dDJLUHJyM0o0RW44VS0xYkszdGp5VmRuSU1id0dMeUxGVDJRT1lBMXRhLTBlOWpaMVFsZDBTR24zaEI5Zlc4V2hV?oc=5\" rel=\"noopener noreferrer\">Ars Technica</a>. A Thanksgiving ad, narrated by Matt Damon and directed by Zack Snyder, supports the racing comeback <a href=\"https://news.google.com/rss/articles/CBMilwFBVV95cUxNcVB4ZzBjOUhoXzBWN3ppcDFVaG44UlJxNVlhdFlnMFFNTjZvaUNJU054YjRfTXJ3ZUhEZGpTM0RoUTA1R3BMM2hHcVlZM1NFODhubHk5dDJLUHJyM0o0RW44VS0xYkszdGp5VmRuSU1id0dMeUxGVDJRT1lBMXRhLTBlOWpaMVFsZDBTR24zaEI5Zlc4V2hV?oc=5\" rel=\"noopener noreferrer\">Ars Technica</a>.</p>\n<h3>GTA VI Strains PS5 Consoles</h3>\n<p>Reports indicate Grand Theft Auto VI acts as the \"toughest real-world PlayStation 5 stress test,\" drawing 220W with minimal on-screen action <a href=\"https://news.google.com/rss/articles/CBMiggFBVV95cUxOTzB4NDh2VHdudm1ZTS1sbGlmUVBqUDF4bTN4Uy1tV1RzTlJlVHNNbk8xSGNiNVU0T3I5a3lMMnV2THJocXNyRmstWWNrbWZDRVRweW9vb0Zidkk5VzNKb1c3N3NYczhJdXdVemQ5d1pEbVZCQVpDcktSbmpFQ2F4d2Jn0gGHAUFVX3lxTE9LYV9lUWhJdVFzbUlpNXdZVFZXNmJwTW5UdW1QRFFJSkw1QTctaDhZcG5kd3RPY2hfcnhtN1o5TEtZS01Rc2dNSThxUElhWlFqUGdOV282XzlKdXotVFJBcVM0VGR5Wm1ZQmRQM0NRaVo2N1NZVEIzZ005WVdPdjhPREZYN19pVQ?oc=5\" rel=\"noopener noreferrer\">Wccftech</a>. Some consoles reportedly died or smoked, prompting player concern <a href=\"https://news.google.com/rss/articles/CBMiggFBVV95cUxOTzB4NDh2VHdudm1ZTS1sbGlmUVBqUDF4bTN4Uy1tV1RzTlJlVHNNbk8xSGNiNVU0T3I5a3lMMnV2THJocXNyRmstWWNrbWZDRVRweW9vb0Zidkk5VzNKb1c3N3NYczhJdXdVemQ5d1pEbVZCQVpDcktSbmpFQ2F4d2Jn0gGHAUFVX3lxTE9LYV9lUWhJdVFzbUlpNXdZVFZXNmJwTW5UdW1QRFFJSkw1QTctaDhZcG5kd3RPY2hfcnhtN1o5TEtZS01Rc2dNSThxUElhWlFqUGdOV282XzlKdXotVFJBcVM0VGR5Wm1ZQmRQM0NRaVo2N1NZVEIzZ005WVdPdjhPREZYN19pVQ?oc=5\" rel=\"noopener noreferrer\">Wccftech</a>.</p>\n<h3>Black Friday Tech Deals Dominate</h3>\n<p>Major discounts hit MacBooks, with the M6 MacBook Pro at record lows and the MacBook Neo dropping to $599 <a href=\"https://news.google.com/rss/articles/CBMiekFVX3lxTE02RDVOaEQ5ckVBZG11cmxJWlpub0RnQjZQTHh6Unh5Z3dic083UDRaRXY1WWZCM0ctOUFnR2M3TXF1a19WdUhXRDFZUGFFQThwWFBEWVFKS1VsUUE3enp4SGRtM1MwbW13WUVkeE8wQlJwWm0xRXJ4VWtn?oc=5\" rel=\"noopener noreferrer\">MacRumors</a> <a href=\"https://news.google.com/rss/articles/CBMif0FVX3lxTE96UTd5Q0xHR29YaEtEeExTNTB2ZVI2UnlYa1Q1enNFOFlPQjRRbTJReDJtOVNOTzd5UllHTnhEcVZVMUtFYWctUy1kT05aU2pOU1M3WUw5ODJibnZVMUhvQ3RqQ3E5bHUzMGVoNXcxT1BBYWg5b29tSkZUQ2V4d2c?oc=5\" rel=\"noopener noreferrer\">9to5Mac</a>. Laptop, TV, and gaming deals also saw significant price cuts <a href=\"https://news.google.com/rss/articles/CBMikAFBVV95cUxPLVZNNmVrR253VGFFM2pDNVYxSGRDcjhMeXN3dXU0aEl6VUlwWnVDN2Z3SGlXSmZ3RmpmTS00ZXBBQVhDN21yR2JSXy1PdnFCWXB6UkxjR2x0dDF6VzhiWDZtQTA5VGx4NnR6cjhWcmM0NUx3bVdLSjZpaWtYMlhRaWM3SC1QZ21lM2piSnY4RTM?oc=5\" rel=\"noopener noreferrer\">CNN</a> <a href=\"https://news.google.com/rss/articles/CBMiwgFBVV95cUxOZUxQUS00dGxIWkJ5cVhyd215NDlRQW1uV2FsVjVkV3B1bkdEY3hnTU5EMFNEMXIxZ2hmckl5MHJwTTRkOTFMb0Z1T2dSdGVzazZ1M1liQ0VQNkE5aTFHMWVYMkJ5N0R6ZzZHNFRnTXl0eElnWER0YVJEWVBVdGNiWkFHX2Z3Qk1VMlFGNEdiQ0ZLQlp1d1J4dm1vYURUM1FYY002R1ZINVBISy1BNFl4QWR5cUxobUluUVRERk8tbXAyUQ?oc=5\" rel=\"noopener noreferrer\">USA Today</a>.</p>",
+      "order": 3
+    },
+    {
+      "id": "entertainment-news",
+      "title": "Entertainment News",
+      "content": "<p>‘Hunger Games: Sunrise on the Reaping’ devoured the Thanksgiving box office with an $85M five-day debut <a href=\"https://news.google.com/rss/articles/CBMingFBVV95cUxPYlFQM056RTF2OVY2RkFUU0RYZ2RTYmtyRWE4bi0zS3JjV1JySFFjbEhKb3c5Um9LZWZUNDFhN2NvRXRtQXRoZUFYVC1VUmg5XzhySllaNDRSeE9KYTlac09RWnlGUmZ5cmxrMVdoREpTNUJ1d1Q4c3hkUS1iUTFsUnRab2FqX2lZLVVJMlBLM2doN3E2WFFxdXRqNU1jQQ?oc=5\" rel=\"noopener noreferrer\">Deadline</a>. U2 honored Dolly Parton during the NFL’s Thanksgiving Eve halftime show <a href=\"https://news.google.com/rss/articles/CBMi1wFBVV95cUxON0VGU05QSFFXbzNaNFFPQzlXUnpKQmFNNnY2YTAwdFdwaVNpbjRxRDVRdnhWY1lKWWpmX2x3d2ZLODllYS1LYVVpZHY3b1M0eXdwakpaRHJhanF4QmtCU2g4S1QwSm5vaGswS3puOU8xX01IemVCR25rOTZsTGc0Ul90S2swUUJTLTdXUmtRSExJdTJSMVdXblBXTXJBSHY0RE9jN3NDenJXNUtva2haV2JYLTVBRGtWMVQ2Y0VOUXZ1T0RreTVxLTBpeFpOTTFNaGllYVc4Zw?oc=5\" rel=\"noopener noreferrer\">Forbes</a>. King Crimson co-founder Michael Giles died at 84 <a href=\"https://news.google.com/rss/articles/CBMisAFBVV95cUxNU1EzOEdsa29oNHd6TTF4NXRqUU5XejhWSno2OGpCdC00blFJZzJPY21XVlNlYUlMWnIxaFp2TE4xbGtMVTVsUllCZGxMdTRCMTBaM3lWSGRzVTB0VWdyOFRBd1BWd24yT2lEZVBuWU1zcDI3ZU9neWpmYVd3bjQ3djJuLUdTSDdzZXN4VFF5R3NFNmRpb09CTnVYTW03dWVpVkU3OFhheFUwdWpvU1dmTQ?oc=5\" rel=\"noopener noreferrer\">The Guardian</a>, alongside Duran Duran guitarist Andy Taylor at 65 <a href=\"https://news.google.com/rss/articles/CBMie0FVX3lxTE9OY3REOG05X0trei10M1RoY0pxbUlLUjF3Sm9zeWxCa3ZRbXBNMGRPemNJQXRQLTNwdXFoa1FPaHVhNnZQTUxSWEdCeXZRVW1KdG52TS1ERjdrNVdfRlJuNmUydDdzWVA4aFJaTldYN3pwR0tSSnpyajZ1SQ?oc=5\" rel=\"noopener noreferrer\">NPR</a>. Essence Music Festival bid farewell to New Orleans after 30 years <a href=\"https://news.google.com/rss/articles/CBMipAFBVV95cUxNM2Q2bGZlTUFpUDRPa01CMU82N0g4c0JEX1pHMDNXMUlZbjh5dDVNVnEwNHhIZE5tbjhubDhob1B2dWRtb1hzaFdicUNOYVhSSmxZMjhkSFlsZUZNb04xS216SnNDVXBQOFdDdjkxZ1B6NzN0dWdRUld1N192Y01ESGhSTXpKem1rTUJkb3d3NGliaGlQcTlwN3lpcEVCYVI4T3k3MQ?oc=5\" rel=\"noopener noreferrer\">AP News</a>.</p>",
+      "order": 4
+    },
+    {
+      "id": "sports",
+      "title": "Sports",
+      "content": "<h3>Football</h3>\n<ul>\n<li><strong>Bears 39, Lions 35</strong> – Caleb Williams’ TD pass with 3 seconds left gives Chicago its 9th win <a href=\"https://www.espn.com/nfl/game/_/gameId/401873081/bears-lions\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n<li><strong>Rams 26, Packers 13</strong> – Blake Corum powers a dominant rushing attack in LA’s 5th straight win <a href=\"https://www.espn.com/nfl/game/_/gameId/401873079/packers-rams\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n</ul>\n<h3>Basketball</h3>\n<ul>\n<li><strong>76ers 111, Heat 104</strong> – LeBron James posts his first Philly triple-double in NBA Cup play <a href=\"https://www.espn.com/nba/game/_/gameId/401909317/heat-76ers\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n<li><strong>Rockets 116, Suns 104</strong> – Kevin Durant reaches 33,000 career points in defeat <a href=\"https://www.espn.com/nba/game/_/gameId/401909323/suns-rockets\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n<li><strong>Timberwolves 113, Thunder 106</strong> – Minnesota improves to 3-0 in Cup group play <a href=\"https://www.espn.com/nba/game/_/gameId/401909320/timberwolves-thunder\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n</ul>\n<h3>Hockey</h3>\n<ul>\n<li><strong>Hurricanes 3, Lightning 1</strong> – Third-period goals from Robinson and Slavin fuel a rally; Carolina is 19-3-3 <a href=\"https://www.espn.com/nhl/game/_/gameId/401892783/hurricanes-lightning\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n<li><strong>Sabres 5, Rangers 1</strong> – Dahlin scores 17 seconds in; Buffalo rolls <a href=\"https://www.espn.com/nhl/game/_/gameId/401892782/rangers-sabres\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n</ul>\n<h3>Baseball</h3>\n<ul>\n<li><strong>Mets sign Tarik Skubal</strong> – Two-time Cy Young winner finalizes a record $450M, nine-year deal <a href=\"https://www.espn.com/mlb/story/_/id/50599216/mets-owners-steve-alex-cohen-thrilled-impressive-skubal-rotation\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n<li><strong>Twins add Kevin Ginkel</strong> – Two-year, $18M deal for the ex-Diamondbacks reliever <a href=\"https://www.espn.com/mlb/story/_/id/50602024/twins-kevin-ginkel-agree-2-year-18-million-deal\" rel=\"noopener noreferrer\">ESPN</a>.</li>\n</ul>",
+      "order": 5
+    },
+    {
+      "id": "music-releases",
+      "title": "Music Releases",
+      "content": "<h3>Albums &amp; EPs</h3>\n<ul>\n<li><strong>Armin van Buuren — UNFILTERED 010</strong> — Two fresh live sets from London capture the trance titan’s ASOT 25-years celebration through the week <a href=\"https://open.spotify.com/album/76yL3mUfeD5cZOs4GK2Vxz\" rel=\"noopener noreferrer\">Spotify</a> <a href=\"https://open.spotify.com/album/56yKblCBnNcRoEbxnToDqd\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n<li><strong>Kabza De Small — Tutu</strong> — The amapiano heavyweight drops a 13-track album, a key African release for the day <a href=\"https://open.spotify.com/album/3D1VFPlgwhz2KdBs0Z28Ty\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n<li><strong>Valentín Elizalde — Vencedor (Remasterizado 2026)</strong> — A remastered edition revives the late Mexican star’s legacy <a href=\"https://open.spotify.com/album/61Yh6cp6dKz1IT8zonNAsD\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n<li><strong>Toro y Moi — Unusua</strong> — The chillwave mainstay returns with a concise seven-track project <a href=\"https://open.spotify.com/album/4SRkoUbFCftbruOQHKZkVa\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n</ul>\n<h3>Singles</h3>\n<ul>\n<li><strong>Judika &amp; Cleo Mora — Boru Panggoaran</strong> — A cross-cultural Indonesian collaboration makes waves <a href=\"https://open.spotify.com/album/1ZYlFViacYh55IIxTTSbNr\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n<li><strong>Pezet, Sokół &amp; Jonatan — PESO</strong> — Polish hip-hop heavyweights unite on a new track <a href=\"https://open.spotify.com/album/5Yq9qPkI7v3RUffZWCNqZM\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n<li><strong>Burai, JOJO &amp; BELANO — NastyGirl</strong> — A club-ready single from Hungarian artists <a href=\"https://open.spotify.com/album/1IOFsHBKo2LsvgluRjiJ0V\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n<li><strong>Saran — SUNSHINE (☀️)</strong> — A bright, upbeat Korean pop release <a href=\"https://open.spotify.com/album/1ivx4eAIq7Cf0HIybZWQ9L\" rel=\"noopener noreferrer\">Spotify</a>.</li>\n</ul>",
+      "order": 6
+    },
+    {
+      "id": "stock-analysis",
+      "title": "Stock Analysis",
+      "content": "<h3>IPOs</h3>\n<p>No IPOs priced or listed in the recent calendar beyond existing names; upcoming listings include NovaGold (NG) and PBT Land and Minerals (PBT) on NYSE, dated 2026-12-02 <a href=\"https://finance.yahoo.com/quote/NG\" rel=\"noopener noreferrer\">Yahoo Finance</a> <a href=\"https://finance.yahoo.com/quote/PBT\" rel=\"noopener noreferrer\">Yahoo Finance</a>.</p>\n<h3>Major Indices</h3>\n<p>S&amp;P 500 slipped 0.25% to 7,182.78; Nasdaq fell 0.62%, while Dow rose 0.33% and Russell 2000 gained 0.71% <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>. VIX dropped 5.27% to 26.80 <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>.</p>\n<h3>Sectors</h3>\n<p>Materials led with a 2.07% jump; Communication Services (+0.89%) and Industrials (+0.83%) followed <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>. Technology lagged at -0.83%, with Health Care down 0.56% <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>.</p>\n<h3>Major Stocks</h3>\n<p>Meta surged 3.40%; Apple added 0.43% <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>. Nvidia tumbled 3.91%, Amazon fell 3.12%, and Alphabet lost 2.13% <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a> <a href=\"https://finance.yahoo.com/quote/NVDA\" rel=\"noopener noreferrer\">Yahoo Finance</a>.</p>\n<h3>Notable Movers</h3>\n<p>Top gainers: BZ +12.6%, LBTYB +11.9%, HPQ +11.5% <a href=\"https://finance.yahoo.com/quote/BZ\" rel=\"noopener noreferrer\">Yahoo Finance</a> <a href=\"https://finance.yahoo.com/quote/LBTYB\" rel=\"noopener noreferrer\">Yahoo Finance</a> <a href=\"https://finance.yahoo.com/quote/HPQ\" rel=\"noopener noreferrer\">Yahoo Finance</a>. Losers: NTNX -15.2%, URBN -10.3% <a href=\"https://finance.yahoo.com/quote/NTNX\" rel=\"noopener noreferrer\">Yahoo Finance</a> <a href=\"https://finance.yahoo.com/quote/URBN\" rel=\"noopener noreferrer\">Yahoo Finance</a>. Most active: NVDA, ANT, SPCX <a href=\"https://finance.yahoo.com/quote/NVDA\" rel=\"noopener noreferrer\">Yahoo Finance</a> <a href=\"https://finance.yahoo.com/quote/ANT\" rel=\"noopener noreferrer\">Yahoo Finance</a> <a href=\"https://finance.yahoo.com/quote/SPCX\" rel=\"noopener noreferrer\">Yahoo Finance</a>.</p>\n<h3>Rates &amp; Commodities</h3>\n<p>10-year yield fell 1.14% to 4.85% <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>. WTI crude rose 1.47% to $84.91; gold gained 1.63% to $3,593.40 <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>. Bitcoin edged up 0.18% to $60,486.65 <a href=\"https://finance.yahoo.com/markets/\" rel=\"noopener noreferrer\">Yahoo Finance</a>.</p>",
+      "order": 7,
+      "charts": [
+        {
+          "group": "Indices",
+          "label": "S&P 500",
+          "symbol": "^GSPC",
+          "change": -0.25,
+          "closes": [
+            7416.59,
+            7340.53,
+            7323.63,
+            7175.83,
+            6910.39,
+            7237.17,
+            7201.09,
+            7182.78
+          ]
+        },
+        {
+          "group": "Indices",
+          "label": "Dow Jones Industrial Average",
+          "symbol": "^DJI",
+          "change": 0.33,
+          "closes": [
+            51608.17,
+            50759.42,
+            50198.17,
+            49097.06,
+            48147.33,
+            49595.31,
+            50018.7,
+            50182.95
+          ]
+        },
+        {
+          "group": "Indices",
+          "label": "Nasdaq Composite",
+          "symbol": "^IXIC",
+          "change": -0.62,
+          "closes": [
+            24509.76,
+            24328.38,
+            24429.88,
+            23879.2,
+            22617.73,
+            24089.56,
+            23733.54,
+            23585.8
+          ]
+        },
+        {
+          "group": "Indices",
+          "label": "Russell 2000",
+          "symbol": "^RUT",
+          "change": 0.71,
+          "closes": [
+            2742.94,
+            2701.87,
+            2714.31,
+            2655.11,
+            2581.79,
+            2669.66,
+            2684.94,
+            2704.06
+          ]
+        },
+        {
+          "group": "Indices",
+          "label": "VIX",
+          "symbol": "^VIX",
+          "change": -5.27,
+          "closes": [
+            22.91,
+            25.46,
+            24.56,
+            28.44,
+            35.89,
+            26.62,
+            26.36,
+            28.29,
+            26.8
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Technology",
+          "symbol": "XLK",
+          "change": -0.83,
+          "closes": [
+            164.76,
+            163.26,
+            163.81,
+            160.69,
+            149.01,
+            162.38,
+            157.09,
+            155.79
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Financials",
+          "symbol": "XLF",
+          "change": 0.71,
+          "closes": [
+            58.18,
+            57.07,
+            56.42,
+            55.58,
+            54.57,
+            55.65,
+            56.11,
+            56.51
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Energy",
+          "symbol": "XLE",
+          "change": 0.74,
+          "closes": [
+            63.69,
+            63.36,
+            61.29,
+            60.89,
+            60.51,
+            59.87,
+            60.45,
+            60.9
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Health Care",
+          "symbol": "XLV",
+          "change": -0.56,
+          "closes": [
+            187.88,
+            185.24,
+            181.17,
+            177.46,
+            177.24,
+            179.42,
+            184.72,
+            183.68
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Consumer Discretionary",
+          "symbol": "XLY",
+          "change": -0.2,
+          "closes": [
+            118.15,
+            117.1,
+            119.2,
+            115.88,
+            112.46,
+            116.93,
+            117.72,
+            117.49
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Consumer Staples",
+          "symbol": "XLP",
+          "change": 0.46,
+          "closes": [
+            92.6,
+            91.46,
+            91.18,
+            89.86,
+            90.46,
+            90.38,
+            91.88,
+            92.3
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Industrials",
+          "symbol": "XLI",
+          "change": 0.83,
+          "closes": [
+            165.66,
+            164.75,
+            164.66,
+            161.36,
+            156.37,
+            162.47,
+            161.61,
+            162.95
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Materials",
+          "symbol": "XLB",
+          "change": 2.07,
+          "closes": [
+            51.47,
+            50.84,
+            50.46,
+            49.42,
+            48.34,
+            49.9,
+            50.17,
+            51.21
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Utilities",
+          "symbol": "XLU",
+          "change": 0.48,
+          "closes": [
+            44.12,
+            43.42,
+            43.55,
+            43.01,
+            42.69,
+            43.32,
+            43.4,
+            43.61
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Real Estate",
+          "symbol": "XLRE",
+          "change": 0.92,
+          "closes": [
+            44.25,
+            43.59,
+            43.62,
+            42.88,
+            42.46,
+            42.9,
+            43.46,
+            43.86
+          ]
+        },
+        {
+          "group": "Sectors",
+          "label": "Communication Services",
+          "symbol": "XLC",
+          "change": 0.89,
+          "closes": [
+            106.82,
+            105.26,
+            105.58,
+            102.76,
+            100.03,
+            103.6,
+            104.45,
+            105.38
+          ]
+        }
+      ]
+    },
+    {
+      "id": "outlook",
+      "title": "Outlook",
+      "content": "<h3>Next 24–48 Hours</h3>\n<ul>\n<li><strong>Tariff fallout:</strong> Markets may swing on retaliation signals from China/EU after Trump’s sweeping proposal; watch tech and materials volatility.</li>\n<li><strong>Storm recovery:</strong> Power restoration in St. Louis and East Coast could ripple into retail logistics ahead of Black Friday weekend.</li>\n<li><strong>Ebola containment:</strong> Congo evacuation risks may prompt updated WHO guidance.</li>\n</ul>\n<h3>Next Week</h3>\n<ul>\n<li><strong>Nvidia downgrade watch:</strong> S&amp;P decision could amplify AI-sector turbulence; monitor Huang reinstatement news.</li>\n<li><strong>ECB leadership:</strong> New Spanish president’s first signals may shift eurozone rate expectations.</li>\n<li><strong>GTA VI strain reports:</strong> Could pressure Sony’s PS5 narrative ahead of holiday sales.</li>\n</ul>\n<h3>Next Month</h3>\n<ul>\n<li><strong>NovaGold/PBT listings</strong> may test IPO appetite amid trade uncertainty.</li>\n</ul>",
+      "order": 9
+    }
+  ],
+  "model": "deepseek/deepseek-v4-flash-0731",
+  "usage": {
+    "prompt_tokens": 64676,
+    "completion_tokens": 7983,
+    "cost": 0.009232018960000001
+  },
+  "promptVersions": {
+    "major-events-editor": "2.0.0",
+    "political-analyst": "2.3.0",
+    "financial-analyst": "2.5.0",
+    "tech-analyst": "1.0.0",
+    "entertainment-curator": "1.10.0",
+    "sports-analyst": "1.2.0",
+    "music-curator": "2.3.0",
+    "stock-analyst": "3.2.0",
+    "synthesis-agent": "4.4.0",
+    "outlook-agent": "1.11.0"
+  },
+  "theme": {
+    "name": "Storm Signal",
+    "note": "A trade war brewing on the horizon while markets waver between fear and recovery — a day of amber warnings and uneasy calm.",
+    "mood": "tense",
+    "hero": "split",
+    "sections": {
+      "major-events": {
+        "card": "banner",
+        "layout": "grid-2"
+      },
+      "political-news": {
+        "card": "numbered",
+        "layout": "stack"
+      },
+      "financial-news": {
+        "card": "stat",
+        "layout": "grid-3"
+      },
+      "tech-news": {
+        "card": "outline",
+        "layout": "grid-2"
+      },
+      "entertainment-news": {
+        "card": "plain",
+        "layout": "stack"
+      },
+      "sports": {
+        "card": "split",
+        "layout": "masonry"
+      },
+      "music-releases": {
+        "card": "plain",
+        "layout": "stack"
+      },
+      "stock-analysis": {
+        "card": "stat",
+        "layout": "grid-2"
+      },
+      "outlook": {
+        "card": "tile",
+        "layout": "grid-2"
+      }
+    },
+    "css": "/* theme: Storm Signal | A trade war brewing on the horizon while markets waver between fear and recovery — a day of amber warnings and uneasy calm. */\n/* mood: tense */\n/* layout: hero=split; major-events=banner/grid-2; political-news=numbered/stack; financial-news=stat/grid-3; tech-news=outline/grid-2; entertainment-news=plain/stack; sports=split/masonry; music-releases=plain/stack; stock-analysis=stat/grid-2; outlook=tile/grid-2 */\n\n.diary-page {\n  --paper: #241c0a;\n  --paper-alt: #2e2510;\n  --ink: #f5ecd9;\n  --ink-soft: #d8cfbd;\n  --muted: #a89d85;\n  --accent: #ffb347;\n  --accent-ink: #1a1206;\n  --rule: #453a24;\n  --font-display: var(--ff-archivo-black), sans-serif;\n  --font-body: var(--ff-newsreader), Georgia, serif;\n  --font-ui: var(--ff-space-grotesk), sans-serif;\n}\n\n.diary-page .diary-hero {\n  background: linear-gradient(180deg, #332a12 0%, #241c0a 100%);\n  border-bottom: 2px solid var(--accent);\n}\n\n.diary-page .diary-hero-inner {\n  padding-top: 1.5rem;\n  padding-bottom: 2.5rem;\n}\n\n.diary-page .diary-kicker {\n  color: var(--accent);\n  font-family: var(--font-ui);\n  letter-spacing: 0.22em;\n  font-weight: 700;\n}\n\n.diary-page .diary-title {\n  font-family: var(--font-display);\n  font-size: clamp(2.25rem, 5vw, 4.5rem);\n  line-height: 1.05;\n  letter-spacing: 0.02em;\n  text-transform: uppercase;\n  color: var(--ink);\n  border-left: 4px solid var(--accent);\n  padding-left: 1rem;\n}\n\n.diary-page .diary-summary {\n  color: var(--ink-soft);\n  font-size: clamp(1.1rem, 1.8vw, 1.3rem);\n  line-height: 1.6;\n  border-left: 2px solid var(--rule);\n  padding-left: 1.25rem;\n  margin-top: 1.25rem;\n}\n\n.diary-page .diary-theme-note {\n  color: var(--muted);\n  font-family: var(--font-ui);\n  font-size: 0.85rem;\n  margin-top: 1.5rem;\n}\n\n.diary-page .diary-theme-name {\n  background: var(--accent);\n  color: var(--accent-ink);\n  font-weight: 700;\n  text-transform: uppercase;\n  letter-spacing: 0.12em;\n  font-size: 0.78rem;\n  padding: 0.15rem 0.7rem;\n}\n\n.diary-page .diary-crumbs a {\n  color: var(--muted);\n  font-family: var(--font-ui);\n}\n\n.diary-page .diary-crumbs a:hover {\n  color: var(--accent);\n}\n\n.diary-page .diary-toc {\n  background: var(--paper);\n  border-bottom-color: var(--rule);\n}\n\n.diary-page .diary-toc-label {\n  color: var(--muted);\n}\n\n.diary-page .diary-toc-link,\n.diary-page .diary-toc-top,\n.diary-page .diary-toc-bottom {\n  color: var(--muted);\n  font-family: var(--font-ui);\n}\n\n.diary-page .diary-toc-link:hover,\n.diary-page .diary-toc-link.is-active {\n  color: var(--ink);\n}\n\n.diary-page .diary-toc-number {\n  color: var(--accent);\n}\n\n@media (min-width: 1024px) {\n  .diary-page .diary-toc-link.is-active {\n    border-left-color: var(--accent);\n  }\n}\n\n@media (max-width: 1023px) {\n  .diary-page .diary-toc-list {\n    border-left: 0;\n  }\n  \n  .diary-page .diary-toc-link {\n    border-left: 0;\n  }\n}\n\n.diary-page .diary-section {\n  border-top-color: var(--rule);\n}\n\n.diary-page .diary-section-number {\n  color: var(--accent);\n  font-family: var(--font-ui);\n  font-weight: 700;\n  font-size: 0.9rem;\n}\n\n.diary-page .diary-section-title {\n  color: var(--ink);\n  font-family: var(--font-display);\n  letter-spacing: 0.01em;\n  text-transform: uppercase;\n  font-size: clamp(1.6rem, 3vw, 2.4rem);\n}\n\n.diary-page .diary-prose {\n  color: var(--ink-soft);\n  font-size: 1.1rem;\n  line-height: 1.7;\n}\n\n.diary-page .diary-prose h3 {\n  color: var(--ink);\n  font-family: var(--font-ui);\n}\n\n.diary-page .diary-prose h4 {\n  color: var(--ink);\n  font-family: var(--font-display);\n}\n\n.diary-page .diary-prose a {\n  color: var(--accent);\n  font-family: var(--font-ui);\n}\n\n.diary-page .diary-prose a:hover {\n  color: var(--ink);\n}\n\n.diary-page .diary-prose strong {\n  color: var(--ink);\n}\n\n.diary-page .diary-prose blockquote {\n  color: var(--ink);\n  border-left-color: var(--accent);\n}\n\n.diary-page .diary-prose ul > li::before {\n  background: var(--accent);\n}\n\n.diary-page .diary-prose ol > li::marker {\n  color: var(--accent);\n}\n\n.diary-page :is(.diary-spark-label, .diary-spark-value, .diary-spark-change) {\n  font-family: var(--font-ui);\n}\n\n.diary-page .diary-spark {\n  background: var(--paper-alt);\n  border-color: var(--rule);\n}\n\n.diary-page .diary-spark.is-up .diary-spark-change {\n  color: var(--ink);\n}\n\n.diary-page .diary-spark.is-down .diary-spark-change {\n  color: var(--accent);\n}\n\n.diary-page .diary-footer {\n  border-top-color: var(--rule);\n  color: var(--muted);\n  font-family: var(--font-ui);\n}\n\n.diary-page .diary-footer a {\n  color: var(--ink);\n}\n\n.diary-page .diary-footer a:hover {\n  color: var(--accent);\n}\n\n/* Major Events: banner cards with a stronger band */\n.diary-page [data-card=\"banner\"] .diary-card-inner {\n  border-color: var(--rule);\n  background: #2a2210;\n}\n\n.diary-page [data-card=\"banner\"] .diary-card-title {\n  background: var(--accent);\n  color: var(--accent-ink);\n  font-family: var(--font-display);\n  font-size: 1.2rem;\n  letter-spacing: 0.02em;\n  padding: 1rem 1.25rem;\n}\n\n.diary-page [data-card=\"banner\"] .diary-card-body {\n  padding: 1.25rem;\n}\n\n.diary-page [data-card=\"banner\"] .diary-card-thread {\n  margin: 1rem 1.25rem 0;\n}\n\n/* Numbered cards (political news) */\n.diary-page [data-card=\"numbered\"] .diary-card-inner {\n  border-left: 3px solid var(--rule);\n  padding-left: 1.25rem;\n}\n\n.diary-page [data-card=\"numbered\"] .diary-card-index {\n  color: var(--accent);\n  font-family: var(--font-display);\n  font-size: 3.2rem;\n}\n\n/* Stat cards: a bold top border and oversized figures */\n.diary-page [data-card=\"stat\"] .diary-card-inner {\n  border-top: 4px solid var(--accent);\n  padding-top: 0.75rem;\n}\n\n.diary-page [data-card=\"stat\"] .diary-card-figure {\n  color: var(--accent);\n  font-family: var(--font-display);\n  font-size: clamp(2.4rem, 10cqi, 3.6rem);\n  letter-spacing: 0.01em;\n}\n\n/* Outline cards: crackled, angular corners */\n.diary-page [data-card=\"outline\"] .diary-card-inner {\n  border: 1px solid var(--rule);\n  border-radius: 0;\n  padding: 1.25rem;\n  background: #282110;\n}\n\n.diary-page [data-card=\"outline\"] .diary-card-title {\n  font-family: var(--font-display);\n  color: var(--ink);\n  font-size: 1.3rem;\n}\n\n/* Split cards for sports */\n.diary-page [data-card=\"split\"] .diary-card-inner {\n  border-top: 2px solid var(--accent);\n  padding-top: 1rem;\n}\n\n.diary-page [data-card=\"split\"] .diary-card-title {\n  color: var(--ink);\n  font-family: var(--font-display);\n  font-size: 1.35rem;\n}\n\n/* Tile cards for outlook: blocks of amber-tinted darkness */\n.diary-page [data-card=\"tile\"] .diary-card-inner {\n  background: var(--paper-alt);\n  padding: 1.5rem;\n  border: 1px solid var(--rule);\n}\n\n.diary-page [data-card=\"tile\"] .diary-card-title {\n  color: var(--ink);\n  font-family: var(--font-display);\n}\n\n/* Threads: the continuation label stays legible */\n.diary-page .diary-card-thread {\n  border-color: var(--accent);\n  color: var(--accent);\n  font-family: var(--font-ui);\n}\n\n.diary-page .diary-card-thread:hover {\n  background: var(--accent);\n  color: var(--accent-ink);\n}\n\n/* Lede paragraphs (not used today, but keep consistent if present) */\n.diary-page .diary-card-lede {\n  border-left-color: var(--accent);\n  color: var(--ink);\n  font-family: var(--font-display);\n  font-size: 1.25rem;\n}\n\n/* Card titles shared */\n.diary-page .diary-card-title {\n  color: var(--ink);\n  font-family: var(--font-display);\n}\n\n/* Card body shared */\n.diary-page .diary-card-body {\n  color: var(--ink-soft);\n  font-size: 1.05rem;\n  line-height: 1.7;\n}\n\n/* Adjust stack spacing for sections using stack */\n.diary-page .diary-stories--stack > .diary-card--plain + .diary-card--plain {\n  border-top-color: var(--rule);\n}\n\n/* Make sure focus states are clear */\n.diary-page a:focus-visible {\n  outline: 2px solid var(--accent);\n  outline-offset: 2px;\n}\n\n/* Subtle entrance for cards: one fade+rise, no looping */\n.diary-page .diary-card {\n  animation: rise-in 400ms ease-out both;\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .diary-page .diary-card {\n    animation: none;\n  }\n}\n\n@keyframes rise-in {\n  from {\n    opacity: 0;\n    transform: translateY(8px);\n  }\n  to {\n    opacity: 1;\n    transform: translateY(0);\n  }\n}\n\n/* Hide scrollbar in rail (stock data not in rail, but keep safe) */\n.diary-page .diary-stories--rail {\n  scrollbar-width: thin;\n  scrollbar-color: var(--rule) transparent;\n}\n\n/* Remove base drop-cap override for dark theme (keep it subtle) */\n.diary-page .diary-section:first-child .diary-card--plain:first-child .diary-prose > p:first-of-type::first-letter {\n  color: var(--accent);\n  font-family: var(--font-display);\n}"
+  },
+  "threads": [
+    {
+      "id": "ai-capex-selloff",
+      "title": "AI capex selloff",
+      "story": "financial-news/1",
+      "day": 30,
+      "follows": [
+        "2026-10-26/financial-news/1",
+        "2026-10-27/financial-news/1",
+        "2026-10-28/financial-news/1",
+        "2026-10-29/financial-news/1",
+        "2026-10-30/financial-news/1",
+        "2026-10-31/financial-news/1",
+        "2026-11-01/financial-news/1",
+        "2026-11-02/financial-news/1",
+        "2026-11-04/financial-news/2",
+        "2026-11-05/financial-news/1",
+        "2026-11-06/financial-news/1",
+        "2026-11-07/financial-news/1",
+        "2026-11-08/financial-news/1",
+        "2026-11-09/financial-news/1",
+        "2026-11-10/financial-news/1",
+        "2026-11-11/financial-news/1",
+        "2026-11-12/financial-news/1",
+        "2026-11-13/financial-news/1",
+        "2026-11-14/financial-news/1",
+        "2026-11-15/financial-news/1",
+        "2026-11-17/financial-news/1",
+        "2026-11-18/financial-news/1",
+        "2026-11-19/financial-news/1",
+        "2026-11-20/financial-news/1",
+        "2026-11-21/financial-news/1",
+        "2026-11-22/financial-news/1",
+        "2026-11-23/financial-news/1",
+        "2026-11-24/financial-news/1",
+        "2026-11-25/financial-news/1"
+      ]
+    },
+    {
+      "id": "ai-capex-selloff",
+      "title": "AI capex selloff",
+      "story": "financial-news/2",
+      "day": 30,
+      "follows": [
+        "2026-10-26/financial-news/1",
+        "2026-10-27/financial-news/1",
+        "2026-10-28/financial-news/1",
+        "2026-10-29/financial-news/1",
+        "2026-10-30/financial-news/1",
+        "2026-10-31/financial-news/1",
+        "2026-11-01/financial-news/1",
+        "2026-11-02/financial-news/1",
+        "2026-11-04/financial-news/2",
+        "2026-11-05/financial-news/1",
+        "2026-11-06/financial-news/1",
+        "2026-11-07/financial-news/1",
+        "2026-11-08/financial-news/1",
+        "2026-11-09/financial-news/1",
+        "2026-11-10/financial-news/1",
+        "2026-11-11/financial-news/1",
+        "2026-11-12/financial-news/1",
+        "2026-11-13/financial-news/1",
+        "2026-11-14/financial-news/1",
+        "2026-11-15/financial-news/1",
+        "2026-11-17/financial-news/1",
+        "2026-11-18/financial-news/1",
+        "2026-11-19/financial-news/1",
+        "2026-11-20/financial-news/1",
+        "2026-11-21/financial-news/1",
+        "2026-11-22/financial-news/1",
+        "2026-11-23/financial-news/1",
+        "2026-11-24/financial-news/1",
+        "2026-11-25/financial-news/1"
+      ]
+    },
+    {
+      "id": "gta-vi-launch",
+      "title": "GTA VI launch frenzy",
+      "story": "tech-news/3",
+      "day": 12,
+      "follows": [
+        "2026-11-14/tech-news/1",
+        "2026-11-15/tech-news/3",
+        "2026-11-16/tech-news/4",
+        "2026-11-17/tech-news/1",
+        "2026-11-18/entertainment-news/1",
+        "2026-11-18/tech-news/1",
+        "2026-11-19/tech-news/1",
+        "2026-11-20/tech-news/1",
+        "2026-11-20/tech-news/2",
+        "2026-11-21/tech-news/1",
+        "2026-11-23/tech-news/1",
+        "2026-11-24/tech-news/4",
+        "2026-11-25/tech-news/3"
+      ]
+    },
+    {
+      "id": "hunger-games-sunrise",
+      "title": "Hunger Games Sunrise",
+      "story": "entertainment-news/1",
+      "day": 7,
+      "follows": [
+        "2026-11-17/entertainment-news/1",
+        "2026-11-20/entertainment-news/1",
+        "2026-11-21/entertainment-news/1",
+        "2026-11-22/entertainment-news/1",
+        "2026-11-24/entertainment-news/1",
+        "2026-11-25/entertainment-news/1"
+      ]
+    }
+  ]
+}
